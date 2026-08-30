@@ -4,3 +4,9 @@ rust:
 typescript:
   quality-gate: prompts-00009-typescript
   best-practices: none
+flutter:
+  quality-gate: prompts-00010-flutter
+  best-practices: prompts-00011-flutter-best-practices
+dart:
+  quality-gate: prompts-00010-flutter
+  best-practices: prompts-00011-flutter-best-practices
