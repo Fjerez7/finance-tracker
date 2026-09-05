@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/repositories/account_repository_impl.dart';
 import 'data/repositories/category_repository_impl.dart';
+import 'data/repositories/subscription_repository_impl.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'presentation/screens/accounts/accounts_screen.dart';
 import 'presentation/screens/dashboard/dashboard_screen.dart';
+import 'presentation/screens/subscriptions/subscriptions_screen.dart';
 import 'presentation/screens/transactions/quick_transaction_screen.dart';
 import 'presentation/screens/transactions/transaction_list_screen.dart';
 import 'providers/accounts_provider.dart';
+import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
 
 void main() {
@@ -20,11 +23,13 @@ void main() {
 class FinanceTrackerApp extends StatelessWidget {
   final AccountsProvider? accountsProvider;
   final TransactionsProvider? transactionsProvider;
+  final SubscriptionsProvider? subscriptionsProvider;
 
   const FinanceTrackerApp({
     super.key,
     this.accountsProvider,
     this.transactionsProvider,
+    this.subscriptionsProvider,
   });
 
   @override
@@ -51,6 +56,16 @@ class FinanceTrackerApp extends StatelessWidget {
               transactionRepository: TransactionRepositoryImpl(),
               categoryRepository: CategoryRepositoryImpl(),
             )..initialize(),
+          ),
+        if (subscriptionsProvider != null)
+          ChangeNotifierProvider<SubscriptionsProvider>.value(
+            value: subscriptionsProvider!,
+          )
+        else
+          ChangeNotifierProvider<SubscriptionsProvider>(
+            create: (_) => SubscriptionsProvider(
+              repository: SubscriptionRepositoryImpl(),
+            )..loadSubscriptions(),
           ),
       ],
       child: MaterialApp(
@@ -91,6 +106,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   final List<Widget> _screens = const [
     DashboardScreen(),
     TransactionListScreen(),
+    SubscriptionsScreen(),
     AccountsScreen(),
   ];
 
@@ -115,6 +131,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
             label: 'Transactions',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Subscriptions',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
