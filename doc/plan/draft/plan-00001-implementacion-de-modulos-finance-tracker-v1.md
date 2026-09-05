@@ -22,6 +22,12 @@ related:
   - rfc-00001-arquitectura-base-de-finance-tracker
   - task-00001-inicializar-proyecto-flutter-y-estructura-base
   - task-00002-implementar-sqlite-schema-entidades-y-modelos-base
+  - task-00003-implementar-modulo-cuentas-y-patrimonio-neto
+  - task-00004-implementar-modulo-transacciones-rapidas-y-calculadora
+  - task-00005-implementar-modulo-suscripciones-y-pagos-recurrentes
+  - task-00006-implementar-modulo-presupuestos-y-metas-de-ahorro
+  - task-00007-implementar-modulo-dashboard-y-analiticas-visuales
+  - task-00008-implementar-modulo-backup-cloud-y-exportacion-csv
 supersedes: []
 superseded_by: null
 aliases:

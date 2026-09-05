@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' hide Transaction;
+import 'package:finance_tracker/data/datasources/local/database_helper.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/budget.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
@@ -13,40 +16,61 @@ import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/savings_goal_repository.dart';
 import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
-import 'package:finance_tracker/presentation/screens/dashboard/dashboard_screen.dart';
-import 'package:finance_tracker/presentation/widgets/cards/hero_net_worth_card.dart';
-import 'package:finance_tracker/presentation/widgets/charts/category_expense_pie_chart.dart';
+import 'package:finance_tracker/presentation/screens/settings/backup_settings_screen.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
-import 'package:finance_tracker/providers/analytics_provider.dart';
+import 'package:finance_tracker/providers/backup_provider.dart';
 import 'package:finance_tracker/providers/budgets_provider.dart';
 import 'package:finance_tracker/providers/subscriptions_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
+import 'package:finance_tracker/services/google_drive_service.dart';
+
+class FakeDriveService extends GoogleDriveService {
+  GoogleSignInAccount? fakeUser;
+  final List<DriveBackupInfo> backups = [
+    DriveBackupInfo(
+      id: 'b-1',
+      name: 'finance_tracker_backup_20260905_120000.json',
+      modifiedTime: DateTime(2026, 9, 5, 12, 0),
+      sizeBytes: 1024,
+    ),
+  ];
+
+  @override
+  GoogleSignInAccount? get currentUser => fakeUser;
+
+  @override
+  Future<GoogleSignInAccount?> signIn() async {
+    return fakeUser;
+  }
+
+  @override
+  Future<void> signOut() async {
+    fakeUser = null;
+    backups.clear();
+  }
+
+  @override
+  Future<List<DriveBackupInfo>> listBackups() async => List.from(backups);
+}
 
 class FakeAccountRepo implements AccountRepository {
-  final List<Account> accounts;
-  FakeAccountRepo(this.accounts);
   @override
-  Future<List<Account>> getAccounts({bool includeArchived = false}) async =>
-      includeArchived ? accounts : accounts.where((a) => !a.isArchived).toList();
+  Future<List<Account>> getAccounts({bool includeArchived = false}) async => [];
   @override
-  Future<Account?> getAccountById(String id) async =>
-      accounts.where((a) => a.id == id).firstOrNull;
+  Future<Account?> getAccountById(String id) async => null;
   @override
-  Future<void> createAccount(Account account) async => accounts.add(account);
+  Future<void> createAccount(Account account) async {}
   @override
   Future<void> updateAccount(Account account) async {}
   @override
-  Future<void> deleteAccount(String id) async =>
-      accounts.removeWhere((a) => a.id == id);
+  Future<void> deleteAccount(String id) async {}
   @override
   Future<void> adjustBalance(String id, int newBalanceCents) async {}
   @override
   Future<void> setArchived(String id, bool isArchived) async {}
 }
 
-class FakeTransactionRepo implements TransactionRepository {
-  final List<Transaction> transactions;
-  FakeTransactionRepo(this.transactions);
+class FakeTxRepo implements TransactionRepository {
   @override
   Future<List<Transaction>> getTransactions({
     String? accountId,
@@ -57,10 +81,9 @@ class FakeTransactionRepo implements TransactionRepository {
     String? query,
     int? limit,
     int? offset,
-  }) async => transactions;
+  }) async => [];
   @override
-  Future<List<Transaction>> getRecentTransactions({int limit = 20}) async =>
-      transactions;
+  Future<List<Transaction>> getRecentTransactions({int limit = 20}) async => [];
   @override
   Future<Transaction?> getTransactionById(String id) async => null;
   @override
@@ -76,17 +99,14 @@ class FakeTransactionRepo implements TransactionRepository {
     TransactionType? type,
     DateTime? startDate,
     DateTime? endDate,
-  }) async => transactions.length;
+  }) async => 0;
 }
 
-class FakeCategoryRepo implements CategoryRepository {
-  final List<Category> categories;
-  FakeCategoryRepo(this.categories);
+class FakeCatRepo implements CategoryRepository {
   @override
-  Future<List<Category>> getCategories({CategoryType? type}) async => categories;
+  Future<List<Category>> getCategories({CategoryType? type}) async => [];
   @override
-  Future<Category?> getCategoryById(String id) async =>
-      categories.where((c) => c.id == id).firstOrNull;
+  Future<Category?> getCategoryById(String id) async => null;
   @override
   Future<void> createCategory(Category category) async {}
   @override
@@ -95,15 +115,13 @@ class FakeCategoryRepo implements CategoryRepository {
   Future<void> deleteCategory(String id) async {}
 }
 
-class FakeSubscriptionRepo implements SubscriptionRepository {
-  final List<Subscription> subscriptions;
-  FakeSubscriptionRepo(this.subscriptions);
+class FakeSubRepo implements SubscriptionRepository {
   @override
   Future<List<Subscription>> getSubscriptions({
     String? accountId,
     String? categoryId,
     bool? isActive,
-  }) async => subscriptions;
+  }) async => [];
   @override
   Future<Subscription?> getSubscriptionById(String id) async => null;
   @override
@@ -133,7 +151,7 @@ class FakeBudgetRepo implements BudgetRepository {
   Future<void> deleteBudget(String id) async {}
 }
 
-class FakeSavingsGoalRepo implements SavingsGoalRepository {
+class FakeGoalRepo implements SavingsGoalRepository {
   @override
   Future<List<SavingsGoal>> getSavingsGoals({bool? isCompleted}) async => [];
   @override
@@ -149,91 +167,63 @@ class FakeSavingsGoalRepo implements SavingsGoalRepository {
 }
 
 void main() {
-  final now = DateTime.now();
+  sqfliteFfiInit();
 
-  final account = Account(
-    id: 'acc-1',
-    name: 'Main Checking',
-    type: AccountType.bank,
-    currency: 'USD',
-    balanceCents: 500000, // $5,000.00
-    colorHex: '#4CAF50',
-    iconName: 'account_balance',
-    isArchived: false,
-    createdAt: now,
-    updatedAt: now,
-  );
-
-  final category = Category(
-    id: 'cat-1',
-    name: 'Food',
-    iconName: 'restaurant',
-    colorHex: '#FF5722',
-    type: CategoryType.expense,
-    isDefault: true,
-    createdAt: now,
-    updatedAt: now,
-  );
-
-  final transaction = Transaction(
-    id: 'tx-1',
-    accountId: 'acc-1',
-    categoryId: 'cat-1',
-    amountCents: 4500, // $45.00
-    type: TransactionType.expense,
-    description: 'Dinner with friends',
-    transactionDate: now,
-    createdAt: now,
-    updatedAt: now,
-  );
-
+  late DatabaseHelper dbHelper;
+  late FakeDriveService fakeDriveService;
+  late BackupProvider backupProv;
   late AccountsProvider accountsProv;
   late TransactionsProvider txProv;
   late SubscriptionsProvider subsProv;
   late BudgetsProvider budgetsProv;
-  late AnalyticsProvider analyticsProv;
 
   setUp(() async {
-    accountsProv = AccountsProvider(repository: FakeAccountRepo([account]));
-    await accountsProv.loadAccounts();
+    dbHelper = DatabaseHelper.instance;
+    dbHelper.databaseFactoryOverride = databaseFactoryFfi;
+    dbHelper.databasePathOverride = inMemoryDatabasePath;
 
+    await dbHelper.close();
+    await dbHelper.database;
+
+    fakeDriveService = FakeDriveService();
+    backupProv = BackupProvider(
+      dbHelper: dbHelper,
+      driveService: fakeDriveService,
+    );
+
+    accountsProv = AccountsProvider(repository: FakeAccountRepo());
     txProv = TransactionsProvider(
-      transactionRepository: FakeTransactionRepo([transaction]),
-      categoryRepository: FakeCategoryRepo([category]),
+      transactionRepository: FakeTxRepo(),
+      categoryRepository: FakeCatRepo(),
     );
-    await txProv.initialize();
-
-    subsProv = SubscriptionsProvider(
-      repository: FakeSubscriptionRepo([]),
-    );
-    await subsProv.loadSubscriptions();
-
+    subsProv = SubscriptionsProvider(repository: FakeSubRepo());
     budgetsProv = BudgetsProvider(
       budgetRepository: FakeBudgetRepo(),
-      savingsGoalRepository: FakeSavingsGoalRepo(),
+      savingsGoalRepository: FakeGoalRepo(),
     );
-    await budgetsProv.initialize();
+  });
 
-    analyticsProv = AnalyticsProvider();
+  tearDown(() async {
+    await dbHelper.close();
   });
 
   Widget buildTestableWidget() {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<BackupProvider>.value(value: backupProv),
         ChangeNotifierProvider<AccountsProvider>.value(value: accountsProv),
         ChangeNotifierProvider<TransactionsProvider>.value(value: txProv),
         ChangeNotifierProvider<SubscriptionsProvider>.value(value: subsProv),
         ChangeNotifierProvider<BudgetsProvider>.value(value: budgetsProv),
-        ChangeNotifierProvider<AnalyticsProvider>.value(value: analyticsProv),
       ],
       child: const MaterialApp(
-        home: DashboardScreen(),
+        home: BackupSettingsScreen(),
       ),
     );
   }
 
-  group('DashboardScreen Widget Tests', () {
-    testWidgets('renders HeroNetWorthCard, quick action buttons, pie chart and recent transactions', (
+  group('BackupSettingsScreen Widget Tests', () {
+    testWidgets('renders Google Drive card, CSV export, and JSON export buttons when signed out', (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -244,23 +234,60 @@ void main() {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Finance Tracker'), findsOneWidget);
-      expect(find.byType(HeroNetWorthCard), findsOneWidget);
-      expect(find.text('TOTAL NET WORTH'), findsOneWidget);
-      expect(find.text(r'$5,000.00'), findsWidgets);
+      expect(find.text('Backup & Export'), findsOneWidget);
+      expect(find.text('Google Drive Cloud Sync'), findsOneWidget);
+      expect(find.text('Sign In with Google'), findsOneWidget);
+      expect(find.text('Export Ledger (CSV)'), findsOneWidget);
+      expect(find.text('Export Database Snapshot (JSON)'), findsOneWidget);
+    });
 
-      // Quick action shortcuts
-      expect(find.text('Expense'), findsOneWidget);
-      expect(find.text('Budget'), findsOneWidget);
-      expect(find.text('Bill/Sub'), findsOneWidget);
+    testWidgets('tapping CSV export opens preview dialog', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-      // Category pie chart card
-      expect(find.text('Expense Breakdown'), findsOneWidget);
-      expect(find.byType(CategoryExpensePieChart), findsOneWidget);
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
 
-      // Recent transactions
-      expect(find.text('Recent Transactions'), findsOneWidget);
-      expect(find.text('Dinner with friends'), findsOneWidget);
+      await tester.tap(find.text('Export Ledger (CSV)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CSV Export Preview'), findsOneWidget);
+      expect(find.text('Close'), findsOneWidget);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CSV Export Preview'), findsNothing);
+    });
+
+    testWidgets('tapping JSON snapshot opens preview dialog', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Export Database Snapshot (JSON)'));
+        await Future.delayed(const Duration(milliseconds: 150));
+      });
+      await tester.pumpAndSettle();
+
+      expect(find.text('Database Snapshot JSON'), findsOneWidget);
+      expect(find.text('Close'), findsOneWidget);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Database Snapshot JSON'), findsNothing);
     });
   });
 }

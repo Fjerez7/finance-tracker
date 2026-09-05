@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/repositories/account_repository_impl.dart';
+import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/category_repository_impl.dart';
+import 'data/repositories/savings_goal_repository_impl.dart';
 import 'data/repositories/subscription_repository_impl.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'presentation/screens/accounts/accounts_screen.dart';
+import 'presentation/screens/budgets/budgets_screen.dart';
 import 'presentation/screens/dashboard/dashboard_screen.dart';
 import 'presentation/screens/subscriptions/subscriptions_screen.dart';
 import 'presentation/screens/transactions/quick_transaction_screen.dart';
 import 'presentation/screens/transactions/transaction_list_screen.dart';
 import 'providers/accounts_provider.dart';
+import 'providers/analytics_provider.dart';
+import 'providers/backup_provider.dart';
+import 'providers/budgets_provider.dart';
 import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
 
@@ -24,12 +30,18 @@ class FinanceTrackerApp extends StatelessWidget {
   final AccountsProvider? accountsProvider;
   final TransactionsProvider? transactionsProvider;
   final SubscriptionsProvider? subscriptionsProvider;
+  final BudgetsProvider? budgetsProvider;
+  final AnalyticsProvider? analyticsProvider;
+  final BackupProvider? backupProvider;
 
   const FinanceTrackerApp({
     super.key,
     this.accountsProvider,
     this.transactionsProvider,
     this.subscriptionsProvider,
+    this.budgetsProvider,
+    this.analyticsProvider,
+    this.backupProvider,
   });
 
   @override
@@ -66,6 +78,33 @@ class FinanceTrackerApp extends StatelessWidget {
             create: (_) => SubscriptionsProvider(
               repository: SubscriptionRepositoryImpl(),
             )..loadSubscriptions(),
+          ),
+        if (budgetsProvider != null)
+          ChangeNotifierProvider<BudgetsProvider>.value(
+            value: budgetsProvider!,
+          )
+        else
+          ChangeNotifierProvider<BudgetsProvider>(
+            create: (_) => BudgetsProvider(
+              budgetRepository: BudgetRepositoryImpl(),
+              savingsGoalRepository: SavingsGoalRepositoryImpl(),
+            )..initialize(),
+          ),
+        if (analyticsProvider != null)
+          ChangeNotifierProvider<AnalyticsProvider>.value(
+            value: analyticsProvider!,
+          )
+        else
+          ChangeNotifierProvider<AnalyticsProvider>(
+            create: (_) => AnalyticsProvider(),
+          ),
+        if (backupProvider != null)
+          ChangeNotifierProvider<BackupProvider>.value(
+            value: backupProvider!,
+          )
+        else
+          ChangeNotifierProvider<BackupProvider>(
+            create: (_) => BackupProvider()..checkExistingAuth(),
           ),
       ],
       child: MaterialApp(
@@ -106,6 +145,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   final List<Widget> _screens = const [
     DashboardScreen(),
     TransactionListScreen(),
+    BudgetsScreen(),
     SubscriptionsScreen(),
     AccountsScreen(),
   ];
@@ -131,6 +171,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
             label: 'Transactions',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.pie_chart_outline),
+            selectedIcon: Icon(Icons.pie_chart),
+            label: 'Budgets',
           ),
           NavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
