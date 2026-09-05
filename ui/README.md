@@ -37,10 +37,15 @@ lib/
         └── common/
 ```
 
+## Key Design Invariants
+
+- **Integer Cent Precision:** All monetary amounts, balances, and budget limits are stored and computed strictly as 64-bit integer cents (`int`), preventing floating-point rounding errors.
+- **Local-First Persistence:** Core application data is persisted locally in SQLite (`sqflite`) with foreign key enforcement and default seed categories.
+
 ## Key Dependencies
 
 - **State Management:** `provider`
-- **Local Database:** `sqflite`, `path`
+- **Local Database:** `sqflite`, `sqflite_common_ffi`, `path`
 - **Charts & Visualization:** `fl_chart`
 - **Formatting & Localization:** `intl`
 - **Cloud Backup:** `google_sign_in`, `googleapis`

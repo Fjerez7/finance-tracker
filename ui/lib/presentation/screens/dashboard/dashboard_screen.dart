@@ -8,9 +8,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Finance Tracker'),
-      ),
+      appBar: AppBar(title: const Text('Finance Tracker')),
       body: const Center(
         child: Text(
           'Finance Tracker Dashboard',
