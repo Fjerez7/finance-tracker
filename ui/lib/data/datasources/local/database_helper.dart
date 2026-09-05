@@ -15,12 +15,15 @@ class DatabaseHelper {
 
   factory DatabaseHelper() => instance;
 
+  static Future<Database>? _initFuture;
+
   /// Returns the active SQLite database instance, initializing it if needed.
   Future<Database> get database async {
     if (_database != null && _database!.isOpen) {
       return _database!;
     }
-    _database = await initDatabase();
+    _initFuture ??= initDatabase();
+    _database = await _initFuture;
     return _database!;
   }
 
@@ -180,11 +183,11 @@ class DatabaseHelper {
       'CREATE INDEX idx_accounts_archived ON ${DatabaseConstants.tableAccounts} (${DatabaseConstants.colIsArchived});',
     );
 
-    // Execute table and index creation
-    await batch.commit(noResult: true);
+    // 8. Seed Default Categories into same transaction batch
+    _seedDefaultCategories(batch);
 
-    // 8. Seed Default Categories
-    await _seedDefaultCategories(db);
+    // Execute table, index creation, and category seeds atomically
+    await batch.commit(noResult: true);
   }
 
   /// Migrations for future database schema versions.
@@ -192,10 +195,9 @@ class DatabaseHelper {
     // Handle future schema migrations when increasing databaseVersion
   }
 
-  /// Populates the initial system categories.
-  Future<void> _seedDefaultCategories(Database db) async {
+  /// Populates the initial system categories into batch.
+  void _seedDefaultCategories(Batch batch) {
     final String now = DateTime.now().toUtc().toIso8601String();
-    final Batch batch = db.batch();
 
     final List<Map<String, dynamic>> defaultCategories = [
       // Expense Categories
@@ -360,12 +362,11 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
-
-    await batch.commit(noResult: true);
   }
 
   /// Closes the active database connection.
   Future<void> close() async {
+    _initFuture = null;
     if (_database != null && _database!.isOpen) {
       await _database!.close();
       _database = null;
