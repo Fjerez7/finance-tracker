@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import '../../../core/constants/database_constants.dart';
 
 /// Singleton helper managing SQLite database lifecycle, schema migrations, and seeds.
@@ -27,17 +29,26 @@ class DatabaseHelper {
     return _database!;
   }
 
-  /// Initializes the SQLite database.
+  /// Initializes the SQLite database across web, desktop, and mobile environments.
   Future<Database> initDatabase() async {
+    final DatabaseFactory factory;
     final String path;
-    if (databasePathOverride != null) {
-      path = databasePathOverride!;
-    } else {
-      final String dbPath = await getDatabasesPath();
-      path = p.join(dbPath, DatabaseConstants.databaseName);
-    }
 
-    final DatabaseFactory factory = databaseFactoryOverride ?? databaseFactory;
+    if (databaseFactoryOverride != null) {
+      factory = databaseFactoryOverride!;
+      path = databasePathOverride ?? DatabaseConstants.databaseName;
+    } else if (kIsWeb) {
+      factory = databaseFactoryFfiWeb;
+      path = DatabaseConstants.databaseName;
+    } else {
+      factory = databaseFactory;
+      if (databasePathOverride != null) {
+        path = databasePathOverride!;
+      } else {
+        final String dbPath = await getDatabasesPath();
+        path = p.join(dbPath, DatabaseConstants.databaseName);
+      }
+    }
 
     return await factory.openDatabase(
       path,
@@ -376,14 +387,24 @@ class DatabaseHelper {
   /// Deletes the database file (useful for testing or full app reset).
   Future<void> deleteDatabaseFile() async {
     await close();
+    final DatabaseFactory factory;
     final String path;
-    if (databasePathOverride != null) {
-      path = databasePathOverride!;
+
+    if (databaseFactoryOverride != null) {
+      factory = databaseFactoryOverride!;
+      path = databasePathOverride ?? DatabaseConstants.databaseName;
+    } else if (kIsWeb) {
+      factory = databaseFactoryFfiWeb;
+      path = DatabaseConstants.databaseName;
     } else {
-      final String dbPath = await getDatabasesPath();
-      path = p.join(dbPath, DatabaseConstants.databaseName);
+      factory = databaseFactory;
+      if (databasePathOverride != null) {
+        path = databasePathOverride!;
+      } else {
+        final String dbPath = await getDatabasesPath();
+        path = p.join(dbPath, DatabaseConstants.databaseName);
+      }
     }
-    final DatabaseFactory factory = databaseFactoryOverride ?? databaseFactory;
     await factory.deleteDatabase(path);
   }
 }
