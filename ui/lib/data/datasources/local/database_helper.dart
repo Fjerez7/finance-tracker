@@ -109,6 +109,9 @@ class DatabaseHelper {
         ${DatabaseConstants.colToAccountId} TEXT,
         ${DatabaseConstants.colCategoryId} TEXT,
         ${DatabaseConstants.colAmountCents} INTEGER NOT NULL CHECK (${DatabaseConstants.colAmountCents} > 0),
+        ${DatabaseConstants.colOriginalCurrency} TEXT,
+        ${DatabaseConstants.colOriginalAmountCents} INTEGER,
+        ${DatabaseConstants.colExchangeRate} REAL,
         ${DatabaseConstants.colTransactionType} TEXT NOT NULL,
         ${DatabaseConstants.colDescription} TEXT NOT NULL DEFAULT '',
         ${DatabaseConstants.colTransactionDate} TEXT NOT NULL,
@@ -126,6 +129,7 @@ class DatabaseHelper {
         ${DatabaseConstants.colId} TEXT PRIMARY KEY,
         ${DatabaseConstants.colName} TEXT NOT NULL,
         ${DatabaseConstants.colAmountCents} INTEGER NOT NULL CHECK (${DatabaseConstants.colAmountCents} > 0),
+        ${DatabaseConstants.colCurrency} TEXT NOT NULL DEFAULT 'USD',
         ${DatabaseConstants.colFrequency} TEXT NOT NULL,
         ${DatabaseConstants.colAccountId} TEXT NOT NULL,
         ${DatabaseConstants.colCategoryId} TEXT NOT NULL,
@@ -180,7 +184,18 @@ class DatabaseHelper {
       );
     ''');
 
-    // 8. Performance Indexes
+    // 8. Exchange Rates Table
+    batch.execute('''
+      CREATE TABLE ${DatabaseConstants.tableExchangeRates} (
+        ${DatabaseConstants.colBaseCurrency} TEXT NOT NULL,
+        ${DatabaseConstants.colTargetCurrency} TEXT NOT NULL,
+        ${DatabaseConstants.colRate} REAL NOT NULL,
+        ${DatabaseConstants.colLastUpdated} TEXT NOT NULL,
+        PRIMARY KEY (${DatabaseConstants.colBaseCurrency}, ${DatabaseConstants.colTargetCurrency})
+      );
+    ''');
+
+    // 9. Performance Indexes
     batch.execute(
       'CREATE INDEX idx_transactions_date ON ${DatabaseConstants.tableTransactions} (${DatabaseConstants.colTransactionDate} DESC);',
     );
@@ -203,7 +218,7 @@ class DatabaseHelper {
       'CREATE INDEX idx_accounts_archived ON ${DatabaseConstants.tableAccounts} (${DatabaseConstants.colIsArchived});',
     );
 
-    // 9. Seed Default Categories into same transaction batch
+    // 10. Seed Default Categories into same transaction batch
     _seedDefaultCategories(batch);
 
     // Execute table, index creation, and category seeds atomically
@@ -220,6 +235,37 @@ class DatabaseHelper {
           ${DatabaseConstants.colUpdatedAt} TEXT NOT NULL
         );
       ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableExchangeRates} (
+          ${DatabaseConstants.colBaseCurrency} TEXT NOT NULL,
+          ${DatabaseConstants.colTargetCurrency} TEXT NOT NULL,
+          ${DatabaseConstants.colRate} REAL NOT NULL,
+          ${DatabaseConstants.colLastUpdated} TEXT NOT NULL,
+          PRIMARY KEY (${DatabaseConstants.colBaseCurrency}, ${DatabaseConstants.colTargetCurrency})
+        );
+      ''');
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableTransactions} ADD COLUMN ${DatabaseConstants.colOriginalCurrency} TEXT;',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableTransactions} ADD COLUMN ${DatabaseConstants.colOriginalAmountCents} INTEGER;',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableTransactions} ADD COLUMN ${DatabaseConstants.colExchangeRate} REAL;',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableSubscriptions} ADD COLUMN ${DatabaseConstants.colCurrency} TEXT NOT NULL DEFAULT \'USD\';',
+        );
+      } catch (_) {}
     }
   }
 

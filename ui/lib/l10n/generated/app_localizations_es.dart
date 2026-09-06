@@ -1299,4 +1299,48 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get validationSameAccount =>
       'La cuenta de origen y destino deben ser diferentes';
+
+  @override
+  String get currencyConversion => 'Conversión de Moneda';
+
+  @override
+  String get exchangeRate => 'Tasa de Cambio';
+
+  @override
+  String get customRate => 'Tasa Personalizada';
+
+  @override
+  String get editExchangeRate => 'Editar Tasa de Cambio';
+
+  @override
+  String get setCustomRate => 'Definir Tasa Personalizada';
+
+  @override
+  String get resetRate => 'Restablecer a Tasa en Vivo';
+
+  @override
+  String get debitedAmount => 'Debitado de la cuenta';
+
+  @override
+  String get creditedAmount => 'Acreditado a la cuenta';
+
+  @override
+  String rateUnitFormat(String from, String rate, String to) {
+    return '1 $from = $rate $to';
+  }
+
+  @override
+  String get refreshRateTooltip => 'Actualizar tasa en tiempo real';
+
+  @override
+  String get exchangeRateHint => 'Tasa en vivo de open.er-api.com';
+
+  @override
+  String get ratePlaceholder => 'Tasa de cambio (ej. 4150.0)';
+
+  @override
+  String get customRateActive => 'Tasa personalizada aplicada';
+
+  @override
+  String get originalAmount => 'Monto Original';
 }

@@ -2413,6 +2413,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Source and destination accounts must be different'**
   String get validationSameAccount;
+
+  /// No description provided for @currencyConversion.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency Conversion'**
+  String get currencyConversion;
+
+  /// No description provided for @exchangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange Rate'**
+  String get exchangeRate;
+
+  /// No description provided for @customRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Rate'**
+  String get customRate;
+
+  /// No description provided for @editExchangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Exchange Rate'**
+  String get editExchangeRate;
+
+  /// No description provided for @setCustomRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Custom Rate'**
+  String get setCustomRate;
+
+  /// No description provided for @resetRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Live Rate'**
+  String get resetRate;
+
+  /// No description provided for @debitedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Debited from account'**
+  String get debitedAmount;
+
+  /// No description provided for @creditedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Credited to account'**
+  String get creditedAmount;
+
+  /// No description provided for @rateUnitFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'1 {from} = {rate} {to}'**
+  String rateUnitFormat(String from, String rate, String to);
+
+  /// No description provided for @refreshRateTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh live exchange rate'**
+  String get refreshRateTooltip;
+
+  /// No description provided for @exchangeRateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Live rate from open.er-api.com'**
+  String get exchangeRateHint;
+
+  /// No description provided for @ratePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate (e.g. 4150.0)'**
+  String get ratePlaceholder;
+
+  /// No description provided for @customRateActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom rate applied'**
+  String get customRateActive;
+
+  /// No description provided for @originalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Original Amount'**
+  String get originalAmount;
 }
 
 class _AppLocalizationsDelegate

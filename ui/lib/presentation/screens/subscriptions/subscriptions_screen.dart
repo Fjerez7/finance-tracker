@@ -4,6 +4,7 @@ import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/subscription.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
+import '../../../providers/exchange_rate_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
 import '../../widgets/cards/subscription_card.dart';
@@ -266,6 +267,24 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
     final account = accountsProv.accounts
         .where((a) => a.id == sub.accountId)
         .firstOrNull;
+    final accountCurrency = account?.currency ?? 'USD';
+    final exchangeRateProv = context.read<ExchangeRateProvider>();
+
+    final bool isForeign = sub.currency != accountCurrency;
+    final int debitedCents = isForeign
+        ? exchangeRateProv.convertAmount(
+            amountCents: sub.amountCents,
+            fromCurrency: sub.currency,
+            toCurrency: accountCurrency,
+          )
+        : sub.amountCents;
+
+    final String paymentAmountFormatted = isForeign
+        ? '${CurrencyFormatter.formatCents(sub.amountCents, symbol: sub.currency == 'USD' ? '\$' : '${sub.currency} ')} (${CurrencyFormatter.formatCents(debitedCents, symbol: accountCurrency == 'USD' ? '\$' : '$accountCurrency ')})'
+        : CurrencyFormatter.formatCents(
+            sub.amountCents,
+            symbol: accountCurrency == 'USD' ? '\$' : '$accountCurrency ',
+          );
 
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
@@ -275,7 +294,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
             title: Text(l10n.postPaymentQuestion(sub.name)),
             content: Text(
               l10n.confirmPaymentDetail(
-                CurrencyFormatter.formatCents(sub.amountCents),
+                paymentAmountFormatted,
                 account?.name ?? l10n.account,
               ),
             ),
@@ -298,6 +317,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
           sub,
           transactionsProvider: txProv,
           accountsProvider: accountsProv,
+          exchangeRateProvider: exchangeRateProv,
         );
 
         messenger.showSnackBar(

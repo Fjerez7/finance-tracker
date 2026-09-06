@@ -4,6 +4,7 @@ import 'data/repositories/account_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/category_repository_impl.dart';
 import 'data/repositories/savings_goal_repository_impl.dart';
+import 'data/repositories/sqlite_exchange_rate_repository.dart';
 import 'data/repositories/subscription_repository_impl.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -17,6 +18,7 @@ import 'providers/accounts_provider.dart';
 import 'providers/analytics_provider.dart';
 import 'providers/backup_provider.dart';
 import 'providers/budgets_provider.dart';
+import 'providers/exchange_rate_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
@@ -36,6 +38,7 @@ class FinanceTrackerApp extends StatelessWidget {
   final AnalyticsProvider? analyticsProvider;
   final BackupProvider? backupProvider;
   final SettingsProvider? settingsProvider;
+  final ExchangeRateProvider? exchangeRateProvider;
 
   const FinanceTrackerApp({
     super.key,
@@ -46,6 +49,7 @@ class FinanceTrackerApp extends StatelessWidget {
     this.analyticsProvider,
     this.backupProvider,
     this.settingsProvider,
+    this.exchangeRateProvider,
   });
 
   @override
@@ -117,6 +121,16 @@ class FinanceTrackerApp extends StatelessWidget {
         else
           ChangeNotifierProvider<SettingsProvider>(
             create: (_) => SettingsProvider()..loadSettings(),
+          ),
+        if (exchangeRateProvider != null)
+          ChangeNotifierProvider<ExchangeRateProvider>.value(
+            value: exchangeRateProvider!,
+          )
+        else
+          ChangeNotifierProvider<ExchangeRateProvider>(
+            create: (_) => ExchangeRateProvider(
+              repository: SqliteExchangeRateRepository(),
+            )..initialize(),
           ),
       ],
       child: Consumer<SettingsProvider>(

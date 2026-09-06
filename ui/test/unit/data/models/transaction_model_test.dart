@@ -48,5 +48,36 @@ void main() {
       expect(fromMapModel.amountCents, equals(5000));
       expect(fromMapModel.type, equals(TransactionType.transfer));
     });
+
+    test('serializes and deserializes multi-currency fields accurately', () {
+      final foreignTx = Transaction(
+        id: 'tx-usd-1',
+        accountId: 'acc-cop',
+        categoryId: 'cat-food',
+        amountCents: 62250,
+        originalCurrency: 'USD',
+        originalAmountCents: 1500,
+        exchangeRate: 4150.0,
+        type: TransactionType.expense,
+        description: 'International lunch',
+        transactionDate: now,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final model = TransactionModel.fromEntity(foreignTx);
+      final map = model.toMap();
+
+      expect(map['original_currency'], 'USD');
+      expect(map['original_amount_cents'], 1500);
+      expect(map['exchange_rate'], 4150.0);
+
+      final deserialized = TransactionModel.fromMap(map);
+      expect(deserialized.originalCurrency, 'USD');
+      expect(deserialized.originalAmountCents, 1500);
+      expect(deserialized.exchangeRate, 4150.0);
+      expect(deserialized.amountCents, 62250);
+      expect(deserialized.toEntity(), equals(foreignTx));
+    });
   });
 }

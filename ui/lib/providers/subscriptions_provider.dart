@@ -3,6 +3,7 @@ import '../domain/entities/subscription.dart';
 import '../domain/entities/transaction.dart';
 import '../domain/repositories/subscription_repository.dart';
 import 'accounts_provider.dart';
+import 'exchange_rate_provider.dart';
 import 'transactions_provider.dart';
 
 /// Reactive provider managing subscriptions, recurrence scheduling, and 1-tap ledger posting.
@@ -187,24 +188,58 @@ class SubscriptionsProvider extends ChangeNotifier {
   }
 
   /// 1-Tap post payment: creates a real expense transaction and advances next due date.
+  /// Handles multi-currency conversion if subscription currency differs from account currency.
   Future<void> postSubscriptionPayment(
     Subscription subscription, {
     required TransactionsProvider transactionsProvider,
     AccountsProvider? accountsProvider,
+    ExchangeRateProvider? exchangeRateProvider,
   }) async {
     _setLoading(true);
     _errorMessage = null;
 
     try {
       final now = DateTime.now();
+
+      // Resolve account currency
+      final account = accountsProvider?.accounts
+          .where((a) => a.id == subscription.accountId)
+          .firstOrNull;
+      final accountCurrency = account?.currency ?? 'USD';
+
+      int debitedAmountCents = subscription.amountCents;
+      String? originalCurrency;
+      int? originalAmountCents;
+      double? exchangeRate;
+
+      if (subscription.currency != accountCurrency) {
+        originalCurrency = subscription.currency;
+        originalAmountCents = subscription.amountCents;
+
+        if (exchangeRateProvider != null) {
+          exchangeRate = exchangeRateProvider.getRate(
+            subscription.currency,
+            accountCurrency,
+          );
+          debitedAmountCents = exchangeRateProvider.convertAmount(
+            amountCents: subscription.amountCents,
+            fromCurrency: subscription.currency,
+            toCurrency: accountCurrency,
+          );
+        }
+      }
+
       final tx = Transaction(
         id: 'tx_sub_${subscription.id}_${now.millisecondsSinceEpoch}',
         accountId: subscription.accountId,
         categoryId: subscription.categoryId,
-        amountCents: subscription.amountCents,
+        amountCents: debitedAmountCents,
         type: TransactionType.expense,
         description: '${subscription.name} (Recurring Payment)',
         transactionDate: now,
+        originalCurrency: originalCurrency,
+        originalAmountCents: originalAmountCents,
+        exchangeRate: exchangeRate,
         createdAt: now.toUtc(),
         updatedAt: now.toUtc(),
       );
@@ -236,6 +271,7 @@ class SubscriptionsProvider extends ChangeNotifier {
   Future<int> checkAndProcessAutoRegister({
     required TransactionsProvider transactionsProvider,
     AccountsProvider? accountsProvider,
+    ExchangeRateProvider? exchangeRateProvider,
   }) async {
     final now = DateTime.now();
     final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
@@ -252,6 +288,7 @@ class SubscriptionsProvider extends ChangeNotifier {
           sub,
           transactionsProvider: transactionsProvider,
           accountsProvider: accountsProvider,
+          exchangeRateProvider: exchangeRateProvider,
         );
         processedCount++;
       } catch (e) {

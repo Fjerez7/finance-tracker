@@ -92,6 +92,27 @@ class TransactionListTile extends StatelessWidget {
       transaction.amountCents,
       symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ',
     );
+
+    final bool isForeign = transaction.originalCurrency != null &&
+        transaction.originalAmountCents != null &&
+        transaction.originalCurrency != currencyCode;
+
+    final String primaryAmountText;
+    final String? secondaryAmountText;
+
+    if (isForeign) {
+      final origCode = transaction.originalCurrency!;
+      final formattedOrig = CurrencyFormatter.formatCents(
+        transaction.originalAmountCents!,
+        symbol: origCode == 'USD' ? '\$' : '$origCode ',
+      );
+      primaryAmountText = '$signPrefix$formattedOrig';
+      secondaryAmountText = '(~$signPrefix$formattedAmount)';
+    } else {
+      primaryAmountText = '$signPrefix$formattedAmount';
+      secondaryAmountText = null;
+    }
+
     final formattedDate = DateFormat(
       'MMM d, h:mm a',
     ).format(transaction.transactionDate.toLocal());
@@ -195,14 +216,31 @@ class TransactionListTile extends StatelessWidget {
 
               const SizedBox(width: 10),
 
-              // Amount
-              Text(
-                '$signPrefix$formattedAmount',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: amountColor,
-                ),
+              // Amount Column
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    primaryAmountText,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: amountColor,
+                    ),
+                  ),
+                  if (secondaryAmountText != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      secondaryAmountText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

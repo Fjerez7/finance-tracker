@@ -8,6 +8,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
+import '../../widgets/cards/currency_conversion_card.dart';
 
 /// Screen for creating and editing recurring commitments / subscriptions.
 class AddEditSubscriptionScreen extends StatefulWidget {
@@ -28,6 +29,8 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
   late TextEditingController _nameController;
   late TextEditingController _amountController;
   late RecurrenceFrequency _frequency;
+  late String _selectedCurrency;
+  double? _customRate;
   String? _selectedAccountId;
   String? _selectedCategoryId;
   late DateTime _nextDueDate;
@@ -48,6 +51,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
               : '',
     );
     _frequency = sub?.frequency ?? RecurrenceFrequency.monthly;
+    _selectedCurrency = sub?.currency ?? 'USD';
     _selectedAccountId = sub?.accountId;
     _selectedCategoryId = sub?.categoryId;
     _nextDueDate = sub?.nextDueDate ?? DateTime.now().add(const Duration(days: 7));
@@ -120,28 +124,61 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Amount
-            TextFormField(
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: InputDecoration(
-                labelText: l10n.periodicAmount,
-                hintText: '0.00',
-                prefixIcon: const Icon(Icons.attach_money),
-                border: const OutlineInputBorder(),
-              ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
-                  return l10n.pleaseEnterPeriodicAmount;
-                }
-                final cents = CurrencyFormatter.parseToCents(val);
-                if (cents <= 0) {
-                  return l10n.limitMustBeGreaterThanZero;
-                }
-                return null;
-              },
+            // Amount & Currency Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: l10n.periodicAmount,
+                      hintText: '0.00',
+                      prefixIcon: const Icon(Icons.attach_money),
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return l10n.pleaseEnterPeriodicAmount;
+                      }
+                      final cents = CurrencyFormatter.parseToCents(val);
+                      if (cents <= 0) {
+                        return l10n.limitMustBeGreaterThanZero;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCurrency,
+                    decoration: const InputDecoration(
+                      labelText: 'Currency',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'USD', child: Text('USD')),
+                      DropdownMenuItem(value: 'COP', child: Text('COP')),
+                      DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedCurrency = val;
+                          _customRate = null;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
@@ -207,6 +244,27 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
               },
               validator: (val) => val == null ? l10n.pleaseSelectAccount : null,
             ),
+            if (_selectedAccountId != null) ...[
+              () {
+                final acc = accounts.where((a) => a.id == _selectedAccountId).firstOrNull;
+                final accCurrency = acc?.currency ?? 'USD';
+                if (_selectedCurrency != accCurrency) {
+                  final amountCents = CurrencyFormatter.parseToCents(_amountController.text);
+                  return CurrencyConversionCard(
+                    fromCurrency: _selectedCurrency,
+                    toCurrency: accCurrency,
+                    amountCents: amountCents,
+                    customRate: _customRate,
+                    onCustomRateChanged: (rate) {
+                      setState(() {
+                        _customRate = rate;
+                      });
+                    },
+                  );
+                }
+                return const SizedBox.shrink();
+              }(),
+            ],
             const SizedBox(height: 16),
 
             // Category Dropdown
@@ -393,6 +451,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
           'sub_${DateTime.now().millisecondsSinceEpoch}',
       name: name,
       amountCents: amountCents,
+      currency: _selectedCurrency,
       frequency: _frequency,
       accountId: _selectedAccountId!,
       categoryId: _selectedCategoryId!,

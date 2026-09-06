@@ -6,8 +6,11 @@ import 'package:finance_tracker/data/repositories/category_repository_impl.dart'
 import 'package:finance_tracker/data/repositories/subscription_repository_impl.dart';
 import 'package:finance_tracker/data/repositories/transaction_repository_impl.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
+import 'package:finance_tracker/domain/entities/exchange_rate_result.dart';
 import 'package:finance_tracker/domain/entities/subscription.dart';
+import 'package:finance_tracker/domain/repositories/exchange_rate_repository.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
+import 'package:finance_tracker/providers/exchange_rate_provider.dart';
 import 'package:finance_tracker/providers/subscriptions_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
 
@@ -246,5 +249,69 @@ void main() {
       expect(transactionsProvider.transactions.length, equals(1));
       expect(transactionsProvider.transactions.first.amountCents, equals(299));
     });
+
+    test(
+      'postSubscriptionPayment converts foreign currency amounts accurately',
+      () async {
+        final exchangeRateRepo = _FakeExchangeRateRepo();
+        await exchangeRateRepo.saveRates(
+          ExchangeRateResult(
+            baseCode: 'USD',
+            rates: {'USD': 1.0, 'COP': 4150.0},
+            lastUpdatedUtc: DateTime.now().toUtc(),
+          ),
+        );
+        final exchangeRateProv = ExchangeRateProvider(repository: exchangeRateRepo);
+        await exchangeRateProv.initialize();
+
+        // 41,500 COP subscription (~$10.00 USD, 1000 cents)
+        final foreignSub = Subscription(
+          id: 'sub-cop-1',
+          name: 'Colpatria Seguros',
+          amountCents: 4150000, // 41,500.00 COP (4,150,000 cents)
+          currency: 'COP',
+          frequency: RecurrenceFrequency.monthly,
+          accountId: 'acc-bank-p', // USD account
+          categoryId: 'cat_default_subscriptions',
+          billingDay: 10,
+          nextDueDate: DateTime(2026, 9, 10),
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        await subscriptionsProvider.addSubscription(foreignSub);
+
+        await subscriptionsProvider.postSubscriptionPayment(
+          foreignSub,
+          transactionsProvider: transactionsProvider,
+          accountsProvider: accountsProvider,
+          exchangeRateProvider: exchangeRateProv,
+        );
+
+        expect(transactionsProvider.transactions.length, equals(1));
+        final tx = transactionsProvider.transactions.first;
+        expect(tx.originalCurrency, equals('COP'));
+        expect(tx.originalAmountCents, equals(4150000));
+        // 4,150,000 * (1 / 4150) = 1000 cents ($10.00 USD)
+        expect(tx.amountCents, equals(1000));
+        expect(tx.exchangeRate, isNotNull);
+
+        // Account balance was 500,000; deducting 1,000 cents -> 499,000 cents
+        expect(accountsProvider.totalAssetsCents, equals(499000));
+      },
+    );
   });
+}
+
+class _FakeExchangeRateRepo implements ExchangeRateRepository {
+  final Map<String, ExchangeRateResult> _store = {};
+
+  @override
+  Future<ExchangeRateResult?> getCachedRates(String baseCurrency) async =>
+      _store[baseCurrency.toUpperCase()];
+
+  @override
+  Future<void> saveRates(ExchangeRateResult result) async {
+    _store[result.baseCode.toUpperCase()] = result;
+  }
 }

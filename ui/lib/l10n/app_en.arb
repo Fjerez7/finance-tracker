@@ -706,5 +706,33 @@
 
   "validationRequired": "This field is required",
   "validationInvalidAmount": "Please enter a valid positive amount",
-  "validationSameAccount": "Source and destination accounts must be different"
+  "validationSameAccount": "Source and destination accounts must be different",
+
+  "currencyConversion": "Currency Conversion",
+  "exchangeRate": "Exchange Rate",
+  "customRate": "Custom Rate",
+  "editExchangeRate": "Edit Exchange Rate",
+  "setCustomRate": "Set Custom Rate",
+  "resetRate": "Reset to Live Rate",
+  "debitedAmount": "Debited from account",
+  "creditedAmount": "Credited to account",
+  "rateUnitFormat": "1 {from} = {rate} {to}",
+  "@rateUnitFormat": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "refreshRateTooltip": "Refresh live exchange rate",
+  "exchangeRateHint": "Live rate from open.er-api.com",
+  "ratePlaceholder": "Exchange rate (e.g. 4150.0)",
+  "customRateActive": "Custom rate applied",
+  "originalAmount": "Original Amount"
 }

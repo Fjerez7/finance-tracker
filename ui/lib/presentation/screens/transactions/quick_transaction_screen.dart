@@ -6,7 +6,9 @@ import '../../../domain/entities/account.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
+import '../../../providers/exchange_rate_provider.dart';
 import '../../../providers/transactions_provider.dart';
+import '../../widgets/cards/currency_conversion_card.dart';
 import '../../widgets/common/calculator_numpad.dart';
 import '../../widgets/common/category_grid_picker.dart';
 
@@ -31,6 +33,8 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
   String? _selectedAccountId;
   String? _toAccountId; // For transfers
   String? _selectedCategoryId;
+  String? _selectedCurrency;
+  double? _customRate;
   DateTime _transactionDate = DateTime.now();
   final TextEditingController _noteController = TextEditingController();
   bool _showDetails = false;
@@ -67,10 +71,13 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
         accounts.where((a) => a.id == _selectedAccountId).firstOrNull ??
         accounts.firstOrNull;
     final currencyCode = currentAccount?.currency ?? 'USD';
+    _selectedCurrency ??= currencyCode;
 
     final categories = _selectedType == TransactionType.income
         ? txProv.incomeCategories
         : txProv.expenseCategories;
+
+    final bool isForeignCurrency = _selectedCurrency != currencyCode;
 
     return Scaffold(
       appBar: AppBar(
@@ -141,22 +148,47 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                     ),
                     child: Column(
                       children: [
-                        Text(
-                          CurrencyFormatter.formatCents(
-                            _amountCents,
-                            symbol: currencyCode == 'USD'
-                                ? '\$'
-                                : '$currencyCode ',
-                          ),
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: _selectedType == TransactionType.expense
-                                ? Colors.red.shade600
-                                : _selectedType == TransactionType.income
-                                ? Colors.green.shade600
-                                : colorScheme.primary,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              CurrencyFormatter.formatCents(
+                                _amountCents,
+                                symbol: _selectedCurrency == 'USD'
+                                    ? '\$'
+                                    : '$_selectedCurrency ',
+                              ),
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: _selectedType == TransactionType.expense
+                                    ? Colors.red.shade600
+                                    : _selectedType == TransactionType.income
+                                    ? Colors.green.shade600
+                                    : colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Quick Currency Dropdown Selector
+                            DropdownButton<String>(
+                              value: _selectedCurrency,
+                              isDense: true,
+                              underline: const SizedBox(),
+                              items: const [
+                                DropdownMenuItem(value: 'USD', child: Text('USD')),
+                                DropdownMenuItem(value: 'COP', child: Text('COP')),
+                                DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _selectedCurrency = val;
+                                    _customRate = null;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         // Account Selector pill
@@ -164,6 +196,21 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                       ],
                     ),
                   ),
+
+                  // Live Currency Conversion Card if foreign currency is selected
+                  if (isForeignCurrency)
+                    CurrencyConversionCard(
+                      fromCurrency: _selectedCurrency!,
+                      toCurrency: currencyCode,
+                      amountCents: _amountCents,
+                      customRate: _customRate,
+                      onCustomRateChanged: (rate) {
+                        setState(() {
+                          _customRate = rate;
+                        });
+                      },
+                      isIncome: _selectedType == TransactionType.income,
+                    ),
                 ],
               ),
             ),
@@ -406,6 +453,26 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
       }
     }
 
+    final accountsProv = context.read<AccountsProvider>();
+    final account = accountsProv.accounts.where((a) => a.id == _selectedAccountId).firstOrNull;
+    final accountCurrency = account?.currency ?? 'USD';
+    final currency = _selectedCurrency ?? accountCurrency;
+    final bool isForeign = currency != accountCurrency;
+
+    final exchangeProv = context.read<ExchangeRateProvider>();
+    final double? effectiveRate = isForeign
+        ? (_customRate ?? exchangeProv.getRate(currency, accountCurrency) ?? 1.0)
+        : null;
+
+    final int canonicalAmountCents = isForeign
+        ? exchangeProv.convertAmount(
+            amountCents: _amountCents,
+            fromCurrency: currency,
+            toCurrency: accountCurrency,
+            customRate: _customRate,
+          )
+        : _amountCents;
+
     final tx = Transaction(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
       accountId: _selectedAccountId!,
@@ -415,7 +482,10 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
       categoryId: _selectedType != TransactionType.transfer
           ? _selectedCategoryId
           : null,
-      amountCents: _amountCents,
+      amountCents: canonicalAmountCents,
+      originalCurrency: isForeign ? currency : null,
+      originalAmountCents: isForeign ? _amountCents : null,
+      exchangeRate: effectiveRate,
       type: _selectedType,
       description: _noteController.text.trim(),
       transactionDate: _transactionDate,
@@ -424,7 +494,6 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
     );
 
     final txProv = context.read<TransactionsProvider>();
-    final accountsProv = context.read<AccountsProvider>();
 
     try {
       await txProv.addTransaction(tx, accountsProvider: accountsProv);

@@ -4,14 +4,30 @@ import 'package:provider/provider.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
+import 'package:finance_tracker/domain/entities/exchange_rate_result.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
+import 'package:finance_tracker/domain/repositories/exchange_rate_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
 import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/transactions/quick_transaction_screen.dart';
 import 'package:finance_tracker/presentation/widgets/common/calculator_numpad.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
+import 'package:finance_tracker/providers/exchange_rate_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
+
+class FakeExchangeRateRepo implements ExchangeRateRepository {
+  final Map<String, ExchangeRateResult> _store = {};
+
+  @override
+  Future<ExchangeRateResult?> getCachedRates(String baseCurrency) async =>
+      _store[baseCurrency.toUpperCase()];
+
+  @override
+  Future<void> saveRates(ExchangeRateResult result) async {
+    _store[result.baseCode.toUpperCase()] = result;
+  }
+}
 
 class FakeAccountRepo implements AccountRepository {
   final List<Account> accounts;
@@ -136,13 +152,16 @@ void main() {
   late FakeAccountRepo accountRepo;
   late FakeCategoryRepo categoryRepo;
   late FakeTransactionRepo txRepo;
+  late FakeExchangeRateRepo exchangeRateRepo;
   late AccountsProvider accountsProvider;
   late TransactionsProvider txProvider;
+  late ExchangeRateProvider exchangeRateProvider;
 
   setUp(() async {
     accountRepo = FakeAccountRepo([testAccount]);
     categoryRepo = FakeCategoryRepo(testCategories);
     txRepo = FakeTransactionRepo();
+    exchangeRateRepo = FakeExchangeRateRepo();
 
     accountsProvider = AccountsProvider(repository: accountRepo);
     await accountsProvider.loadAccounts();
@@ -152,6 +171,16 @@ void main() {
       categoryRepository: categoryRepo,
     );
     await txProvider.initialize();
+
+    exchangeRateProvider = ExchangeRateProvider(repository: exchangeRateRepo);
+    await exchangeRateRepo.saveRates(
+      ExchangeRateResult(
+        baseCode: 'USD',
+        rates: {'USD': 1.0, 'COP': 4150.0, 'EUR': 0.92},
+        lastUpdatedUtc: DateTime.now().toUtc(),
+      ),
+    );
+    await exchangeRateProvider.initialize();
   });
 
   Widget buildTestableWidget() {
@@ -159,6 +188,7 @@ void main() {
       providers: [
         ChangeNotifierProvider<AccountsProvider>.value(value: accountsProvider),
         ChangeNotifierProvider<TransactionsProvider>.value(value: txProvider),
+        ChangeNotifierProvider<ExchangeRateProvider>.value(value: exchangeRateProvider),
       ],
       child: const MaterialApp(
         locale: Locale('en'),
@@ -211,6 +241,52 @@ void main() {
       expect(txRepo.transactions.length, equals(1));
       expect(txRepo.transactions.first.amountCents, equals(2500));
       expect(txRepo.transactions.first.type, equals(TransactionType.expense));
+    });
+
+    testWidgets('entering foreign currency COP converts to USD account amount', (
+      WidgetTester tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pump();
+
+      // Change currency to COP
+      await tester.tap(find.text('USD').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('COP').last);
+      await tester.pumpAndSettle();
+
+      // Tap 4, 1, 5, 0 -> 4,150.00 COP (415000 cents)
+      Finder numpadKey(String text) => find.descendant(
+            of: find.byType(CalculatorNumpad),
+            matching: find.text(text),
+          );
+
+      await tester.tap(numpadKey('4'));
+      await tester.pump();
+      await tester.tap(numpadKey('1'));
+      await tester.pump();
+      await tester.tap(numpadKey('5'));
+      await tester.pump();
+      await tester.tap(numpadKey('0'));
+      await tester.pump();
+
+      // Tap category Groceries
+      final groceriesFinder = find.text('Groceries');
+      await tester.tap(groceriesFinder);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(txRepo.transactions.length, equals(1));
+      final tx = txRepo.transactions.first;
+      expect(tx.originalCurrency, equals('COP'));
+      expect(tx.originalAmountCents, equals(415000));
+      // 4150.00 COP at rate (1/4150 USD per COP) = 1.00 USD (100 cents)
+      expect(tx.amountCents, equals(100));
+      expect(tx.exchangeRate, isNotNull);
     });
   });
 }

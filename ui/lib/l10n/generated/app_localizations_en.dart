@@ -1274,4 +1274,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get validationSameAccount =>
       'Source and destination accounts must be different';
+
+  @override
+  String get currencyConversion => 'Currency Conversion';
+
+  @override
+  String get exchangeRate => 'Exchange Rate';
+
+  @override
+  String get customRate => 'Custom Rate';
+
+  @override
+  String get editExchangeRate => 'Edit Exchange Rate';
+
+  @override
+  String get setCustomRate => 'Set Custom Rate';
+
+  @override
+  String get resetRate => 'Reset to Live Rate';
+
+  @override
+  String get debitedAmount => 'Debited from account';
+
+  @override
+  String get creditedAmount => 'Credited to account';
+
+  @override
+  String rateUnitFormat(String from, String rate, String to) {
+    return '1 $from = $rate $to';
+  }
+
+  @override
+  String get refreshRateTooltip => 'Refresh live exchange rate';
+
+  @override
+  String get exchangeRateHint => 'Live rate from open.er-api.com';
+
+  @override
+  String get ratePlaceholder => 'Exchange rate (e.g. 4150.0)';
+
+  @override
+  String get customRateActive => 'Custom rate applied';
+
+  @override
+  String get originalAmount => 'Original Amount';
 }

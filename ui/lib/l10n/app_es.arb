@@ -398,5 +398,20 @@
 
   "validationRequired": "Este campo es requerido",
   "validationInvalidAmount": "Por favor ingresa un monto positivo válido",
-  "validationSameAccount": "La cuenta de origen y destino deben ser diferentes"
+  "validationSameAccount": "La cuenta de origen y destino deben ser diferentes",
+
+  "currencyConversion": "Conversión de Moneda",
+  "exchangeRate": "Tasa de Cambio",
+  "customRate": "Tasa Personalizada",
+  "editExchangeRate": "Editar Tasa de Cambio",
+  "setCustomRate": "Definir Tasa Personalizada",
+  "resetRate": "Restablecer a Tasa en Vivo",
+  "debitedAmount": "Debitado de la cuenta",
+  "creditedAmount": "Acreditado a la cuenta",
+  "rateUnitFormat": "1 {from} = {rate} {to}",
+  "refreshRateTooltip": "Actualizar tasa en tiempo real",
+  "exchangeRateHint": "Tasa en vivo de open.er-api.com",
+  "ratePlaceholder": "Tasa de cambio (ej. 4150.0)",
+  "customRateActive": "Tasa personalizada aplicada",
+  "originalAmount": "Monto Original"
 }

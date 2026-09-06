@@ -202,7 +202,12 @@ class SubscriptionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        CurrencyFormatter.formatCents(subscription.amountCents),
+                        CurrencyFormatter.formatCents(
+                          subscription.amountCents,
+                          symbol: subscription.currency == 'USD'
+                              ? '\$'
+                              : '${subscription.currency} ',
+                        ),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -212,7 +217,12 @@ class SubscriptionCard extends StatelessWidget {
                           RecurrenceFrequency.monthly) ...[
                         const SizedBox(height: 2),
                         Text(
-                          '~${CurrencyFormatter.formatCents(subscription.monthlyEquivalentCents)}${l10n.perMonth}',
+                          '~${CurrencyFormatter.formatCents(
+                            subscription.monthlyEquivalentCents,
+                            symbol: subscription.currency == 'USD'
+                                ? '\$'
+                                : '${subscription.currency} ',
+                          )}${l10n.perMonth}',
                           style: TextStyle(
                             fontSize: 11,
                             color: colorScheme.onSurfaceVariant,

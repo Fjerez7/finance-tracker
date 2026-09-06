@@ -35,6 +35,9 @@ class TransactionDetailScreen extends StatelessWidget {
         : null;
 
     final currencyCode = sourceAccount?.currency ?? 'USD';
+    final bool isForeign = transaction.originalCurrency != null &&
+        transaction.originalAmountCents != null &&
+        transaction.originalCurrency != currencyCode;
 
     Color amountColor;
     String typeLabel;
@@ -110,13 +113,26 @@ class TransactionDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '$signPrefix${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')}',
+                        isForeign
+                            ? '$signPrefix${CurrencyFormatter.formatCents(transaction.originalAmountCents!, symbol: transaction.originalCurrency == 'USD' ? '\$' : '${transaction.originalCurrency} ')}'
+                            : '$signPrefix${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')}',
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
                           color: amountColor,
                         ),
                       ),
+                      if (isForeign) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '(~$signPrefix${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')})',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       Text(
                         DateFormat(
@@ -200,6 +216,38 @@ class TransactionDetailScreen extends StatelessWidget {
                         label: l10n.destinationAccount,
                         child: Text(
                           destAccount.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+
+                    if (isForeign) ...[
+                      const Divider(),
+                      _buildDetailRow(
+                        context,
+                        label: l10n.originalAmount,
+                        child: Text(
+                          '${CurrencyFormatter.formatCents(transaction.originalAmountCents!, symbol: transaction.originalCurrency == 'USD' ? '\$' : '${transaction.originalCurrency} ')} ${transaction.originalCurrency}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      if (transaction.exchangeRate != null) ...[
+                        const Divider(),
+                        _buildDetailRow(
+                          context,
+                          label: l10n.exchangeRate,
+                          child: Text(
+                            '1 ${transaction.originalCurrency} = ${transaction.exchangeRate! < 1 ? transaction.exchangeRate!.toStringAsFixed(6) : transaction.exchangeRate!.toStringAsFixed(2)} $currencyCode',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                      const Divider(),
+                      _buildDetailRow(
+                        context,
+                        label: l10n.debitedAmount,
+                        child: Text(
+                          '${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')} $currencyCode',
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
