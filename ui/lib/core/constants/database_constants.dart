@@ -3,7 +3,7 @@ class DatabaseConstants {
   DatabaseConstants._();
 
   static const String databaseName = 'finance_tracker.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   // Tables
   static const String tableAccounts = 'accounts';
@@ -12,6 +12,7 @@ class DatabaseConstants {
   static const String tableSubscriptions = 'subscriptions';
   static const String tableBudgets = 'budgets';
   static const String tableSavingsGoals = 'savings_goals';
+  static const String tableSettings = 'app_settings';
 
   // Common Columns
   static const String colId = 'id';
@@ -20,6 +21,10 @@ class DatabaseConstants {
   static const String colUpdatedAt = 'updated_at';
   static const String colColorHex = 'color_hex';
   static const String colIconName = 'icon_name';
+
+  // Settings Columns
+  static const String colKey = 'key';
+  static const String colValue = 'value';
 
   // Accounts Columns
   static const String colAccountType = 'type';

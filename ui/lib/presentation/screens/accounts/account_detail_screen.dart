@@ -4,6 +4,7 @@ import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/account.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import 'add_edit_account_screen.dart';
 
@@ -14,6 +15,7 @@ class AccountDetailScreen extends StatelessWidget {
   const AccountDetailScreen({super.key, required this.accountId});
 
   void _showAdjustBalanceDialog(BuildContext context, Account account) {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(
       text: CurrencyFormatter.centsToDouble(
         account.balanceCents,
@@ -38,12 +40,12 @@ class AccountDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Adjust Balance for ${account.name}',
+              l10n.adjustBalanceFor(account.name),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Enter the new reconciled balance in \$:',
+              l10n.enterNewReconciledBalance,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -53,10 +55,10 @@ class AccountDetailScreen extends StatelessWidget {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
-                labelText: 'New Balance',
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.attach_money),
+                labelText: l10n.newBalance,
               ),
             ),
             const SizedBox(height: 20),
@@ -73,7 +75,7 @@ class AccountDetailScreen extends StatelessWidget {
                   Navigator.pop(bottomSheetContext);
                 }
               },
-              child: const Text('Update Balance'),
+              child: Text(l10n.updateBalance),
             ),
           ],
         ),
@@ -82,17 +84,18 @@ class AccountDetailScreen extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context, Account account) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Account?'),
+        title: Text(l10n.deleteAccountQuestion),
         content: Text(
-          'Are you sure you want to delete "${account.name}"? This action cannot be undone.',
+          l10n.confirmDeleteAccountNamed(account.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -106,7 +109,7 @@ class AccountDetailScreen extends StatelessWidget {
                 Navigator.pop(context); // Close detail screen
               }
             },
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -115,6 +118,7 @@ class AccountDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<AccountsProvider>(
       builder: (context, provider, _) {
         final Account? account = provider.getAccountById(accountId);
@@ -122,7 +126,7 @@ class AccountDetailScreen extends StatelessWidget {
         if (account == null) {
           return Scaffold(
             appBar: AppBar(),
-            body: const Center(child: Text('Account not found')),
+            body: Center(child: Text(l10n.accountNotFound)),
           );
         }
 
@@ -135,6 +139,7 @@ class AccountDetailScreen extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
+                tooltip: l10n.editAccount,
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -160,15 +165,15 @@ class AccountDetailScreen extends StatelessWidget {
                     value: 'archive',
                     child: Text(
                       account.isArchived
-                          ? 'Unarchive Account'
-                          : 'Archive Account',
+                          ? l10n.unarchiveAccount
+                          : l10n.archiveAccount,
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Text(
-                      'Delete Account',
-                      style: TextStyle(color: Colors.red),
+                      l10n.delete,
+                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
                 ],
@@ -232,7 +237,7 @@ class AccountDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      account.isCreditCard ? 'CURRENT DEBT' : 'CURRENT BALANCE',
+                      account.isCreditCard ? l10n.currentDebt : l10n.currentBalance.toUpperCase(),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 12,
@@ -266,9 +271,9 @@ class AccountDetailScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Credit Limit & Utilization',
-                          style: TextStyle(
+                        Text(
+                          l10n.creditLimitAndUtilization,
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -297,7 +302,7 @@ class AccountDetailScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Available Credit',
+                                  l10n.availableCredit,
                                   style: TextStyle(
                                     color: Colors.grey.shade600,
                                     fontSize: 12,
@@ -319,7 +324,7 @@ class AccountDetailScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  'Total Limit',
+                                  l10n.totalLimit,
                                   style: TextStyle(
                                     color: Colors.grey.shade600,
                                     fontSize: 12,
@@ -354,7 +359,7 @@ class AccountDetailScreen extends StatelessWidget {
                       onPressed: () =>
                           _showAdjustBalanceDialog(context, account),
                       icon: const Icon(Icons.tune),
-                      label: const Text('Adjust Balance'),
+                      label: Text(l10n.adjustBalance),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),

@@ -9,6 +9,7 @@ import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/subscriptions/subscriptions_screen.dart';
 import 'package:finance_tracker/presentation/widgets/cards/subscription_card.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
@@ -319,7 +320,12 @@ void main() {
         ChangeNotifierProvider<TransactionsProvider>.value(value: txProv),
         ChangeNotifierProvider<SubscriptionsProvider>.value(value: subsProv),
       ],
-      child: const MaterialApp(home: SubscriptionsScreen()),
+      child: const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SubscriptionsScreen(),
+      ),
     );
   }
 

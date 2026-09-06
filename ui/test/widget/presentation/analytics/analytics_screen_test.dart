@@ -5,6 +5,7 @@ import 'package:finance_tracker/domain/entities/category.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/analytics/analytics_screen.dart';
 import 'package:finance_tracker/presentation/widgets/charts/cash_flow_bar_chart.dart';
 import 'package:finance_tracker/presentation/widgets/charts/category_expense_pie_chart.dart';
@@ -160,6 +161,9 @@ void main() {
         ChangeNotifierProvider<AnalyticsProvider>.value(value: analyticsProv),
       ],
       child: const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: AnalyticsScreen(),
       ),
     );

@@ -13,6 +13,7 @@ import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/savings_goal_repository.dart';
 import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:finance_tracker/presentation/widgets/cards/hero_net_worth_card.dart';
 import 'package:finance_tracker/presentation/widgets/charts/category_expense_pie_chart.dart';
@@ -227,6 +228,9 @@ void main() {
         ChangeNotifierProvider<AnalyticsProvider>.value(value: analyticsProv),
       ],
       child: const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DashboardScreen(),
       ),
     );
@@ -246,16 +250,16 @@ void main() {
 
       expect(find.text('Finance Tracker'), findsOneWidget);
       expect(find.byType(HeroNetWorthCard), findsOneWidget);
-      expect(find.text('TOTAL NET WORTH'), findsOneWidget);
+      expect(find.text('NET WORTH'), findsOneWidget);
       expect(find.text(r'$5,000.00'), findsWidgets);
 
       // Quick action shortcuts
       expect(find.text('Expense'), findsOneWidget);
-      expect(find.text('Budget'), findsOneWidget);
-      expect(find.text('Bill/Sub'), findsOneWidget);
+      expect(find.text('Budgets'), findsOneWidget);
+      expect(find.text('Subscriptions'), findsOneWidget);
 
       // Category pie chart card
-      expect(find.text('Expense Breakdown'), findsOneWidget);
+      expect(find.text('Spending by Category'), findsOneWidget);
       expect(find.byType(CategoryExpensePieChart), findsOneWidget);
 
       // Recent transactions

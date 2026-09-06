@@ -9,6 +9,7 @@ import 'package:finance_tracker/domain/repositories/budget_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/savings_goal_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/budgets/add_edit_budget_screen.dart';
 import 'package:finance_tracker/providers/budgets_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
@@ -158,7 +159,12 @@ void main() {
         ChangeNotifierProvider<TransactionsProvider>.value(value: txProv),
         ChangeNotifierProvider<BudgetsProvider>.value(value: budgetsProv),
       ],
-      child: MaterialApp(home: AddEditBudgetScreen(budget: budget)),
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: AddEditBudgetScreen(budget: budget),
+      ),
     );
   }
 

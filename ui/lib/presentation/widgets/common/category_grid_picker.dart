@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/category.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Interactive grid or horizontal carousel of category selection chips.
 class CategoryGridPicker extends StatelessWidget {
@@ -20,11 +22,12 @@ class CategoryGridPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (categories.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text('No categories available'),
+          padding: const EdgeInsets.all(16.0),
+          child: Text(l10n?.noCategoriesFound ?? 'No categories available'),
         ),
       );
     }
@@ -118,7 +121,11 @@ class CategoryGridPicker extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              category.name,
+              CategoryLocalizationHelper.getLocalizedName(
+                context,
+                categoryId: category.id,
+                defaultName: category.name,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,

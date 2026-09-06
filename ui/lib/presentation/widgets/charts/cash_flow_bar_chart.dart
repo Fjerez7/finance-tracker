@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/models/analytics_models.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Comparative bar chart rendering monthly income vs expense history using fl_chart.
 class CashFlowBarChart extends StatelessWidget {
@@ -14,13 +15,15 @@ class CashFlowBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
 
     if (cashFlows.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Text(
-            'No cashflow data available',
+            l10n.noCashflowData,
             style: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
         ),
@@ -41,9 +44,9 @@ class CashFlowBarChart extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildLegendItem('Income', Colors.green.shade600),
+            _buildLegendItem(l10n.income, Colors.green.shade600),
             const SizedBox(width: 20),
-            _buildLegendItem('Expense', Colors.red.shade600),
+            _buildLegendItem(l10n.expense, Colors.red.shade600),
           ],
         ),
         const SizedBox(height: 16),
@@ -58,7 +61,7 @@ class CashFlowBarChart extends StatelessWidget {
                 touchTooltipData: BarTouchTooltipData(
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final isIncome = rodIndex == 0;
-                    final String label = isIncome ? 'Income' : 'Expense';
+                    final String label = isIncome ? l10n.income : l10n.expense;
                     final int cents = (rod.toY * 100).round();
                     return BarTooltipItem(
                       '$label\n${CurrencyFormatter.formatCents(cents)}',
@@ -92,7 +95,7 @@ class CashFlowBarChart extends StatelessWidget {
                       }
                       final cf = cashFlows[index];
                       final date = DateTime(cf.year, cf.month);
-                      final label = DateFormat('MMM').format(date);
+                      final label = DateFormat('MMM', locale).format(date);
 
                       return SideTitleWidget(
                         meta: meta,

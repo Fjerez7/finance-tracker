@@ -1,22 +1,35 @@
 import 'package:intl/intl.dart';
+import '../constants/app_currency.dart';
 
 /// Utility class for zero-float integer cent calculations and formatting.
 class CurrencyFormatter {
   CurrencyFormatter._();
 
+  /// Default active currency used when not explicitly specified.
+  static AppCurrency defaultCurrency = AppCurrency.usd;
+
   /// Converts an integer cent amount to a human-readable currency string.
-  /// Example: 1250 cents -> "$12.50"
+  /// Example (USD): 1250 cents -> "$12.50"
+  /// Example (COP): 5000000 cents -> "$50.000"
   static String formatCents(
     int cents, {
-    String symbol = '\$',
-    String locale = 'en_US',
-    bool showDecimals = true,
+    AppCurrency? currency,
+    String? symbol,
+    String? locale,
+    bool? showDecimals,
   }) {
+    final AppCurrency activeCurrency = currency ?? defaultCurrency;
     final double value = cents / 100.0;
+    final String activeSymbol = symbol ?? activeCurrency.symbol;
+    final String activeLocale = locale ?? activeCurrency.defaultLocale;
+    final int digits = showDecimals != null
+        ? (showDecimals ? (activeCurrency.decimalDigits > 0 ? activeCurrency.decimalDigits : 2) : 0)
+        : activeCurrency.decimalDigits;
+
     final NumberFormat formatter = NumberFormat.currency(
-      locale: locale,
-      symbol: symbol,
-      decimalDigits: showDecimals ? 2 : 0,
+      locale: activeLocale,
+      symbol: activeSymbol,
+      decimalDigits: digits,
     );
     return formatter.format(value);
   }
@@ -34,14 +47,23 @@ class CurrencyFormatter {
   /// Parses a numeric or currency text string into integer cents.
   /// Handles both period and comma as decimal or thousands separators.
   /// Returns 0 if parsing fails.
-  static int parseToCents(String input) {
+  static int parseToCents(String input, {AppCurrency? currency}) {
     if (input.trim().isEmpty) return 0;
 
+    final AppCurrency activeCurrency = currency ?? defaultCurrency;
     final String clean = input.replaceAll(RegExp(r'[^\d.,-]'), '');
     if (clean.isEmpty || clean == '-') return 0;
 
     final bool isNegative = clean.startsWith('-');
     final String unsigned = isNegative ? clean.substring(1) : clean;
+
+    // For COP, numbers like "50.000" or "50,000" or "50000" represent whole peso units
+    if (activeCurrency == AppCurrency.cop) {
+      final String digitsOnly = unsigned.replaceAll(RegExp(r'\D'), '');
+      final int intVal = int.tryParse(digitsOnly) ?? 0;
+      final int totalCents = intVal * 100;
+      return isNegative ? -totalCents : totalCents;
+    }
 
     final int lastDot = unsigned.lastIndexOf('.');
     final int lastComma = unsigned.lastIndexOf(',');

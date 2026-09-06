@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/account.dart';
 import '../../../domain/entities/category.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Presentation card / tile rendering a single financial transaction.
 class TransactionListTile extends StatelessWidget {
@@ -28,6 +30,7 @@ class TransactionListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final currencyCode = account?.currency ?? 'USD';
 
     // Visual attributes depending on transaction type
@@ -45,7 +48,13 @@ class TransactionListTile extends StatelessWidget {
         itemColor = category != null
             ? ColorHelper.hexToColor(category!.colorHex)
             : colorScheme.error;
-        titleText = category?.name ?? 'Expense';
+        titleText = category != null
+            ? CategoryLocalizationHelper.getLocalizedName(
+                context,
+                categoryId: category!.id,
+                defaultName: category!.name,
+              )
+            : (l10n?.expense ?? 'Expense');
         signPrefix = '-';
         amountColor = Colors.red.shade600;
         break;
@@ -57,7 +66,13 @@ class TransactionListTile extends StatelessWidget {
         itemColor = category != null
             ? ColorHelper.hexToColor(category!.colorHex)
             : Colors.green.shade600;
-        titleText = category?.name ?? 'Income';
+        titleText = category != null
+            ? CategoryLocalizationHelper.getLocalizedName(
+                context,
+                categoryId: category!.id,
+                defaultName: category!.name,
+              )
+            : (l10n?.income ?? 'Income');
         signPrefix = '+';
         amountColor = Colors.green.shade600;
         break;
@@ -65,8 +80,8 @@ class TransactionListTile extends StatelessWidget {
       case TransactionType.transfer:
         iconData = Icons.swap_horiz;
         itemColor = colorScheme.primary;
-        final fromName = account?.name ?? 'Account';
-        final toName = toAccount?.name ?? 'Account';
+        final fromName = account?.name ?? (l10n?.account ?? 'Account');
+        final toName = toAccount?.name ?? (l10n?.account ?? 'Account');
         titleText = '$fromName ➔ $toName';
         signPrefix = '';
         amountColor = colorScheme.primary;

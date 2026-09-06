@@ -10,6 +10,7 @@ import 'package:finance_tracker/presentation/screens/accounts/accounts_screen.da
 import 'package:finance_tracker/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:finance_tracker/presentation/screens/transactions/transaction_list_screen.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
+import 'package:finance_tracker/providers/settings_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
 
 class FakeAccountRepo implements AccountRepository {
@@ -119,10 +120,13 @@ void main() {
       );
       await txProvider.initialize();
 
+      final settingsProvider = SettingsProvider();
+
       await tester.pumpWidget(
         FinanceTrackerApp(
           accountsProvider: accountsProvider,
           transactionsProvider: txProvider,
+          settingsProvider: settingsProvider,
         ),
       );
       await tester.pumpAndSettle();

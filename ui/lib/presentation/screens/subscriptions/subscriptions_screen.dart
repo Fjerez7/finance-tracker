@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/subscription.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
@@ -36,6 +37,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final subsProv = context.watch<SubscriptionsProvider>();
     final txProv = context.watch<TransactionsProvider>();
     final accountsProv = context.watch<AccountsProvider>();
@@ -45,12 +47,12 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Subscriptions & Bills'),
+        title: Text(l10n.subscriptionsAndBills),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Active (${activeSubs.length})'),
-            Tab(text: 'Paused (${inactiveSubs.length})'),
+            Tab(text: l10n.activeCount(activeSubs.length)),
+            Tab(text: l10n.pausedCount(inactiveSubs.length)),
           ],
         ),
       ),
@@ -76,7 +78,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'MONTHLY SUBSCRIPTION COMMITMENT',
+                  l10n.monthlySubscriptionCommitment,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -88,7 +90,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${CurrencyFormatter.formatCents(subsProv.totalMonthlyCommitmentCents)}/mo',
+                  '${CurrencyFormatter.formatCents(subsProv.totalMonthlyCommitmentCents)}${l10n.perMonth}',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -107,7 +109,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Annual Projection: ${CurrencyFormatter.formatCents(subsProv.totalAnnualProjectionCents)}/year',
+                      l10n.annualProjection(CurrencyFormatter.formatCents(subsProv.totalAnnualProjectionCents)),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -131,9 +133,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
                 activeSubs.isEmpty
                     ? _buildEmptyState(
                       context,
-                      title: 'No active subscriptions',
-                      message:
-                          'Track fixed commitments like Netflix, Spotify, or Rent by tapping "+"',
+                      title: l10n.noActiveSubscriptions,
+                      message: l10n.subscriptionsActiveDesc,
                     )
                     : _buildSubscriptionList(
                       context,
@@ -147,8 +148,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
                 inactiveSubs.isEmpty
                     ? _buildEmptyState(
                       context,
-                      title: 'No paused subscriptions',
-                      message: 'Paused subscriptions will appear here',
+                      title: l10n.noPausedSubscriptions,
+                      message: l10n.pausedSubscriptionsDesc,
                     )
                     : _buildSubscriptionList(
                       context,
@@ -163,7 +164,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Add Subscription',
+        tooltip: l10n.addSubscription,
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -261,28 +262,31 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
     TransactionsProvider txProv,
     AccountsProvider accountsProv,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final account = accountsProv.accounts
         .where((a) => a.id == sub.accountId)
         .firstOrNull;
-    final currencyCode = account?.currency ?? 'USD';
 
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: Text('Post ${sub.name} Payment?'),
+            title: Text(l10n.postPaymentQuestion(sub.name)),
             content: Text(
-              'This will create a real expense transaction of ${CurrencyFormatter.formatCents(sub.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')} from "${account?.name ?? 'Account'}" and advance the next due date.',
+              l10n.confirmPaymentDetail(
+                CurrencyFormatter.formatCents(sub.amountCents),
+                account?.name ?? l10n.account,
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Confirm Payment'),
+                child: Text(l10n.confirmPayment),
               ),
             ],
           ),
@@ -298,14 +302,14 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
 
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Payment recorded for ${sub.name}!'),
+            content: Text(l10n.paymentRecordedFor(sub.name)),
             backgroundColor: Colors.green.shade700,
           ),
         );
       } catch (e) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Error posting payment: $e'),
+            content: Text(l10n.errorPostingPayment(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );

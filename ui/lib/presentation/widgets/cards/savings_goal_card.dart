@@ -4,6 +4,7 @@ import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/savings_goal.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Card widget rendering a savings target with progress gauge and deposit action.
 class SavingsGoalCard extends StatelessWidget {
@@ -22,6 +23,8 @@ class SavingsGoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final goalColor = ColorHelper.hexToColor(goal.colorHex);
     final iconData = IconHelper.getIconData(goal.iconName);
 
@@ -94,7 +97,7 @@ class SavingsGoalCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'COMPLETED',
+                                  l10n.completedTag,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -107,7 +110,7 @@ class SavingsGoalCard extends StatelessWidget {
                         const SizedBox(height: 3),
                         if (goal.targetDate != null)
                           Text(
-                            'Target: ${DateFormat('MMM yyyy').format(goal.targetDate!)}',
+                            l10n.targetDeadlineDate(DateFormat('MMM yyyy', locale).format(goal.targetDate!)),
                             style: TextStyle(
                               fontSize: 12,
                               color: colorScheme.onSurfaceVariant,
@@ -115,7 +118,7 @@ class SavingsGoalCard extends StatelessWidget {
                           )
                         else
                           Text(
-                            'No target deadline',
+                            l10n.noTargetDeadline,
                             style: TextStyle(
                               fontSize: 12,
                               color: colorScheme.onSurfaceVariant,
@@ -173,14 +176,14 @@ class SavingsGoalCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${CurrencyFormatter.formatCents(goal.currentAmountCents)} saved',
+                        l10n.savedAmount(CurrencyFormatter.formatCents(goal.currentAmountCents)),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        'Target: ${CurrencyFormatter.formatCents(goal.targetAmountCents)}',
+                        l10n.targetAmountLabel(CurrencyFormatter.formatCents(goal.targetAmountCents)),
                         style: TextStyle(
                           fontSize: 12,
                           color: colorScheme.onSurfaceVariant,
@@ -196,9 +199,9 @@ class SavingsGoalCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                       ),
                       icon: const Icon(Icons.add, size: 16),
-                      label: const Text(
-                        'Deposit',
-                        style: TextStyle(fontSize: 12),
+                      label: Text(
+                        l10n.deposit,
+                        style: const TextStyle(fontSize: 12),
                       ),
                       onPressed: onDeposit,
                     ),
@@ -210,7 +213,7 @@ class SavingsGoalCard extends StatelessWidget {
                   monthlySavingsNeeded > 0) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Need ~${CurrencyFormatter.formatCents(monthlySavingsNeeded)}/mo to reach target on time',
+                  l10n.needMonthlySavings(CurrencyFormatter.formatCents(monthlySavingsNeeded)),
                   style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,

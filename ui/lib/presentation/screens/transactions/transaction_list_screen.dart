@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/transactions_provider.dart';
 import '../../widgets/cards/transaction_list_tile.dart';
@@ -30,6 +31,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final txProv = context.watch<TransactionsProvider>();
     final accountsProv = context.watch<AccountsProvider>();
 
@@ -37,11 +39,11 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transactions'),
+        title: Text(l10n.transactions),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add Transaction',
+            tooltip: l10n.addTransaction,
             onPressed: () => _openAddTransaction(context),
           ),
         ],
@@ -67,7 +69,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search notes or descriptions...',
+                    hintText: l10n.searchHint,
                     prefixIcon: const Icon(Icons.search, size: 20),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
@@ -102,13 +104,13 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                   child: Row(
                     children: [
                       _buildFilterChip(
-                        label: 'All',
+                        label: l10n.filterAll,
                         isSelected: txProv.selectedType == null,
                         onSelected: () => txProv.setFilterType(null),
                       ),
                       const SizedBox(width: 8),
                       _buildFilterChip(
-                        label: 'Expenses',
+                        label: l10n.filterExpenses,
                         isSelected:
                             txProv.selectedType == TransactionType.expense,
                         onSelected: () =>
@@ -116,7 +118,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                       ),
                       const SizedBox(width: 8),
                       _buildFilterChip(
-                        label: 'Income',
+                        label: l10n.filterIncome,
                         isSelected:
                             txProv.selectedType == TransactionType.income,
                         onSelected: () =>
@@ -124,7 +126,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                       ),
                       const SizedBox(width: 8),
                       _buildFilterChip(
-                        label: 'Transfers',
+                        label: l10n.filterTransfers,
                         isSelected:
                             txProv.selectedType == TransactionType.transfer,
                         onSelected: () =>
@@ -145,19 +147,19 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildCashflowMetric(
-                  label: 'Income',
+                  label: l10n.income,
                   amountCents: txProv.totalIncomeCents,
                   color: Colors.green.shade600,
                   sign: '+',
                 ),
                 _buildCashflowMetric(
-                  label: 'Expense',
+                  label: l10n.expense,
                   amountCents: txProv.totalExpenseCents,
                   color: Colors.red.shade600,
                   sign: '-',
                 ),
                 _buildCashflowMetric(
-                  label: 'Net',
+                  label: l10n.net,
                   amountCents: txProv.netCashFlowCents,
                   color: txProv.netCashFlowCents >= 0
                       ? Colors.green.shade700
@@ -186,6 +188,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: l10n.addTransaction,
         onPressed: () => _openAddTransaction(context),
         child: const Icon(Icons.add),
       ),
@@ -232,6 +235,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.15),
@@ -247,14 +251,14 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                 ).colorScheme.outline.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'No transactions found',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              Text(
+                l10n.noTransactionsFound,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Tap the "+" button to record a new transaction.',
-                style: TextStyle(color: Colors.grey),
+              Text(
+                l10n.tapPlusToRecord,
+                style: const TextStyle(color: Colors.grey),
               ),
             ],
           ),
@@ -273,7 +277,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     final Map<String, List<Transaction>> grouped = {};
 
     for (final tx in transactions) {
-      final dateKey = _formatDateHeader(tx.transactionDate);
+      final dateKey = _formatDateHeader(context, tx.transactionDate);
       grouped.putIfAbsent(dateKey, () => []).add(tx);
     }
 
@@ -329,16 +333,17 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     );
   }
 
-  String _formatDateHeader(DateTime date) {
+  String _formatDateHeader(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final local = date.toLocal();
     final today = DateTime(now.year, now.month, now.day);
     final txDay = DateTime(local.year, local.month, local.day);
 
     if (txDay == today) {
-      return 'Today';
+      return l10n?.today ?? 'Today';
     } else if (txDay == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
+      return l10n?.yesterday ?? 'Yesterday';
     } else if (local.year == now.year) {
       return DateFormat('EEEE, MMMM d').format(local);
     } else {

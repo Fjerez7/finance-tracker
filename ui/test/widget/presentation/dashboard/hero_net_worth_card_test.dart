@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/widgets/cards/hero_net_worth_card.dart';
 
 void main() {
@@ -9,6 +10,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: HeroNetWorthCard(
               netWorthCents: 1545000, // $15,450.00
@@ -21,13 +25,13 @@ void main() {
         ),
       );
 
-      expect(find.text('TOTAL NET WORTH'), findsOneWidget);
+      expect(find.text('NET WORTH'), findsOneWidget);
       expect(find.text(r'$15,450.00'), findsOneWidget);
       expect(find.text('Assets'), findsOneWidget);
       expect(find.text(r'$20,000.00'), findsOneWidget);
       expect(find.text('Liabilities'), findsOneWidget);
       expect(find.text(r'$4,550.00'), findsOneWidget);
-      expect(find.text('This Month Cash Flow'), findsOneWidget);
+      expect(find.text('Monthly Cash Flow'), findsOneWidget);
       expect(find.text('Net: \$2,650.00'), findsOneWidget);
     });
 
@@ -36,6 +40,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: HeroNetWorthCard(
               netWorthCents: -500000, // -$5,000.00

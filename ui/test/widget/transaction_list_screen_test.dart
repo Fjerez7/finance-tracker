@@ -7,6 +7,7 @@ import 'package:finance_tracker/domain/entities/transaction.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/transactions/transaction_list_screen.dart';
 import 'package:finance_tracker/presentation/widgets/cards/transaction_list_tile.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
@@ -155,7 +156,12 @@ void main() {
         ChangeNotifierProvider<AccountsProvider>.value(value: accountsProvider),
         ChangeNotifierProvider<TransactionsProvider>.value(value: txProvider),
       ],
-      child: const MaterialApp(home: TransactionListScreen()),
+      child: const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: TransactionListScreen(),
+      ),
     );
   }
 

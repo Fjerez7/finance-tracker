@@ -4,6 +4,7 @@ import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/account.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 
 /// Screen for creating a new account or editing an existing one.
@@ -114,20 +115,22 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error saving account: $e')));
+        ).showSnackBar(SnackBar(content: Text('${l10n?.error ?? 'Error'}: $e')));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final Color activeColor = ColorHelper.hexToColor(_selectedColorHex);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Account' : 'New Account'),
+        title: Text(_isEditing ? l10n.editAccount : l10n.addAccount),
         actions: [
           IconButton(icon: const Icon(Icons.check), onPressed: _saveAccount),
         ],
@@ -158,15 +161,15 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
             // Account Name
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Account Name',
+              decoration: InputDecoration(
+                labelText: l10n.accountName,
                 hintText: 'e.g., Bancolombia, Chase, Cash Wallet',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.label_outline),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.label_outline),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter an account name';
+                  return l10n.validationRequired;
                 }
                 return null;
               },
@@ -174,9 +177,9 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
             const SizedBox(height: 20),
 
             // Account Type Selector
-            const Text(
-              'Account Type',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            Text(
+              l10n.accountType,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -186,16 +189,16 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                 String label;
                 switch (type) {
                   case AccountType.bank:
-                    label = 'Bank';
+                    label = l10n.accountTypeChecking;
                     break;
                   case AccountType.digitalWallet:
-                    label = 'Digital Wallet';
+                    label = l10n.accountTypeSavings;
                     break;
                   case AccountType.cash:
-                    label = 'Cash';
+                    label = l10n.accountTypeCash;
                     break;
                   case AccountType.creditCard:
-                    label = 'Credit Card';
+                    label = l10n.accountTypeCreditCard;
                     break;
                 }
                 return ChoiceChip(
@@ -228,14 +231,14 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
               ),
               decoration: InputDecoration(
                 labelText: _selectedType == AccountType.creditCard
-                    ? 'Current Debt Balance (\$)'
-                    : 'Initial Balance (\$)',
+                    ? l10n.currentBalance
+                    : l10n.initialBalance,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.attach_money),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a balance';
+                  return l10n.validationRequired;
                 }
                 return null;
               },
@@ -249,15 +252,15 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Total Credit Limit (\$)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.credit_score),
+                decoration: InputDecoration(
+                  labelText: l10n.creditLimit,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.credit_score),
                 ),
                 validator: (value) {
                   if (_selectedType == AccountType.creditCard) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a credit limit';
+                      return l10n.validationRequired;
                     }
                   }
                   return null;
@@ -348,7 +351,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
             FilledButton.icon(
               onPressed: _saveAccount,
               icon: const Icon(Icons.save),
-              label: Text(_isEditing ? 'Save Changes' : 'Create Account'),
+              label: Text(l10n.save),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),

@@ -171,7 +171,16 @@ class DatabaseHelper {
       );
     ''');
 
-    // 7. Performance Indexes
+    // 7. Settings Table
+    batch.execute('''
+      CREATE TABLE ${DatabaseConstants.tableSettings} (
+        ${DatabaseConstants.colKey} TEXT PRIMARY KEY,
+        ${DatabaseConstants.colValue} TEXT NOT NULL,
+        ${DatabaseConstants.colUpdatedAt} TEXT NOT NULL
+      );
+    ''');
+
+    // 8. Performance Indexes
     batch.execute(
       'CREATE INDEX idx_transactions_date ON ${DatabaseConstants.tableTransactions} (${DatabaseConstants.colTransactionDate} DESC);',
     );
@@ -194,7 +203,7 @@ class DatabaseHelper {
       'CREATE INDEX idx_accounts_archived ON ${DatabaseConstants.tableAccounts} (${DatabaseConstants.colIsArchived});',
     );
 
-    // 8. Seed Default Categories into same transaction batch
+    // 9. Seed Default Categories into same transaction batch
     _seedDefaultCategories(batch);
 
     // Execute table, index creation, and category seeds atomically
@@ -203,7 +212,15 @@ class DatabaseHelper {
 
   /// Migrations for future database schema versions.
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle future schema migrations when increasing databaseVersion
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSettings} (
+          ${DatabaseConstants.colKey} TEXT PRIMARY KEY,
+          ${DatabaseConstants.colValue} TEXT NOT NULL,
+          ${DatabaseConstants.colUpdatedAt} TEXT NOT NULL
+        );
+      ''');
+    }
   }
 
   /// Populates the initial system categories into batch.
@@ -406,5 +423,34 @@ class DatabaseHelper {
       }
     }
     await factory.deleteDatabase(path);
+  }
+
+  /// Retrieves a persisted setting value by key, returning null if not found.
+  Future<String?> getSetting(String key) async {
+    final Database db = await database;
+    final List<Map<String, dynamic>> results = await db.query(
+      DatabaseConstants.tableSettings,
+      columns: [DatabaseConstants.colValue],
+      where: '${DatabaseConstants.colKey} = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (results.isEmpty) return null;
+    return results.first[DatabaseConstants.colValue] as String?;
+  }
+
+  /// Sets or updates a persisted setting value.
+  Future<void> setSetting(String key, String value) async {
+    final Database db = await database;
+    final String now = DateTime.now().toUtc().toIso8601String();
+    await db.insert(
+      DatabaseConstants.tableSettings,
+      {
+        DatabaseConstants.colKey: key,
+        DatabaseConstants.colValue: value,
+        DatabaseConstants.colUpdatedAt: now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }

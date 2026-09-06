@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/backup_provider.dart';
 import '../../../providers/budgets_provider.dart';
@@ -22,13 +23,14 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final backupProv = context.watch<BackupProvider>();
     final txProv = context.watch<TransactionsProvider>();
     final accountsProv = context.watch<AccountsProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Backup & Export'),
+        title: Text(l10n.backupAndExport),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -122,17 +124,17 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Google Drive Cloud Sync',
-                              style: TextStyle(
+                            Text(
+                              l10n.googleDriveCloudSync,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               backupProv.isSignedIn
-                                  ? (backupProv.currentUser?.email ?? 'Connected')
-                                  : 'Sync encrypted snapshots to private appDataFolder',
+                                  ? (backupProv.currentUser?.email ?? l10n.connected)
+                                  : l10n.syncEncryptedSnapshotsDesc,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colorScheme.onSurfaceVariant,
@@ -160,7 +162,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                                   )
                                 : const Icon(Icons.backup_outlined, size: 18),
                             label: Text(
-                              backupProv.isSyncing ? 'Backing up...' : 'Back Up Now',
+                              backupProv.isSyncing ? l10n.backingUp : l10n.backUpNow,
                             ),
                             onPressed: backupProv.isSyncing
                                 ? null
@@ -169,8 +171,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                                     final ok = await backupProv.createCloudBackup();
                                     if (ok && mounted) {
                                       messenger.showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Cloud backup created successfully!'),
+                                        SnackBar(
+                                          content: Text(l10n.cloudBackupCreatedSuccess),
                                         ),
                                       );
                                     }
@@ -180,7 +182,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                         const SizedBox(width: 8),
                         OutlinedButton(
                           onPressed: () => backupProv.signOut(),
-                          child: const Text('Sign Out'),
+                          child: Text(l10n.signOut),
                         ),
                       ],
                     ),
@@ -190,16 +192,15 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Available Cloud Backups',
-                          style: TextStyle(
+                        Text(
+                          l10n.availableCloudBackups,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.refresh, size: 18),
-                          tooltip: 'Refresh Backups',
                           onPressed: () => backupProv.fetchCloudBackups(),
                         ),
                       ],
@@ -209,7 +210,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         child: Center(
                           child: Text(
-                            'No cloud backups found',
+                            l10n.noCloudBackupsFound,
                             style: TextStyle(color: colorScheme.onSurfaceVariant),
                           ),
                         ),
@@ -223,7 +224,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                       width: double.infinity,
                       child: FilledButton.icon(
                         icon: const Icon(Icons.login),
-                        label: const Text('Sign In with Google'),
+                        label: Text(l10n.signInWithGoogle),
                         onPressed: backupProv.isLoading
                             ? null
                             : () async {
@@ -265,12 +266,12 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                   size: 24,
                 ),
               ),
-              title: const Text(
-                'Export Ledger (CSV)',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Text(
+                l10n.exportLedgerCsv,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                'Export all ${txProv.transactions.length} transactions with account and category mappings',
+                l10n.exportLedgerCsvDesc(txProv.transactions.length),
                 style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               trailing: const Icon(Icons.download),
@@ -284,7 +285,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('CSV Export Preview'),
+                    title: Text(l10n.csvExportPreview),
                     content: SizedBox(
                       width: double.maxFinite,
                       height: 300,
@@ -301,7 +302,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('Close'),
+                        child: Text(l10n.close),
                       ),
                     ],
                   ),
@@ -338,12 +339,12 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                   size: 24,
                 ),
               ),
-              title: const Text(
-                'Export Database Snapshot (JSON)',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Text(
+                l10n.exportDatabaseSnapshotJson,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                'Full database dump with SHA-256 integrity checksum',
+                l10n.databaseSnapshotJsonDesc,
                 style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               trailing: const Icon(Icons.code),
@@ -355,7 +356,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                   showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('Database Snapshot JSON'),
+                      title: Text(l10n.databaseSnapshotJson),
                       content: SizedBox(
                         width: double.maxFinite,
                         height: 300,
@@ -372,7 +373,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(ctx).pop(),
-                          child: const Text('Close'),
+                          child: Text(l10n.close),
                         ),
                       ],
                     ),
@@ -389,6 +390,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
   Widget _buildCloudBackupTile(BuildContext context, DriveBackupInfo backup) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final dateStr = backup.modifiedTime != null
         ? DateFormat('yyyy-MM-dd HH:mm').format(backup.modifiedTime!)
@@ -430,7 +432,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             ),
             onPressed: () => _confirmRestore(context, backup),
-            child: const Text('Restore', style: TextStyle(fontSize: 12)),
+            child: Text(l10n.restore, style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -438,22 +440,23 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
   }
 
   Future<void> _confirmRestore(BuildContext context, DriveBackupInfo backup) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Restore Cloud Backup?'),
+        title: Text(l10n.restoreCloudBackupQuestion),
         content: Text(
-          'This will overwrite existing local data with the snapshot from ${backup.name}. Are you sure?',
+          l10n.confirmRestoreCloudBackupDetail(backup.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Restore Data'),
+            child: Text(l10n.restoreData),
           ),
         ],
       ),
@@ -473,8 +476,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Database restored successfully from Google Drive!'),
+            SnackBar(
+              content: Text(l10n.databaseRestoredSuccess),
             ),
           );
         }

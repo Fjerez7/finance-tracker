@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/subscription.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
@@ -65,6 +67,8 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final accountsProv = context.watch<AccountsProvider>();
     final txProv = context.watch<TransactionsProvider>();
 
@@ -81,14 +85,14 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isEditing ? 'Edit Subscription' : 'Add Subscription',
+          widget.isEditing ? l10n.editSubscription : l10n.addSubscription,
         ),
         actions: [
           if (widget.isEditing)
             IconButton(
               icon: const Icon(Icons.delete_outline),
               color: colorScheme.error,
-              tooltip: 'Delete Subscription',
+              tooltip: l10n.delete,
               onPressed: _confirmDelete,
             ),
         ],
@@ -101,15 +105,15 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
             // Service Name
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Service Name',
-                hintText: 'e.g., Netflix, Spotify, Gym, Rent',
-                prefixIcon: Icon(Icons.subscriptions_outlined),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.serviceName,
+                hintText: l10n.serviceNameHint,
+                prefixIcon: const Icon(Icons.subscriptions_outlined),
+                border: const OutlineInputBorder(),
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter a service name';
+                  return l10n.pleaseEnterServiceName;
                 }
                 return null;
               },
@@ -122,19 +126,19 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Periodic Amount',
+              decoration: InputDecoration(
+                labelText: l10n.periodicAmount,
                 hintText: '0.00',
-                prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.attach_money),
+                border: const OutlineInputBorder(),
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter the periodic amount';
+                  return l10n.pleaseEnterPeriodicAmount;
                 }
                 final cents = CurrencyFormatter.parseToCents(val);
                 if (cents <= 0) {
-                  return 'Amount must be greater than 0';
+                  return l10n.limitMustBeGreaterThanZero;
                 }
                 return null;
               },
@@ -144,16 +148,31 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
             // Frequency Dropdown
             DropdownButtonFormField<RecurrenceFrequency>(
               value: _frequency,
-              decoration: const InputDecoration(
-                labelText: 'Billing Frequency',
-                prefixIcon: Icon(Icons.repeat),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.billingFrequency,
+                prefixIcon: const Icon(Icons.repeat),
+                border: const OutlineInputBorder(),
               ),
               items:
                   RecurrenceFrequency.values.map((freq) {
+                    final String label;
+                    switch (freq) {
+                      case RecurrenceFrequency.monthly:
+                        label = l10n.freqMonthly;
+                        break;
+                      case RecurrenceFrequency.weekly:
+                        label = l10n.freqWeekly;
+                        break;
+                      case RecurrenceFrequency.biweekly:
+                        label = l10n.freqBiweekly;
+                        break;
+                      case RecurrenceFrequency.annual:
+                        label = l10n.freqAnnual;
+                        break;
+                    }
                     return DropdownMenuItem(
                       value: freq,
-                      child: Text(freq.name.toUpperCase()),
+                      child: Text(label),
                     );
                   }).toList(),
               onChanged: (val) {
@@ -169,10 +188,10 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
             // Account Dropdown
             DropdownButtonFormField<String>(
               value: _selectedAccountId,
-              decoration: const InputDecoration(
-                labelText: 'Account to Debit',
-                prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.accountToDebit,
+                prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                border: const OutlineInputBorder(),
               ),
               items:
                   accounts.map((acc) {
@@ -186,23 +205,29 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                   _selectedAccountId = val;
                 });
               },
-              validator: (val) => val == null ? 'Please select an account' : null,
+              validator: (val) => val == null ? l10n.pleaseSelectAccount : null,
             ),
             const SizedBox(height: 16),
 
             // Category Dropdown
             DropdownButtonFormField<String>(
               value: _selectedCategoryId,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                prefixIcon: Icon(Icons.category_outlined),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.category,
+                prefixIcon: const Icon(Icons.category_outlined),
+                border: const OutlineInputBorder(),
               ),
               items:
                   categories.map((cat) {
                     return DropdownMenuItem(
                       value: cat.id,
-                      child: Text(cat.name),
+                      child: Text(
+                        CategoryLocalizationHelper.getLocalizedName(
+                          context,
+                          categoryId: cat.id,
+                          defaultName: cat.name,
+                        ),
+                      ),
                     );
                   }).toList(),
               onChanged: (val) {
@@ -210,7 +235,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                   _selectedCategoryId = val;
                 });
               },
-              validator: (val) => val == null ? 'Please select a category' : null,
+              validator: (val) => val == null ? l10n.pleaseSelectCategory : null,
             ),
             const SizedBox(height: 16),
 
@@ -232,9 +257,9 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Next Due Date',
-                              style: TextStyle(
+                            Text(
+                              l10n.nextDueDate,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey,
@@ -242,7 +267,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              DateFormat('EEEE, MMMM d, yyyy').format(
+                              DateFormat('EEEE, MMMM d, yyyy', locale).format(
                                 _nextDueDate,
                               ),
                               style: const TextStyle(
@@ -254,7 +279,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                         ),
                         TextButton.icon(
                           icon: const Icon(Icons.calendar_month, size: 18),
-                          label: const Text('Change'),
+                          label: Text(l10n.edit),
                           onPressed: _pickDueDate,
                         ),
                       ],
@@ -264,9 +289,9 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Monthly Billing Day:',
-                            style: TextStyle(fontWeight: FontWeight.w500),
+                          Text(
+                            l10n.monthlyBillingDay,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                           DropdownButton<int>(
                             value: _billingDay,
@@ -274,7 +299,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                                 List.generate(31, (i) => i + 1).map((day) {
                                   return DropdownMenuItem(
                                     value: day,
-                                    child: Text('Day $day'),
+                                    child: Text(l10n.billingDayNumber(day)),
                                   );
                                 }).toList(),
                             onChanged: (val) {
@@ -296,10 +321,8 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
 
             // Automation & Active Toggles
             SwitchListTile(
-              title: const Text('Auto-register transaction'),
-              subtitle: const Text(
-                'Automatically post transaction on due date without manual confirmation',
-              ),
+              title: Text(l10n.autoRegisterTransaction),
+              subtitle: Text(l10n.autoRegisterDesc),
               value: _autoRegister,
               onChanged: (val) {
                 setState(() {
@@ -310,8 +333,8 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
 
             if (widget.isEditing)
               SwitchListTile(
-                title: const Text('Active Commitment'),
-                subtitle: const Text('Include in monthly burn rate and payment schedules'),
+                title: Text(l10n.activeCommitment),
+                subtitle: Text(l10n.activeCommitmentDesc),
                 value: _isActive,
                 onChanged: (val) {
                   setState(() {
@@ -329,7 +352,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
               ),
               icon: const Icon(Icons.save),
               label: Text(
-                widget.isEditing ? 'Save Changes' : 'Create Subscription',
+                widget.isEditing ? l10n.saveChanges : l10n.createSubscription,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               onPressed: _saveSubscription,
@@ -359,6 +382,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
   Future<void> _saveSubscription() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
     final amountCents = CurrencyFormatter.parseToCents(_amountController.text);
     final subsProv = context.read<SubscriptionsProvider>();
@@ -392,8 +416,8 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
           SnackBar(
             content: Text(
               widget.isEditing
-                  ? 'Subscription updated successfully'
-                  : 'Subscription added successfully',
+                  ? l10n.subscriptionUpdatedSuccess
+                  : l10n.subscriptionAddedSuccess,
             ),
             backgroundColor: Colors.green.shade700,
           ),
@@ -404,7 +428,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving subscription: $e'),
+            content: Text(l10n.errorSavingSubscription(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -413,25 +437,26 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Delete Subscription?'),
+            title: Text(l10n.deleteSubscriptionQuestion),
             content: Text(
-              'Are you sure you want to delete "${widget.subscription?.name}"? Past recorded transactions will remain unaffected.',
+              l10n.confirmDeleteSubscriptionDetail(widget.subscription?.name ?? ''),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: Theme.of(ctx).colorScheme.error,
                 ),
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Delete'),
+                child: Text(l10n.delete),
               ),
             ],
           ),

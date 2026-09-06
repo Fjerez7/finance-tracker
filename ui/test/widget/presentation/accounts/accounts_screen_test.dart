@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/accounts/accounts_screen.dart';
 import 'package:finance_tracker/presentation/widgets/cards/account_balance_card.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
@@ -66,12 +67,17 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<AccountsProvider>.value(
         value: provider,
-        child: const MaterialApp(home: AccountsScreen()),
+        child: const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AccountsScreen(),
+        ),
       ),
     );
 
-    expect(find.text('Accounts & Net Worth'), findsOneWidget);
-    expect(find.text('TOTAL NET WORTH'), findsOneWidget);
+    expect(find.text('Accounts'), findsOneWidget);
+    expect(find.text('NET WORTH'), findsOneWidget);
 
     // Net worth = 400000 - 50000 = 350000 cents ($3,500.00)
     expect(find.text('\$3,500.00'), findsOneWidget);
@@ -87,6 +93,6 @@ void main() {
     expect(find.text('Visa Card'), findsOneWidget);
 
     // FAB
-    expect(find.text('New Account'), findsOneWidget);
+    expect(find.text('Add Account'), findsOneWidget);
   });
 }
