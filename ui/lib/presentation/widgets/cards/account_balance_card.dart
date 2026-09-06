@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
@@ -91,7 +92,10 @@ class AccountBalanceCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    CurrencyFormatter.formatCents(account.balanceCents),
+                    CurrencyFormatter.formatCents(
+                      account.balanceCents,
+                      currency: AppCurrency.fromCode(account.currency),
+                    ),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

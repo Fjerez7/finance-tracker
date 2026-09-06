@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
@@ -16,10 +17,11 @@ class AccountDetailScreen extends StatelessWidget {
 
   void _showAdjustBalanceDialog(BuildContext context, Account account) {
     final l10n = AppLocalizations.of(context)!;
+    final accountCurrency = AppCurrency.fromCode(account.currency);
     final TextEditingController controller = TextEditingController(
       text: CurrencyFormatter.centsToDouble(
         account.balanceCents,
-      ).toStringAsFixed(2),
+      ).toStringAsFixed(accountCurrency.decimalDigits),
     );
 
     showModalBottomSheet(
@@ -66,6 +68,7 @@ class AccountDetailScreen extends StatelessWidget {
               onPressed: () async {
                 final int newCents = CurrencyFormatter.parseToCents(
                   controller.text,
+                  currency: AppCurrency.fromCode(account.currency),
                 );
                 await Provider.of<AccountsProvider>(
                   context,
@@ -247,7 +250,10 @@ class AccountDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      CurrencyFormatter.formatCents(account.balanceCents),
+                      CurrencyFormatter.formatCents(
+                        account.balanceCents,
+                        currency: AppCurrency.fromCode(account.currency),
+                      ),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -312,6 +318,9 @@ class AccountDetailScreen extends StatelessWidget {
                                 Text(
                                   CurrencyFormatter.formatCents(
                                     account.availableCreditCents,
+                                    currency: AppCurrency.fromCode(
+                                      account.currency,
+                                    ),
                                   ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -334,6 +343,9 @@ class AccountDetailScreen extends StatelessWidget {
                                 Text(
                                   CurrencyFormatter.formatCents(
                                     account.creditLimitCents,
+                                    currency: AppCurrency.fromCode(
+                                      account.currency,
+                                    ),
                                   ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,

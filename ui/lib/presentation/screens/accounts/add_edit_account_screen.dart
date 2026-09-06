@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
@@ -52,7 +53,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
     _selectedType = acc?.type ?? AccountType.bank;
     _selectedColorHex = acc?.colorHex ?? ColorHelper.presetColors.first;
     _selectedIconName = acc?.iconName ?? 'account_balance';
-    _selectedCurrency = acc?.currency ?? 'USD';
+    _selectedCurrency = acc?.currency ?? CurrencyFormatter.defaultCurrency.code;
   }
 
   @override
@@ -67,11 +68,16 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final String name = _nameController.text.trim();
+    final accountAppCurrency = AppCurrency.fromCode(_selectedCurrency);
     final int balanceCents = CurrencyFormatter.parseToCents(
       _balanceController.text,
+      currency: accountAppCurrency,
     );
     final int creditLimitCents = _selectedType == AccountType.creditCard
-        ? CurrencyFormatter.parseToCents(_creditLimitController.text)
+        ? CurrencyFormatter.parseToCents(
+            _creditLimitController.text,
+            currency: accountAppCurrency,
+          )
         : 0;
 
     final DateTime now = DateTime.now().toUtc();
@@ -220,6 +226,33 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                   },
                 );
               }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            // Account Currency Selector
+            Text(
+              l10n.currency,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedCurrency,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.currency_exchange),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'USD', child: Text('USD - US Dollar (\$)')),
+                DropdownMenuItem(value: 'COP', child: Text('COP - Colombian Peso (\$)')),
+                DropdownMenuItem(value: 'EUR', child: Text('EUR - Euro (€)')),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    _selectedCurrency = val;
+                  });
+                }
+              },
             ),
             const SizedBox(height: 20),
 

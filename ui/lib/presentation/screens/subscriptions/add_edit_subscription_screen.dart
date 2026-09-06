@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/subscription.dart';
@@ -51,7 +52,7 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
               : '',
     );
     _frequency = sub?.frequency ?? RecurrenceFrequency.monthly;
-    _selectedCurrency = sub?.currency ?? 'USD';
+    _selectedCurrency = sub?.currency ?? CurrencyFormatter.defaultCurrency.code;
     _selectedAccountId = sub?.accountId;
     _selectedCategoryId = sub?.categoryId;
     _nextDueDate = sub?.nextDueDate ?? DateTime.now().add(const Duration(days: 7));
@@ -146,7 +147,10 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
                       if (val == null || val.trim().isEmpty) {
                         return l10n.pleaseEnterPeriodicAmount;
                       }
-                      final cents = CurrencyFormatter.parseToCents(val);
+                      final cents = CurrencyFormatter.parseToCents(
+                        val,
+                        currency: AppCurrency.fromCode(_selectedCurrency),
+                      );
                       if (cents <= 0) {
                         return l10n.limitMustBeGreaterThanZero;
                       }
@@ -442,7 +446,10 @@ class _AddEditSubscriptionScreenState extends State<AddEditSubscriptionScreen> {
 
     final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
-    final amountCents = CurrencyFormatter.parseToCents(_amountController.text);
+    final amountCents = CurrencyFormatter.parseToCents(
+      _amountController.text,
+      currency: AppCurrency.fromCode(_selectedCurrency),
+    );
     final subsProv = context.read<SubscriptionsProvider>();
 
     final sub = Subscription(

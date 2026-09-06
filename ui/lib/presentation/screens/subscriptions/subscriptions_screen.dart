@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/subscription.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -280,10 +281,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen>
         : sub.amountCents;
 
     final String paymentAmountFormatted = isForeign
-        ? '${CurrencyFormatter.formatCents(sub.amountCents, symbol: sub.currency == 'USD' ? '\$' : '${sub.currency} ')} (${CurrencyFormatter.formatCents(debitedCents, symbol: accountCurrency == 'USD' ? '\$' : '$accountCurrency ')})'
+        ? '${CurrencyFormatter.formatCents(sub.amountCents, currency: AppCurrency.fromCode(sub.currency))} (${CurrencyFormatter.formatCents(debitedCents, currency: AppCurrency.fromCode(accountCurrency))})'
         : CurrencyFormatter.formatCents(
             sub.amountCents,
-            symbol: accountCurrency == 'USD' ? '\$' : '$accountCurrency ',
+            currency: AppCurrency.fromCode(accountCurrency),
           );
 
     final messenger = ScaffoldMessenger.of(context);
