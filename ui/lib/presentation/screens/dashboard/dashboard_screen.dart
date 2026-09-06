@@ -13,7 +13,6 @@ import '../../widgets/cards/transaction_list_tile.dart';
 import '../../widgets/charts/category_expense_pie_chart.dart';
 import '../analytics/analytics_screen.dart';
 import '../budgets/add_edit_budget_screen.dart';
-import '../settings/backup_settings_screen.dart';
 import '../settings/settings_screen.dart';
 import '../subscriptions/add_edit_subscription_screen.dart';
 import '../transactions/quick_transaction_screen.dart';
@@ -68,15 +67,6 @@ class DashboardScreen extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.cloud_sync_outlined),
-            tooltip: l10n.cloudBackup,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const BackupSettingsScreen()),
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.insights_outlined),
             tooltip: l10n.analytics,
