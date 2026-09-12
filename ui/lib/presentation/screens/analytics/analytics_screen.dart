@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/analytics_provider.dart';
 import '../../../providers/transactions_provider.dart';
 import '../../widgets/charts/cash_flow_bar_chart.dart';
@@ -15,6 +16,7 @@ class AnalyticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final analyticsProv = context.watch<AnalyticsProvider>();
     final txProv = context.watch<TransactionsProvider>();
 
@@ -53,7 +55,7 @@ class AnalyticsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Visual Analytics'),
+        title: Text(l10n.visualAnalytics),
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 40),
@@ -64,26 +66,26 @@ class AnalyticsScreen extends StatelessWidget {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SegmentedButton<AnalyticsTimeframe>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: AnalyticsTimeframe.thisMonth,
-                    label: Text('This Month'),
+                    label: Text(l10n.thisMonth),
                   ),
                   ButtonSegment(
                     value: AnalyticsTimeframe.lastMonth,
-                    label: Text('Last Month'),
+                    label: Text(l10n.lastMonth),
                   ),
                   ButtonSegment(
                     value: AnalyticsTimeframe.last90Days,
-                    label: Text('90 Days'),
+                    label: Text(l10n.last90Days),
                   ),
                   ButtonSegment(
                     value: AnalyticsTimeframe.thisYear,
-                    label: Text('This Year'),
+                    label: Text(l10n.thisYear),
                   ),
                   ButtonSegment(
                     value: AnalyticsTimeframe.allTime,
-                    label: Text('All Time'),
+                    label: Text(l10n.allTime),
                   ),
                 ],
                 selected: {analyticsProv.selectedTimeframe},
@@ -109,7 +111,7 @@ class AnalyticsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Income',
+                        l10n.totalIncome,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -133,7 +135,7 @@ class AnalyticsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Expense',
+                        l10n.totalExpense,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -157,7 +159,7 @@ class AnalyticsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Net Flow',
+                        l10n.netFlow,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -223,9 +225,9 @@ class AnalyticsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Month-over-Month Spend Delta',
-                          style: TextStyle(
+                        Text(
+                          l10n.monthOverMonthSpendDelta,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -233,8 +235,14 @@ class AnalyticsScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           momComparison.isIncrease
-                              ? '${momComparison.percentageChange}% more than last month (${CurrencyFormatter.formatCents(momComparison.previousMonthSpentCents)})'
-                              : '${momComparison.percentageChange}% less than last month (${CurrencyFormatter.formatCents(momComparison.previousMonthSpentCents)})',
+                              ? l10n.momIncreaseDesc(
+                                momComparison.percentageChange.toString(),
+                                CurrencyFormatter.formatCents(momComparison.previousMonthSpentCents),
+                              )
+                              : l10n.momDecreaseDesc(
+                                momComparison.percentageChange.toString(),
+                                CurrencyFormatter.formatCents(momComparison.previousMonthSpentCents),
+                              ),
                           style: TextStyle(
                             fontSize: 12,
                             color: colorScheme.onSurfaceVariant,
@@ -264,9 +272,9 @@ class AnalyticsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '6-Month Cash Flow Comparison',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.sixMonthCashFlowComparison,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   CashFlowBarChart(cashFlows: recentCashflows),
@@ -291,9 +299,9 @@ class AnalyticsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Category Expense Proportions',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.categoryExpenseProportions,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   CategoryExpensePieChart(

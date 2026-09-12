@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/savings_goal.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/budgets_provider.dart';
 import '../../../providers/transactions_provider.dart';
@@ -34,6 +35,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final budgetsProv = context.watch<BudgetsProvider>();
     final accountsProv = context.watch<AccountsProvider>();
     final txProv = context.watch<TransactionsProvider>();
@@ -43,12 +45,12 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Savings Goals'),
+        title: Text(l10n.savingsGoals),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Active (${activeGoals.length})'),
-            Tab(text: 'Completed (${completedGoals.length})'),
+            Tab(text: l10n.activeCount(activeGoals.length)),
+            Tab(text: l10n.completedCount(completedGoals.length)),
           ],
         ),
       ),
@@ -59,9 +61,8 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
           activeGoals.isEmpty
               ? _buildEmptyState(
                 context,
-                title: 'No active savings goals',
-                message:
-                    'Set savings targets for vacations, emergency funds, or gadgets by tapping "+"',
+                title: l10n.noActiveSavingsGoals,
+                message: l10n.savingsGoalsDesc,
               )
               : ListView.builder(
                 padding: const EdgeInsets.only(bottom: 80, top: 8),
@@ -93,8 +94,8 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
           completedGoals.isEmpty
               ? _buildEmptyState(
                 context,
-                title: 'No completed goals yet',
-                message: 'Goals you reach 100% will be celebrated here',
+                title: l10n.noCompletedGoals,
+                message: l10n.completedGoalsDesc,
               )
               : ListView.builder(
                 padding: const EdgeInsets.only(bottom: 80, top: 8),
@@ -116,7 +117,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'New Savings Goal',
+        tooltip: l10n.newSavingsGoal,
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -177,6 +178,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
     String? selectedAccountId = accounts.isNotEmpty ? accounts.first.id : null;
 
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final deposited = await showDialog<bool>(
       context: context,
@@ -184,7 +186,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Deposit to ${goal.name}'),
+              title: Text(l10n.depositToGoal(goal.name)),
               content: Form(
                 key: formKey,
                 child: Column(
@@ -196,19 +198,19 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
                         decimal: true,
                       ),
                       autofocus: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Deposit Amount',
+                      decoration: InputDecoration(
+                        labelText: l10n.depositAmount,
                         hintText: '0.00',
-                        prefixIcon: Icon(Icons.attach_money),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.attach_money),
+                        border: const OutlineInputBorder(),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
-                          return 'Please enter deposit amount';
+                          return l10n.pleaseEnterDepositAmount;
                         }
                         final cents = CurrencyFormatter.parseToCents(val);
                         if (cents <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountMustBeGreaterThanZero;
                         }
                         return null;
                       },
@@ -217,12 +219,12 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
                     if (accounts.isNotEmpty)
                       DropdownButtonFormField<String>(
                         value: selectedAccountId,
-                        decoration: const InputDecoration(
-                          labelText: 'Source Account',
-                          prefixIcon: Icon(
+                        decoration: InputDecoration(
+                          labelText: l10n.sourceAccount,
+                          prefixIcon: const Icon(
                             Icons.account_balance_wallet_outlined,
                           ),
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                         ),
                         items:
                             accounts.map((acc) {
@@ -243,7 +245,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -251,7 +253,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
                       Navigator.of(ctx).pop(true);
                     }
                   },
-                  child: const Text('Deposit'),
+                  child: Text(l10n.deposit),
                 ),
               ],
             );
@@ -275,7 +277,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              'Deposited ${CurrencyFormatter.formatCents(amountCents)} into ${goal.name}!',
+              l10n.depositedIntoGoal(CurrencyFormatter.formatCents(amountCents), goal.name),
             ),
             backgroundColor: Colors.green.shade700,
           ),
@@ -283,7 +285,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen>
       } catch (e) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Error depositing funds: $e'),
+            content: Text(l10n.errorDepositingFunds(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );

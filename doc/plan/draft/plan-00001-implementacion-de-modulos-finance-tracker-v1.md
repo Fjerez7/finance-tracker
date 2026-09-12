@@ -8,7 +8,7 @@ description: Master execution plan orchestrating the end-to-end delivery of the 
 category: plan
 status: draft
 created: 2026-09-04
-updated: 2026-09-04
+updated: 2026-09-05
 authors: []
 tags:
   - flutter
@@ -50,7 +50,7 @@ By enforcing a structured, bottom-up delivery pipeline, this plan ensures that c
 **Task:** [[task-00001-inicializar-proyecto-flutter-y-estructura-base]] — Completed  
 **Module:** `ui`
 
-Establishes the Flutter workspace skeleton under `ui/`, core package dependencies (`provider`, `sqflite`, `fl_chart`, `intl`, `google_sign_in`, `googleapis`), and test directory mirrors.
+Establishes the Flutter workspace skeleton under `ui/`, core package dependencies (`provider`, `sqflite`, `fl_chart`, `intl`, `google_sign_in`, `googleapis`, `crypto`, `http`), and test directory mirrors.
 
 ### 2.2 — SQLite Schema, Domain Entities & Monetary Invariants
 **Task:** [[task-00002-implementar-sqlite-schema-entidades-y-modelos-base]] — Completed  
@@ -72,22 +72,22 @@ Phases are ordered by functional and architectural dependency. Each phase delive
 |  +---------------------------+       +---------------------------+                                    |
 |  | Phase 1: Local Foundation | ----> | Phase 2: Module 1         |                                    |
 |  | (SQLite, Entities, Models)|       | Accounts & Net Worth      |                                    |
-|  | [COMPLETED: task-00002]   |       | [task-00003]              |                                    |
+|  | [COMPLETED: task-00002]   |       | [COMPLETED: task-00003]   |                                    |
 |  +---------------------------+       +-------------+-------------+                                    |
 |                                                    |                                                  |
 |                                                    v                                                  |
 |  +---------------------------+       +---------------------------+                                    |
 |  | Phase 4: Module 3         | <---- | Phase 3: Module 2         |                                    |
 |  | Subscriptions & Recurring |       | Rapid Micro-Transactions  |                                    |
-|  | [task-00005]              |       | & Numpad Calculator       |                                    |
-|  +-------------+-------------+       | [task-00004]              |                                    |
+|  | [COMPLETED: task-00005]   |       | & Numpad Calculator       |                                    |
+|  +-------------+-------------+       | [COMPLETED: task-00004]   |                                    |
 |                |                     +---------------------------+                                    |
 |                v                                                                                      |
 |  +---------------------------+       +---------------------------+       +-------------------------+  |
 |  | Phase 5: Module 4         | ----> | Phase 6: Module 5         | ----> | Phase 7: Module 6       |  |
 |  | Budgets & Savings Goals   |       | Dashboard & Visual        |       | Google Drive Backup     |  |
-|  | [task-00006]              |       | Analytics (fl_chart)      |       | & CSV Local Export      |  |
-|  +---------------------------+       | [task-00007]              |       | [task-00008]            |  |
+|  | [COMPLETED: task-00006]   |       | Analytics (fl_chart)      |       | & CSV Local Export      |  |
+|  +---------------------------+       | [COMPLETED: task-00007]   |       | [COMPLETED: task-00008] |  |
 |                                      +---------------------------+       +-------------------------+  |
 +-------------------------------------------------------------------------------------------------------+
 ```
@@ -99,29 +99,19 @@ Phases are ordered by functional and architectural dependency. Each phase delive
 **Goal:** Establish database tables, foreign keys, domain entities, and data models with integer cent monetary precision.
 
 **Tasks:**
-- [[task-00002-implementar-sqlite-schema-entidades-y-modelos-base]]
+- [[task-00002-implementar-sqlite-schema-entidades-y-modelos-base]] — Completed
 
 **Input:** `spec-00002` data entity and invariant specifications  
 **Output:** Pure domain entities, `DatabaseHelper` with SQLite DDL, seed data, and data models (`AccountModel`, `CategoryModel`, `TransactionModel`, `SubscriptionModel`, `BudgetModel`, `SavingsGoalModel`).
 
 ---
 
-### Phase 2 — Module 1: Accounts & Net Worth Engine
-
-```vector-agent-inline-action
-label: Create a Task
-prompt-field: message
-profile: create-doc
-prompt: prompts-00005-create-document
-input:
-  document-name: "task-00003-implementar-modulo-cuentas-y-patrimonio-neto"
-  document-type: task
-```
+### Phase 2 — Module 1: Accounts & Net Worth Engine (Completed)
 
 **Goal:** Implement full CRUD account management, credit card utilization tracking, and real-time Net Worth calculation.
 
 **Tasks:**
-- `task-00003-implementar-modulo-cuentas-y-patrimonio-neto`
+- [[task-00003-implementar-modulo-cuentas-y-patrimonio-neto]] — Completed
 
 **Input:** `Account` entity, `AccountModel`, SQLite `accounts` table  
 **Output:** `AccountRepository`, `AccountsProvider`, `AccountsScreen`, `AddEditAccountScreen`, `AccountDetailScreen`, `AccountBalanceCard`.
@@ -134,22 +124,12 @@ input:
 
 ---
 
-### Phase 3 — Module 2: Rapid Transaction Capture Engine (Micro-Expense Numpad)
-
-```vector-agent-inline-action
-label: Create a Task
-prompt-field: message
-profile: create-doc
-prompt: prompts-00005-create-document
-input:
-  document-name: "task-00004-implementar-modulo-transacciones-rapidas-y-calculadora"
-  document-type: task
-```
+### Phase 3 — Module 2: Rapid Transaction Capture Engine (Completed)
 
 **Goal:** Provide frictionless, 2-tap micro-expense logging with an integrated in-screen calculator numpad and chronological ledger.
 
 **Tasks:**
-- `task-00004-implementar-modulo-transacciones-rapidas-y-calculadora`
+- [[task-00004-implementar-modulo-transacciones-rapidas-y-calculadora]] — Completed
 
 **Input:** `Transaction` & `Category` entities, `AccountsProvider`, `accounts` and `transactions` tables  
 **Output:** `TransactionRepository`, `CategoryRepository`, `TransactionsProvider`, `QuickTransactionScreen`, `CalculatorNumpad`, `CategoryGridPicker`, `TransactionListScreen`, `TransactionDetailScreen`.
@@ -162,22 +142,12 @@ input:
 
 ---
 
-### Phase 4 — Module 3: Subscriptions & Recurring Payments Engine
-
-```vector-agent-inline-action
-label: Create a Task
-prompt-field: message
-profile: create-doc
-prompt: prompts-00005-create-document
-input:
-  document-name: "task-00005-implementar-modulo-suscripciones-y-pagos-recurrentes"
-  document-type: task
-```
+### Phase 4 — Module 3: Subscriptions & Recurring Payments Engine (Completed)
 
 **Goal:** Centralize recurring commitments, billing cycle tracking, monthly/annual projections, and automated ledger postings.
 
 **Tasks:**
-- `task-00005-implementar-modulo-suscripciones-y-pagos-recurrentes`
+- [[task-00005-implementar-modulo-suscripciones-y-pagos-recurrentes]] — Completed
 
 **Input:** `Subscription` entity, `TransactionRepository`, SQLite `subscriptions` table  
 **Output:** `SubscriptionRepository`, `SubscriptionsProvider`, `SubscriptionsScreen`, `AddEditSubscriptionScreen`, `SubscriptionCard`, recurring bill auto-poster.
@@ -190,22 +160,12 @@ input:
 
 ---
 
-### Phase 5 — Module 4: Budgets & Savings Goals Engine
-
-```vector-agent-inline-action
-label: Create a Task
-prompt-field: message
-profile: create-doc
-prompt: prompts-00005-create-document
-input:
-  document-name: "task-00006-implementar-modulo-presupuestos-y-metas-de-ahorro"
-  document-type: task
-```
+### Phase 5 — Module 4: Budgets & Savings Goals Engine (Completed)
 
 **Goal:** Deliver proactive monthly category budgets with 80%/100% alert thresholds and target savings goals.
 
 **Tasks:**
-- `task-00006-implementar-modulo-presupuestos-y-metas-de-ahorro`
+- [[task-00006-implementar-modulo-presupuestos-y-metas-de-ahorro]] — Completed
 
 **Input:** `Budget` & `SavingsGoal` entities, `TransactionsProvider`, SQLite `budgets` and `savings_goals` tables  
 **Output:** `BudgetRepository`, `SavingsGoalRepository`, `BudgetsProvider`, `BudgetsScreen`, `SavingsGoalsScreen`, `BudgetProgressCard`, `SavingsGoalCard`.
@@ -217,22 +177,12 @@ input:
 
 ---
 
-### Phase 6 — Module 5: Dashboard & Visual Analytics Engine
-
-```vector-agent-inline-action
-label: Create a Task
-prompt-field: message
-profile: create-doc
-prompt: prompts-00005-create-document
-input:
-  document-name: "task-00007-implementar-modulo-dashboard-y-analiticas-visuales"
-  document-type: task
-```
+### Phase 6 — Module 5: Dashboard & Visual Analytics Engine (Completed)
 
 **Goal:** Assemble the executive dashboard with `fl_chart` interactive pie charts, Net Worth hero card, and month-over-month metrics.
 
 **Tasks:**
-- `task-00007-implementar-modulo-dashboard-y-analiticas-visuales`
+- [[task-00007-implementar-modulo-dashboard-y-analiticas-visuales]] — Completed
 
 **Input:** All state providers (`AccountsProvider`, `TransactionsProvider`, `BudgetsProvider`, `SubscriptionsProvider`)  
 **Output:** `DashboardScreen`, `AnalyticsScreen`, `CategoryExpensePieChart`, `CashFlowBarChart`, `HeroNetWorthCard`.
@@ -244,31 +194,20 @@ input:
 
 ---
 
-### Phase 7 — Module 6: Backup, Restore & Local Export Engine
-
-```vector-agent-inline-action
-label: Create a Task
-prompt-field: message
-profile: create-doc
-prompt: prompts-00005-create-document
-input:
-  document-name: "task-00008-implementar-modulo-backup-cloud-y-exportacion-csv"
-  document-type: task
-```
+### Phase 7 — Module 6: Backup, Restore & Local Export Engine (Completed)
 
 **Goal:** Provide Google Drive `appDataFolder` private backup synchronization and offline CSV data export.
 
 **Tasks:**
-- `task-00008-implementar-modulo-backup-cloud-y-exportacion-csv`
+- [[task-00008-implementar-modulo-backup-cloud-y-exportacion-csv]] — Completed
 
 **Input:** Complete SQLite database state across all tables  
-**Output:** `GoogleDriveSyncService`, `CsvExportService`, `BackupSettingsScreen`, snapshot JSON builder with SHA-256 validation, one-click restore.
+**Output:** `GoogleDriveSyncService`, `CsvExportService`, `BackupRestoreService`, `BackupProvider`, `BackupSettingsScreen`, snapshot JSON builder with SHA-256 validation, one-click restore.
 
 - Implement `CsvExportService` generating standard CSV files and triggering OS share sheets.
 - Implement `GoogleDriveSyncService` using `google_sign_in` and private `drive.appdata` scope.
-- Implement structured JSON snapshot generation with SHA-256 integrity checksums.
-- Implement safe one-click database restore workflow within an atomic SQLite transaction.
-- Build `BackupSettingsScreen` with Google Account status and export actions.
+- Implement `BackupRestoreService` for structured JSON snapshot generation with SHA-256 integrity checksums and atomic SQLite transaction restoration.
+- Implement `BackupProvider` reactive state and `BackupSettingsScreen` with Google Account status, cloud sync, and export actions.
 
 ---
 

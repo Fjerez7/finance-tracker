@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Hero presentation card displaying real-time Net Worth, liquid assets, liabilities, and monthly cash flow.
 class HeroNetWorthCard extends StatelessWidget {
@@ -24,6 +25,7 @@ class HeroNetWorthCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final int netSavingsCents = monthlyIncomeCents - monthlyExpenseCents;
 
     return Card(
@@ -54,7 +56,7 @@ class HeroNetWorthCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'TOTAL NET WORTH',
+                    l10n != null ? l10n.netWorth.toUpperCase() : 'TOTAL NET WORTH',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -113,7 +115,7 @@ class HeroNetWorthCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Assets',
+                                l10n?.assets ?? 'Assets',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -161,7 +163,7 @@ class HeroNetWorthCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Liabilities',
+                                l10n?.liabilities ?? 'Liabilities',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -198,7 +200,7 @@ class HeroNetWorthCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'This Month Cash Flow',
+                      l10n?.monthlyCashFlow ?? 'This Month Cash Flow',
                       style: TextStyle(
                         fontSize: 12,
                         color: colorScheme.onPrimaryContainer.withValues(
@@ -207,7 +209,7 @@ class HeroNetWorthCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Net: ${CurrencyFormatter.formatCents(netSavingsCents)}',
+                      '${l10n?.net ?? 'Net'}: ${CurrencyFormatter.formatCents(netSavingsCents)}',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

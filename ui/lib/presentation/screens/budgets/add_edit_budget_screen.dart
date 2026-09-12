@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/budget.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/budgets_provider.dart';
 import '../../../providers/transactions_provider.dart';
 
@@ -57,6 +59,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final txProv = context.watch<TransactionsProvider>();
     final categories = txProv.expenseCategories;
 
@@ -65,17 +68,18 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
     }
 
     final date = DateTime(_selectedYear, _selectedMonth);
-    final periodName = DateFormat('MMMM yyyy').format(date);
+    final locale = Localizations.localeOf(context).toString();
+    final periodName = DateFormat('MMMM yyyy', locale).format(date);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Budget' : 'Set Category Budget'),
+        title: Text(widget.isEditing ? l10n.editBudget : l10n.setCategoryBudget),
         actions: [
           if (widget.isEditing)
             IconButton(
               icon: const Icon(Icons.delete_outline),
               color: colorScheme.error,
-              tooltip: 'Delete Budget',
+              tooltip: l10n.delete,
               onPressed: _confirmDelete,
             ),
         ],
@@ -100,9 +104,9 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'BUDGET PERIOD',
-                          style: TextStyle(
+                        Text(
+                          l10n.budgetPeriod,
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey,
@@ -128,16 +132,22 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
             // Category Dropdown
             DropdownButtonFormField<String>(
               value: _selectedCategoryId,
-              decoration: const InputDecoration(
-                labelText: 'Expense Category',
-                prefixIcon: Icon(Icons.category_outlined),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.expenseCategory,
+                prefixIcon: const Icon(Icons.category_outlined),
+                border: const OutlineInputBorder(),
               ),
               items:
                   categories.map((cat) {
                     return DropdownMenuItem(
                       value: cat.id,
-                      child: Text(cat.name),
+                      child: Text(
+                        CategoryLocalizationHelper.getLocalizedName(
+                          context,
+                          categoryId: cat.id,
+                          defaultName: cat.name,
+                        ),
+                      ),
                     );
                   }).toList(),
               onChanged:
@@ -149,7 +159,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         });
                       },
               validator:
-                  (val) => val == null ? 'Please select a category' : null,
+                  (val) => val == null ? l10n.pleaseSelectCategory : null,
             ),
             const SizedBox(height: 16),
 
@@ -159,19 +169,19 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Monthly Spending Limit',
+              decoration: InputDecoration(
+                labelText: l10n.monthlySpendingLimit,
                 hintText: '0.00',
-                prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.attach_money),
+                border: const OutlineInputBorder(),
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter budget limit';
+                  return l10n.pleaseEnterBudgetLimit;
                 }
                 final cents = CurrencyFormatter.parseToCents(val);
                 if (cents <= 0) {
-                  return 'Limit must be greater than 0';
+                  return l10n.limitMustBeGreaterThanZero;
                 }
                 return null;
               },
@@ -185,7 +195,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
               ),
               icon: const Icon(Icons.save),
               label: Text(
-                widget.isEditing ? 'Save Changes' : 'Set Budget',
+                widget.isEditing ? l10n.saveChanges : l10n.setBudget,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -202,6 +212,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   Future<void> _saveBudget() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final limitCents = CurrencyFormatter.parseToCents(_limitController.text);
     final budgetsProv = context.read<BudgetsProvider>();
 
@@ -229,8 +240,8 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
           SnackBar(
             content: Text(
               widget.isEditing
-                  ? 'Budget updated successfully'
-                  : 'Budget set successfully',
+                  ? l10n.budgetUpdatedSuccess
+                  : l10n.budgetSetSuccess,
             ),
             backgroundColor: Colors.green.shade700,
           ),
@@ -241,7 +252,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving budget: $e'),
+            content: Text(l10n.errorSavingBudget(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -250,25 +261,24 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Delete Budget Limit?'),
-            content: const Text(
-              'Are you sure you want to remove this category budget limit? Past recorded transactions will remain unaffected.',
-            ),
+            title: Text(l10n.deleteBudgetLimitQuestion),
+            content: Text(l10n.confirmDeleteBudgetDetail),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: Theme.of(ctx).colorScheme.error,
                 ),
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Delete'),
+                child: Text(l10n.delete),
               ),
             ],
           ),

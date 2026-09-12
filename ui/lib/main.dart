@@ -4,8 +4,10 @@ import 'data/repositories/account_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/category_repository_impl.dart';
 import 'data/repositories/savings_goal_repository_impl.dart';
+import 'data/repositories/sqlite_exchange_rate_repository.dart';
 import 'data/repositories/subscription_repository_impl.dart';
 import 'data/repositories/transaction_repository_impl.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'presentation/screens/accounts/accounts_screen.dart';
 import 'presentation/screens/budgets/budgets_screen.dart';
 import 'presentation/screens/dashboard/dashboard_screen.dart';
@@ -16,6 +18,8 @@ import 'providers/accounts_provider.dart';
 import 'providers/analytics_provider.dart';
 import 'providers/backup_provider.dart';
 import 'providers/budgets_provider.dart';
+import 'providers/exchange_rate_provider.dart';
+import 'providers/settings_provider.dart';
 import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
 
@@ -33,6 +37,8 @@ class FinanceTrackerApp extends StatelessWidget {
   final BudgetsProvider? budgetsProvider;
   final AnalyticsProvider? analyticsProvider;
   final BackupProvider? backupProvider;
+  final SettingsProvider? settingsProvider;
+  final ExchangeRateProvider? exchangeRateProvider;
 
   const FinanceTrackerApp({
     super.key,
@@ -42,6 +48,8 @@ class FinanceTrackerApp extends StatelessWidget {
     this.budgetsProvider,
     this.analyticsProvider,
     this.backupProvider,
+    this.settingsProvider,
+    this.exchangeRateProvider,
   });
 
   @override
@@ -106,26 +114,51 @@ class FinanceTrackerApp extends StatelessWidget {
           ChangeNotifierProvider<BackupProvider>(
             create: (_) => BackupProvider()..checkExistingAuth(),
           ),
+        if (settingsProvider != null)
+          ChangeNotifierProvider<SettingsProvider>.value(
+            value: settingsProvider!,
+          )
+        else
+          ChangeNotifierProvider<SettingsProvider>(
+            create: (_) => SettingsProvider()..loadSettings(),
+          ),
+        if (exchangeRateProvider != null)
+          ChangeNotifierProvider<ExchangeRateProvider>.value(
+            value: exchangeRateProvider!,
+          )
+        else
+          ChangeNotifierProvider<ExchangeRateProvider>(
+            create: (_) => ExchangeRateProvider(
+              repository: SqliteExchangeRateRepository(),
+            )..initialize(),
+          ),
       ],
-      child: MaterialApp(
-        title: 'Finance Tracker',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF1E88E5), // Material Blue
-            brightness: Brightness.light,
-          ),
-        ),
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF1E88E5),
-            brightness: Brightness.dark,
-          ),
-        ),
-        themeMode: ThemeMode.system,
-        home: const MainNavigationShell(),
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'Finance Tracker',
+            debugShowCheckedModeBanner: false,
+            locale: settings.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: ThemeData(
+              useMaterial3: true,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF1E88E5), // Material Blue
+                brightness: Brightness.light,
+              ),
+            ),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF1E88E5),
+                brightness: Brightness.dark,
+              ),
+            ),
+            themeMode: ThemeMode.system,
+            home: const MainNavigationShell(),
+          );
+        },
       ),
     );
   }
@@ -152,6 +185,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
@@ -161,37 +196,37 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             _currentIndex = index;
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard),
+            label: l10n?.navDashboard ?? 'Dashboard',
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Transactions',
+            icon: const Icon(Icons.receipt_long_outlined),
+            selectedIcon: const Icon(Icons.receipt_long),
+            label: l10n?.navTransactions ?? 'Transactions',
           ),
           NavigationDestination(
-            icon: Icon(Icons.pie_chart_outline),
-            selectedIcon: Icon(Icons.pie_chart),
-            label: 'Budgets',
+            icon: const Icon(Icons.pie_chart_outline),
+            selectedIcon: const Icon(Icons.pie_chart),
+            label: l10n?.navBudgets ?? 'Budgets',
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Subscriptions',
+            icon: const Icon(Icons.calendar_month_outlined),
+            selectedIcon: const Icon(Icons.calendar_month),
+            label: l10n?.navSubscriptions ?? 'Subscriptions',
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Accounts',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: const Icon(Icons.account_balance_wallet),
+            label: l10n?.navAccounts ?? 'Accounts',
           ),
         ],
       ),
       floatingActionButton: _currentIndex == 0 || _currentIndex == 1
           ? FloatingActionButton(
-              tooltip: 'Quick Transaction',
+              tooltip: l10n?.quickTransaction ?? 'Quick Transaction',
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(

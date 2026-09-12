@@ -9,6 +9,7 @@ import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/subscriptions/add_edit_subscription_screen.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
 import 'package:finance_tracker/providers/subscriptions_provider.dart';
@@ -245,6 +246,9 @@ void main() {
         ChangeNotifierProvider<SubscriptionsProvider>.value(value: subsProv),
       ],
       child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: AddEditSubscriptionScreen(subscription: subscription),
       ),
     );

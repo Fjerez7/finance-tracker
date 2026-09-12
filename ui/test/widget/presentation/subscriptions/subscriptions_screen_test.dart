@@ -3,17 +3,34 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
+import 'package:finance_tracker/domain/entities/exchange_rate_result.dart';
 import 'package:finance_tracker/domain/entities/subscription.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
+import 'package:finance_tracker/domain/repositories/exchange_rate_repository.dart';
 import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/subscriptions/subscriptions_screen.dart';
 import 'package:finance_tracker/presentation/widgets/cards/subscription_card.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
+import 'package:finance_tracker/providers/exchange_rate_provider.dart';
 import 'package:finance_tracker/providers/subscriptions_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
+
+class FakeExchangeRateRepo implements ExchangeRateRepository {
+  final Map<String, ExchangeRateResult> _store = {};
+
+  @override
+  Future<ExchangeRateResult?> getCachedRates(String baseCurrency) async =>
+      _store[baseCurrency.toUpperCase()];
+
+  @override
+  Future<void> saveRates(ExchangeRateResult result) async {
+    _store[result.baseCode.toUpperCase()] = result;
+  }
+}
 
 class FakeSubscriptionRepo implements SubscriptionRepository {
   final List<Subscription> subscriptions;
@@ -290,12 +307,15 @@ void main() {
   late SubscriptionsProvider subsProv;
   late AccountsProvider accountsProv;
   late TransactionsProvider txProv;
+  late FakeExchangeRateRepo exchangeRateRepo;
+  late ExchangeRateProvider exchangeRateProv;
 
   setUp(() async {
     subRepo = FakeSubscriptionRepo([activeSub, pausedSub]);
     accountRepo = FakeAccountRepo([testAccount]);
     catRepo = FakeCategoryRepo([testCategory]);
     txRepo = FakeTransactionRepo(accountRepo);
+    exchangeRateRepo = FakeExchangeRateRepo();
 
     accountsProv = AccountsProvider(repository: accountRepo);
     await accountsProv.loadAccounts();
@@ -310,6 +330,16 @@ void main() {
       repository: subRepo,
     );
     await subsProv.loadSubscriptions();
+
+    await exchangeRateRepo.saveRates(
+      ExchangeRateResult(
+        baseCode: 'USD',
+        rates: {'USD': 1.0, 'COP': 4150.0},
+        lastUpdatedUtc: DateTime.now().toUtc(),
+      ),
+    );
+    exchangeRateProv = ExchangeRateProvider(repository: exchangeRateRepo);
+    await exchangeRateProv.initialize();
   });
 
   Widget buildTestableWidget() {
@@ -318,8 +348,14 @@ void main() {
         ChangeNotifierProvider<AccountsProvider>.value(value: accountsProv),
         ChangeNotifierProvider<TransactionsProvider>.value(value: txProv),
         ChangeNotifierProvider<SubscriptionsProvider>.value(value: subsProv),
+        ChangeNotifierProvider<ExchangeRateProvider>.value(value: exchangeRateProv),
       ],
-      child: const MaterialApp(home: SubscriptionsScreen()),
+      child: const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SubscriptionsScreen(),
+      ),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/analytics_provider.dart';
 import '../../../providers/budgets_provider.dart';
@@ -12,7 +13,7 @@ import '../../widgets/cards/transaction_list_tile.dart';
 import '../../widgets/charts/category_expense_pie_chart.dart';
 import '../analytics/analytics_screen.dart';
 import '../budgets/add_edit_budget_screen.dart';
-import '../settings/backup_settings_screen.dart';
+import '../settings/settings_screen.dart';
 import '../subscriptions/add_edit_subscription_screen.dart';
 import '../transactions/quick_transaction_screen.dart';
 import '../transactions/transaction_detail_screen.dart';
@@ -25,6 +26,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final accountsProv = context.watch<AccountsProvider>();
     final txProv = context.watch<TransactionsProvider>();
@@ -60,26 +62,26 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Finance Tracker',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.appTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.cloud_sync_outlined),
-            tooltip: 'Cloud Backup & Export',
+            icon: const Icon(Icons.insights_outlined),
+            tooltip: l10n.analytics,
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const BackupSettingsScreen()),
+                MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
               );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.insights_outlined),
-            tooltip: 'Visual Analytics',
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settings,
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             },
           ),
@@ -115,7 +117,7 @@ class DashboardScreen extends StatelessWidget {
                     child: _buildQuickActionButton(
                       context,
                       icon: Icons.add_circle_outline,
-                      label: 'Expense',
+                      label: l10n.expense,
                       color: Colors.red.shade700,
                       onTap: () {
                         Navigator.of(context).push(
@@ -131,7 +133,7 @@ class DashboardScreen extends StatelessWidget {
                     child: _buildQuickActionButton(
                       context,
                       icon: Icons.pie_chart_outline,
-                      label: 'Budget',
+                      label: l10n.budgets,
                       color: Colors.blue.shade700,
                       onTap: () {
                         Navigator.of(context).push(
@@ -147,7 +149,7 @@ class DashboardScreen extends StatelessWidget {
                     child: _buildQuickActionButton(
                       context,
                       icon: Icons.calendar_month_outlined,
-                      label: 'Bill/Sub',
+                      label: l10n.subscriptions,
                       color: Colors.purple.shade700,
                       onTap: () {
                         Navigator.of(context).push(
@@ -178,9 +180,9 @@ class DashboardScreen extends StatelessWidget {
                       color: Colors.orange.shade800,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Upcoming Bills & Renewals',
-                      style: TextStyle(
+                    Text(
+                      l10n.upcomingSubscriptions,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -228,9 +230,9 @@ class DashboardScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Expense Breakdown',
-                          style: TextStyle(
+                        Text(
+                          l10n.spendingByCategory,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -243,7 +245,7 @@ class DashboardScreen extends StatelessWidget {
                               ),
                             );
                           },
-                          child: const Text('Analytics'),
+                          child: Text(l10n.analytics),
                         ),
                       ],
                     ),
@@ -267,13 +269,13 @@ class DashboardScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Recent Transactions',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.recentTransactions,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   if (recentTransactions.isNotEmpty)
                     Text(
-                      'Last ${recentTransactions.length}',
+                      '${recentTransactions.length}',
                       style: TextStyle(
                         fontSize: 12,
                         color: colorScheme.onSurfaceVariant,
@@ -287,7 +289,7 @@ class DashboardScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(24.0),
                 child: Center(
                   child: Text(
-                    'No transactions recorded yet',
+                    l10n.noRecentTransactions,
                     style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                 ),

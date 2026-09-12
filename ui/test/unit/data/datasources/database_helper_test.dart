@@ -46,6 +46,8 @@ void main() {
           DatabaseConstants.tableSubscriptions,
           DatabaseConstants.tableBudgets,
           DatabaseConstants.tableSavingsGoals,
+          DatabaseConstants.tableSettings,
+          DatabaseConstants.tableExchangeRates,
         ]),
       );
 

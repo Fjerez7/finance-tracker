@@ -3,7 +3,7 @@ class DatabaseConstants {
   DatabaseConstants._();
 
   static const String databaseName = 'finance_tracker.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 3;
 
   // Tables
   static const String tableAccounts = 'accounts';
@@ -12,6 +12,8 @@ class DatabaseConstants {
   static const String tableSubscriptions = 'subscriptions';
   static const String tableBudgets = 'budgets';
   static const String tableSavingsGoals = 'savings_goals';
+  static const String tableSettings = 'app_settings';
+  static const String tableExchangeRates = 'exchange_rates';
 
   // Common Columns
   static const String colId = 'id';
@@ -20,6 +22,16 @@ class DatabaseConstants {
   static const String colUpdatedAt = 'updated_at';
   static const String colColorHex = 'color_hex';
   static const String colIconName = 'icon_name';
+
+  // Settings Columns
+  static const String colKey = 'key';
+  static const String colValue = 'value';
+
+  // Exchange Rates Columns
+  static const String colBaseCurrency = 'base_currency';
+  static const String colTargetCurrency = 'target_currency';
+  static const String colRate = 'rate';
+  static const String colLastUpdated = 'last_updated';
 
   // Accounts Columns
   static const String colAccountType = 'type';
@@ -37,6 +49,9 @@ class DatabaseConstants {
   static const String colToAccountId = 'to_account_id';
   static const String colCategoryId = 'category_id';
   static const String colAmountCents = 'amount_cents';
+  static const String colOriginalCurrency = 'original_currency';
+  static const String colOriginalAmountCents = 'original_amount_cents';
+  static const String colExchangeRate = 'exchange_rate';
   static const String colTransactionType = 'type';
   static const String colDescription = 'description';
   static const String colTransactionDate = 'transaction_date';

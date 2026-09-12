@@ -39,6 +39,7 @@ class Subscription {
   final String id;
   final String name;
   final int amountCents;
+  final String currency;
   final RecurrenceFrequency frequency;
   final String accountId;
   final String categoryId;
@@ -53,6 +54,7 @@ class Subscription {
     required this.id,
     required this.name,
     required this.amountCents,
+    this.currency = 'USD',
     required this.frequency,
     required this.accountId,
     required this.categoryId,
@@ -92,6 +94,7 @@ class Subscription {
     String? id,
     String? name,
     int? amountCents,
+    String? currency,
     RecurrenceFrequency? frequency,
     String? accountId,
     String? categoryId,
@@ -106,6 +109,7 @@ class Subscription {
       id: id ?? this.id,
       name: name ?? this.name,
       amountCents: amountCents ?? this.amountCents,
+      currency: currency ?? this.currency,
       frequency: frequency ?? this.frequency,
       accountId: accountId ?? this.accountId,
       categoryId: categoryId ?? this.categoryId,
@@ -126,6 +130,7 @@ class Subscription {
           id == other.id &&
           name == other.name &&
           amountCents == other.amountCents &&
+          currency == other.currency &&
           frequency == other.frequency &&
           accountId == other.accountId &&
           categoryId == other.categoryId &&
@@ -141,6 +146,7 @@ class Subscription {
       id.hashCode ^
       name.hashCode ^
       amountCents.hashCode ^
+      currency.hashCode ^
       frequency.hashCode ^
       accountId.hashCode ^
       categoryId.hashCode ^
@@ -153,6 +159,6 @@ class Subscription {
 
   @override
   String toString() {
-    return 'Subscription(id: $id, name: $name, amountCents: $amountCents, frequency: $frequency, billingDay: $billingDay, nextDueDate: $nextDueDate, isActive: $isActive)';
+    return 'Subscription(id: $id, name: $name, amountCents: $amountCents, currency: $currency, frequency: $frequency, billingDay: $billingDay, nextDueDate: $nextDueDate, isActive: $isActive)';
   }
 }

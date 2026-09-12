@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/budget.dart';
 import '../../../domain/entities/category.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Card widget rendering a monthly category budget progress bar and alert thresholds.
 class BudgetProgressCard extends StatelessWidget {
@@ -24,6 +26,7 @@ class BudgetProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final categoryColor =
         category != null
@@ -45,14 +48,14 @@ class BudgetProgressCard extends StatelessWidget {
     if (isOver) {
       statusColor = Colors.red.shade600;
       final int overCents = spentCents - budget.limitCents;
-      statusLabel = 'Exceeded by ${CurrencyFormatter.formatCents(overCents)}';
+      statusLabel = l10n.budgetExceededBy(CurrencyFormatter.formatCents(overCents));
     } else if (isWarning) {
       statusColor = Colors.amber.shade800;
-      statusLabel = 'Approaching limit ($percentage%)';
+      statusLabel = l10n.budgetApproachingLimit(percentage);
     } else {
       statusColor = Colors.green.shade600;
       final int remCents = budget.remainingCents(spentCents);
-      statusLabel = '${CurrencyFormatter.formatCents(remCents)} remaining';
+      statusLabel = l10n.budgetRemainingAmount(CurrencyFormatter.formatCents(remCents));
     }
 
     return Card(
@@ -97,7 +100,13 @@ class BudgetProgressCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          category?.name ?? 'Category Budget',
+                          category != null
+                              ? CategoryLocalizationHelper.getLocalizedName(
+                                context,
+                                categoryId: category!.id,
+                                defaultName: category!.name,
+                              )
+                              : l10n.categoryBudget,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -131,7 +140,7 @@ class BudgetProgressCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'of ${CurrencyFormatter.formatCents(budget.limitCents)}',
+                        l10n.ofAmount(CurrencyFormatter.formatCents(budget.limitCents)),
                         style: TextStyle(
                           fontSize: 12,
                           color: colorScheme.onSurfaceVariant,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/budgets_provider.dart';
 import '../../../providers/transactions_provider.dart';
 import '../../widgets/cards/budget_progress_card.dart';
@@ -16,13 +17,15 @@ class BudgetsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final budgetsProv = context.watch<BudgetsProvider>();
     final txProv = context.watch<TransactionsProvider>();
 
     final selectedMonth = budgetsProv.selectedMonth;
     final selectedYear = budgetsProv.selectedYear;
     final date = DateTime(selectedYear, selectedMonth);
-    final monthName = DateFormat('MMMM yyyy').format(date);
+    final locale = Localizations.localeOf(context).toString();
+    final monthName = DateFormat('MMMM yyyy', locale).format(date);
 
     final int totalLimit = budgetsProv.totalMonthlyBudgetLimitCents;
     final int totalSpent = budgetsProv.calculateTotalMonthlySpentCents(txProv);
@@ -42,11 +45,11 @@ class BudgetsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Budgets & Goals'),
+        title: Text(l10n.budgetsAndGoals),
         actions: [
           IconButton(
             icon: const Icon(Icons.savings_outlined),
-            tooltip: 'Savings Goals',
+            tooltip: l10n.savingsGoals,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SavingsGoalsScreen()),
@@ -66,7 +69,7 @@ class BudgetsScreen extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
-                  tooltip: 'Previous Month',
+                  tooltip: l10n.previousMonth,
                   onPressed: budgetsProv.previousMonth,
                 ),
                 Text(
@@ -78,7 +81,7 @@ class BudgetsScreen extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  tooltip: 'Next Month',
+                  tooltip: l10n.nextMonth,
                   onPressed: budgetsProv.nextMonth,
                 ),
               ],
@@ -108,7 +111,7 @@ class BudgetsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'TOTAL MONTHLY BUDGET',
+                      l10n.totalMonthlyBudget,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -119,7 +122,7 @@ class BudgetsScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '$percentage% spent',
+                      l10n.percentSpent(percentage),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -143,7 +146,7 @@ class BudgetsScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'of ${CurrencyFormatter.formatCents(totalLimit)}',
+                      l10n.ofAmount(CurrencyFormatter.formatCents(totalLimit)),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
@@ -169,8 +172,8 @@ class BudgetsScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   isOverBudget
-                      ? 'Total budget exceeded by ${CurrencyFormatter.formatCents(totalSpent - totalLimit)}'
-                      : '${CurrencyFormatter.formatCents(totalLimit - totalSpent)} left for the month',
+                      ? l10n.totalBudgetExceededBy(CurrencyFormatter.formatCents(totalSpent - totalLimit))
+                      : l10n.amountLeftForMonth(CurrencyFormatter.formatCents(totalLimit - totalSpent)),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -187,12 +190,12 @@ class BudgetsScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Category Budgets',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.categoryBudgets,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '${budgetsProv.budgets.length} configured',
+                  l10n.configuredCount(budgetsProv.budgets.length),
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurfaceVariant,
@@ -206,7 +209,7 @@ class BudgetsScreen extends StatelessWidget {
           Expanded(
             child:
                 budgetsProv.budgets.isEmpty
-                    ? _buildEmptyState(context)
+                    ? _buildEmptyState(context, l10n)
                     : ListView.builder(
                       padding: const EdgeInsets.only(bottom: 80),
                       itemCount: budgetsProv.budgets.length,
@@ -241,7 +244,7 @@ class BudgetsScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Add Budget',
+        tooltip: l10n.addBudget,
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -258,7 +261,7 @@ class BudgetsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -273,15 +276,15 @@ class BudgetsScreen extends StatelessWidget {
               ).colorScheme.outline.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'No budgets set for this month',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              l10n.noBudgetsSetForMonth,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Set monthly category limits to keep your spending on track by tapping "+"',
+            Text(
+              l10n.setMonthlyLimitsDesc,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey),
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
           ],
         ),

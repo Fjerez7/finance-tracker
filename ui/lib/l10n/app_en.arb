@@ -1,0 +1,738 @@
+{
+  "@@locale": "en",
+  "appTitle": "Finance Tracker",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "confirm": "Confirm",
+  "error": "Error",
+  "success": "Success",
+  "loading": "Loading...",
+  "noData": "No data available",
+  "all": "All",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "custom": "Custom",
+  "date": "Date",
+  "amount": "Amount",
+  "description": "Description",
+  "notes": "Notes",
+  "category": "Category",
+  "account": "Account",
+  "type": "Type",
+  "name": "Name",
+  "actions": "Actions",
+  "clear": "Clear",
+  "filter": "Filter",
+  "search": "Search",
+  "status": "Status",
+  "details": "Details",
+  "done": "Done",
+  "add": "Add",
+  "retry": "Retry",
+  "close": "Close",
+
+  "navDashboard": "Dashboard",
+  "navTransactions": "Transactions",
+  "navBudgets": "Budgets",
+  "navSubscriptions": "Subscriptions",
+  "navAccounts": "Accounts",
+  "navSettings": "Settings",
+
+  "netWorth": "Net Worth",
+  "assets": "Assets",
+  "liabilities": "Liabilities",
+  "net": "Net",
+  "totalIncome": "Total Income",
+  "totalExpense": "Total Expense",
+  "monthlyCashFlow": "Monthly Cash Flow",
+  "recentTransactions": "Recent Transactions",
+  "seeAll": "See all",
+  "noRecentTransactions": "No recent transactions yet",
+  "quickActions": "Quick Actions",
+  "addTransaction": "Add Transaction",
+  "incomeVsExpense": "Income vs Expense",
+  "activeBudgets": "Active Budgets",
+  "upcomingSubscriptions": "Upcoming Subscriptions",
+
+  "accounts": "Accounts",
+  "addAccount": "Add Account",
+  "editAccount": "Edit Account",
+  "accountName": "Account Name",
+  "accountType": "Account Type",
+  "initialBalance": "Initial Balance",
+  "currentBalance": "Current Balance",
+  "currentDebt": "CURRENT DEBT",
+  "creditLimit": "Credit Limit",
+  "includeInNetWorth": "Include in Net Worth",
+  "accountDeleted": "Account deleted successfully",
+  "confirmDeleteAccount": "Are you sure you want to delete this account? All associated transactions will also be deleted.",
+  "confirmDeleteAccountNamed": "Are you sure you want to delete \"{accountName}\"? This action cannot be undone.",
+  "@confirmDeleteAccountNamed": {
+    "placeholders": {
+      "accountName": {
+        "type": "String"
+      }
+    }
+  },
+  "noAccountsFound": "No accounts found. Create one to get started!",
+  "noAccountsFoundCreateFirst": "No accounts found. Please create one first.",
+  "accountNotFound": "Account not found",
+  "adjustBalance": "Adjust Balance",
+  "adjustBalanceFor": "Adjust Balance for {accountName}",
+  "@adjustBalanceFor": {
+    "placeholders": {
+      "accountName": {
+        "type": "String"
+      }
+    }
+  },
+  "enterNewReconciledBalance": "Enter the new reconciled balance:",
+  "newBalance": "New Balance",
+  "updateBalance": "Update Balance",
+  "deleteAccountQuestion": "Delete Account?",
+  "unarchiveAccount": "Unarchive Account",
+  "archiveAccount": "Archive Account",
+  "creditLimitAndUtilization": "Credit Limit & Utilization",
+  "availableCredit": "Available Credit",
+  "totalLimit": "Total Limit",
+  "availableAmount": "Available: {amount}",
+  "@availableAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "creditUsedOfTotal": "{percentage} used of {total}",
+  "@creditUsedOfTotal": {
+    "placeholders": {
+      "percentage": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountTypeChecking": "Checking",
+  "accountTypeSavings": "Savings",
+  "accountTypeCreditCard": "Credit Card",
+  "accountTypeCash": "Cash",
+  "accountTypeInvestment": "Investment",
+  "accountTypeOther": "Other",
+  "accountTypeBank": "Bank Account",
+  "accountTypeDigitalWallet": "Digital Wallet",
+
+  "transactions": "Transactions",
+  "newTransaction": "New Transaction",
+  "quickTransaction": "Quick Transaction",
+  "transactionDetail": "Transaction Details",
+  "income": "Income",
+  "expense": "Expense",
+  "transfer": "Transfer",
+  "accountTransfer": "Account Transfer",
+  "fromAccount": "From Account",
+  "toAccount": "To Account",
+  "sourceAccount": "Source Account",
+  "destinationAccount": "Destination Account",
+  "payee": "Payee / Merchant",
+  "transactionDeleted": "Transaction deleted successfully",
+  "confirmDeleteTransaction": "Are you sure you want to delete this transaction?",
+  "confirmDeleteTransactionDetail": "This will permanently delete this transaction and automatically reverse its effect on your account balance.",
+  "deleteTransactionQuestion": "Delete Transaction?",
+  "filterAll": "All",
+  "filterIncome": "Income",
+  "filterExpense": "Expense",
+  "filterExpenses": "Expenses",
+  "filterTransfer": "Transfer",
+  "filterTransfers": "Transfers",
+  "noTransactionsFound": "No transactions found",
+  "noCategoriesFound": "No categories available",
+  "transactionSaved": "Transaction saved successfully",
+  "calculator": "Calculator",
+  "enterAmount": "Enter amount",
+  "selectCategory": "Select Category",
+  "selectAccount": "Select Account",
+  "searchHint": "Search notes or descriptions...",
+  "netFlow": "Net Flow",
+  "tapPlusToRecord": "Tap the \"+\" button to record a new transaction.",
+  "toggleNoteAndDate": "Toggle Note & Date",
+  "noteOrDescription": "Note / Description",
+  "changeDate": "Change Date",
+  "transferDestinationAccount": "Transfer Destination Account:",
+  "confirmTransfer": "Confirm Transfer",
+  "pleaseEnterAmountGreaterThanZero": "Please enter an amount greater than 0",
+  "pleaseSelectAccount": "Please select an account",
+  "pleaseSelectDifferentDestination": "Please select a different destination account",
+  "recordedSuccessfully": "{type} recorded successfully!",
+  "@recordedSuccessfully": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSavingTransaction": "Error saving transaction: {error}",
+  "@errorSavingTransaction": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unknownAccount": "Unknown Account",
+  "transactionId": "Transaction ID",
+
+  "budgets": "Budgets",
+  "budgetsAndGoals": "Budgets & Goals",
+  "savingsGoals": "Savings Goals",
+  "addBudget": "Add Budget",
+  "editBudget": "Edit Budget",
+  "setCategoryBudget": "Set Category Budget",
+  "budgetPeriod": "BUDGET PERIOD",
+  "expenseCategory": "Expense Category",
+  "monthlySpendingLimit": "Monthly Spending Limit",
+  "pleaseSelectCategory": "Please select a category",
+  "pleaseEnterBudgetLimit": "Please enter budget limit",
+  "limitMustBeGreaterThanZero": "Limit must be greater than 0",
+  "saveChanges": "Save Changes",
+  "setBudget": "Set Budget",
+  "budgetUpdatedSuccess": "Budget updated successfully",
+  "budgetSetSuccess": "Budget set successfully",
+  "errorSavingBudget": "Error saving budget: {error}",
+  "@errorSavingBudget": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteBudgetLimitQuestion": "Delete Budget Limit?",
+  "confirmDeleteBudgetDetail": "Are you sure you want to remove this category budget limit? Past recorded transactions will remain unaffected.",
+  "previousMonth": "Previous Month",
+  "nextMonth": "Next Month",
+  "totalMonthlyBudget": "TOTAL MONTHLY BUDGET",
+  "percentSpent": "{percent}% spent",
+  "@percentSpent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "ofAmount": "of {amount}",
+  "@ofAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "totalBudgetExceededBy": "Total budget exceeded by {amount}",
+  "@totalBudgetExceededBy": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "amountLeftForMonth": "{amount} left for the month",
+  "@amountLeftForMonth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryBudgets": "Category Budgets",
+  "configuredCount": "{count} configured",
+  "@configuredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noBudgetsSetForMonth": "No budgets set for this month",
+  "setMonthlyLimitsDesc": "Set monthly category limits to keep your spending on track by tapping \"+\"",
+  "categoryBudget": "Category Budget",
+  "budgetExceededBy": "Exceeded by {amount}",
+  "@budgetExceededBy": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetApproachingLimit": "Approaching limit ({percent}%)",
+  "@budgetApproachingLimit": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "budgetRemainingAmount": "{amount} remaining",
+  "@budgetRemainingAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetLimit": "Budget Limit",
+  "spent": "Spent",
+  "remaining": "Remaining",
+  "overBudget": "Over Budget",
+  "period": "Period",
+  "monthly": "Monthly",
+  "weekly": "Weekly",
+  "yearly": "Yearly",
+  "noBudgetsFound": "No budgets created for this month",
+  "confirmDeleteBudget": "Are you sure you want to delete this budget?",
+
+  "addSavingsGoal": "Add Savings Goal",
+  "editSavingsGoal": "Edit Savings Goal",
+  "newSavingsGoal": "New Savings Goal",
+  "targetAmount": "Target Amount",
+  "currentAmount": "Current Amount",
+  "targetDate": "Target Date",
+  "goalReached": "Goal Reached!",
+  "addFunds": "Add Funds",
+  "withdrawFunds": "Withdraw Funds",
+  "noSavingsGoals": "No savings goals created yet",
+  "confirmDeleteGoal": "Are you sure you want to delete this savings goal?",
+  "activeCount": "Active ({count})",
+  "@activeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "completedCount": "Completed ({count})",
+  "@completedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noActiveSavingsGoals": "No active savings goals",
+  "savingsGoalsDesc": "Set savings targets for vacations, emergency funds, or gadgets by tapping \"+\"",
+  "noCompletedGoals": "No completed goals yet",
+  "completedGoalsDesc": "Goals you reach 100% will be celebrated here",
+  "depositToGoal": "Deposit to {goalName}",
+  "@depositToGoal": {
+    "placeholders": {
+      "goalName": {
+        "type": "String"
+      }
+    }
+  },
+  "depositAmount": "Deposit Amount",
+  "pleaseEnterDepositAmount": "Please enter deposit amount",
+  "amountMustBeGreaterThanZero": "Amount must be greater than 0",
+  "deposit": "Deposit",
+  "depositedIntoGoal": "Deposited {amount} into {goalName}!",
+  "@depositedIntoGoal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "goalName": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDepositingFunds": "Error depositing funds: {error}",
+  "@errorDepositingFunds": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "goalTitle": "Goal Title",
+  "goalTitleHint": "e.g., Emergency Fund, Japan Trip, New Laptop",
+  "pleaseEnterGoalTitle": "Please enter a goal title",
+  "targetSavingsAmount": "Target Savings Amount",
+  "pleaseEnterTargetAmount": "Please enter the target amount",
+  "targetAmountMustBeGreaterThanZero": "Target amount must be greater than 0",
+  "currentSavedAmount": "Current Saved Amount",
+  "pleaseEnterCurrentSavedAmount": "Please enter current saved amount",
+  "amountCannotBeNegative": "Amount cannot be negative",
+  "targetDeadlineOptional": "Target Deadline (Optional)",
+  "noDeadlineSet": "No deadline set",
+  "setDate": "Set Date",
+  "selectGoalColor": "Select Goal Color",
+  "selectGoalIcon": "Select Goal Icon",
+  "createSavingsGoal": "Create Savings Goal",
+  "savingsGoalUpdatedSuccess": "Savings goal updated successfully",
+  "savingsGoalCreatedSuccess": "Savings goal created successfully",
+  "errorSavingGoal": "Error saving goal: {error}",
+  "@errorSavingGoal": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteSavingsGoalQuestion": "Delete Savings Goal?",
+  "confirmDeleteSavingsGoalDetail": "Are you sure you want to delete \"{goalName}\"? Recorded transactions will remain unaffected.",
+  "@confirmDeleteSavingsGoalDetail": {
+    "placeholders": {
+      "goalName": {
+        "type": "String"
+      }
+    }
+  },
+  "completedTag": "COMPLETED",
+  "targetDeadlineDate": "Target: {date}",
+  "@targetDeadlineDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noTargetDeadline": "No target deadline",
+  "savedAmount": "{amount} saved",
+  "@savedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "targetAmountLabel": "Target: {amount}",
+  "@targetAmountLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "needMonthlySavings": "Need ~{amount}/mo to reach target on time",
+  "@needMonthlySavings": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "subscriptions": "Subscriptions",
+  "subscriptionsAndBills": "Subscriptions & Bills",
+  "addSubscription": "Add Subscription",
+  "editSubscription": "Edit Subscription",
+  "createSubscription": "Create Subscription",
+  "billingCycle": "Billing Cycle",
+  "billingDay": "Billing Day",
+  "nextPayment": "Next Payment",
+  "monthlyTotal": "Monthly Total",
+  "yearlyTotal": "Yearly Total",
+  "activeSubscriptions": "Active Subscriptions",
+  "cancelSubscription": "Cancel Subscription",
+  "autoRegister": "Auto-register Transaction",
+  "confirmDeleteSubscription": "Are you sure you want to delete this subscription?",
+  "noSubscriptionsFound": "No active subscriptions found",
+  "freqWeekly": "Weekly",
+  "freqBiweekly": "Bi-weekly",
+  "freqMonthly": "Monthly",
+  "freqYearly": "Yearly",
+  "freqAnnual": "Annual",
+  "pausedCount": "Paused ({count})",
+  "@pausedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthlySubscriptionCommitment": "MONTHLY SUBSCRIPTION COMMITMENT",
+  "perMonth": "/mo",
+  "annualProjection": "Annual Projection: {amount}/year",
+  "@annualProjection": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noActiveSubscriptions": "No active subscriptions",
+  "subscriptionsActiveDesc": "Track fixed commitments like Netflix, Spotify, or Rent by tapping \"+\"",
+  "noPausedSubscriptions": "No paused subscriptions",
+  "pausedSubscriptionsDesc": "Paused subscriptions will appear here",
+  "postPaymentQuestion": "Post {subName} Payment?",
+  "@postPaymentQuestion": {
+    "placeholders": {
+      "subName": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmPaymentDetail": "This will create a real expense transaction of {amount} from \"{accountName}\" and advance the next due date.",
+  "@confirmPaymentDetail": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "accountName": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmPayment": "Confirm Payment",
+  "paymentRecordedFor": "Payment recorded for {subName}!",
+  "@paymentRecordedFor": {
+    "placeholders": {
+      "subName": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPostingPayment": "Error posting payment: {error}",
+  "@errorPostingPayment": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceName": "Service Name",
+  "serviceNameHint": "e.g., Netflix, Spotify, Gym, Rent",
+  "pleaseEnterServiceName": "Please enter a service name",
+  "periodicAmount": "Periodic Amount",
+  "pleaseEnterPeriodicAmount": "Please enter the periodic amount",
+  "billingFrequency": "Billing Frequency",
+  "accountToDebit": "Account to Debit",
+  "nextDueDate": "Next Due Date",
+  "monthlyBillingDay": "Monthly Billing Day:",
+  "billingDayNumber": "Day {day}",
+  "@billingDayNumber": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "autoRegisterTransaction": "Auto-register transaction",
+  "autoRegisterDesc": "Automatically post transaction on due date without manual confirmation",
+  "activeCommitment": "Active Commitment",
+  "activeCommitmentDesc": "Include in monthly burn rate and payment schedules",
+  "subscriptionUpdatedSuccess": "Subscription updated successfully",
+  "subscriptionAddedSuccess": "Subscription added successfully",
+  "errorSavingSubscription": "Error saving subscription: {error}",
+  "@errorSavingSubscription": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteSubscriptionQuestion": "Delete Subscription?",
+  "confirmDeleteSubscriptionDetail": "Are you sure you want to delete \"{subName}\"? Past recorded transactions will remain unaffected.",
+  "@confirmDeleteSubscriptionDetail": {
+    "placeholders": {
+      "subName": {
+        "type": "String"
+      }
+    }
+  },
+  "pausedTag": "PAUSED",
+  "payAndAdvance": "Pay & Advance",
+  "autoRegistersOnDueDate": "Auto-registers on due date",
+  "manualConfirmation": "Manual confirmation",
+  "overdueDays": "Overdue ({days} days)",
+  "@overdueDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "dueToday": "Due Today",
+  "dueTomorrow": "Due Tomorrow",
+  "dueInDays": "Due in {days} days ({date})",
+  "@dueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "analytics": "Analytics",
+  "visualAnalytics": "Visual Analytics",
+  "spendingByCategory": "Spending by Category",
+  "incomeByCategory": "Income by Category",
+  "cashFlowTrend": "Cash Flow Trend",
+  "monthlyComparison": "Monthly Comparison",
+  "noAnalyticsData": "Not enough data to display analytics",
+  "thisMonth": "This Month",
+  "lastMonth": "Last Month",
+  "last90Days": "90 Days",
+  "thisYear": "This Year",
+  "allTime": "All Time",
+  "monthOverMonthSpendDelta": "Month-over-Month Spend Delta",
+  "momIncreaseDesc": "{percent}% more than last month ({amount})",
+  "@momIncreaseDesc": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "momDecreaseDesc": "{percent}% less than last month ({amount})",
+  "@momDecreaseDesc": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "sixMonthCashFlowComparison": "6-Month Cash Flow Comparison",
+  "categoryExpenseProportions": "Category Expense Proportions",
+  "noCashflowData": "No cashflow data available",
+  "noExpensesPeriod": "No expenses recorded in this period",
+
+  "settings": "Settings",
+  "preferences": "Preferences",
+  "language": "Language",
+  "selectLanguage": "Select Language",
+  "systemDefault": "System Default",
+  "spanish": "Español",
+  "english": "English",
+  "currency": "Currency",
+  "selectCurrency": "Select Currency",
+  "currencyUsd": "US Dollar (USD - $)",
+  "currencyCop": "Colombian Peso (COP - $)",
+  "dataAndStorage": "Data & Storage",
+  "cloudBackup": "Cloud Backup",
+  "cloudBackupDesc": "Backup and restore your data with Google Drive",
+  "exportCsv": "Export CSV",
+  "exportCsvDesc": "Export transactions to a CSV spreadsheet file",
+  "exportSuccess": "Data exported successfully",
+  "about": "About",
+  "appVersion": "App Version",
+  "appDescription": "Privacy-focused, local-first personal finance tracker.",
+  "databaseStatus": "Local Database",
+  "databaseStatusOk": "Healthy (SQLite)",
+
+  "backupAndRestore": "Backup & Restore",
+  "backupAndExport": "Backup & Export",
+  "googleDriveBackup": "Google Drive Backup",
+  "googleDriveCloudSync": "Google Drive Cloud Sync",
+  "syncEncryptedSnapshotsDesc": "Sync encrypted snapshots to private appDataFolder",
+  "googleAccount": "Google Account",
+  "notConnected": "Not connected",
+  "connected": "Connected",
+  "signInWithGoogle": "Sign In with Google",
+  "signOut": "Sign Out",
+  "backupNow": "Backup Now",
+  "backUpNow": "Back Up Now",
+  "backingUp": "Backing up...",
+  "restoreNow": "Restore Now",
+  "lastBackup": "Last Backup",
+  "availableCloudBackups": "Available Cloud Backups",
+  "noCloudBackupsFound": "No cloud backups found",
+  "exportLedgerCsv": "Export Ledger (CSV)",
+  "exportLedgerCsvDesc": "Export all {count} transactions with account and category mappings",
+  "@exportLedgerCsvDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "csvExportPreview": "CSV Export Preview",
+  "exportDatabaseSnapshotJson": "Export Database Snapshot (JSON)",
+  "databaseSnapshotJsonDesc": "Full database dump with SHA-256 integrity checksum",
+  "databaseSnapshotJson": "Database Snapshot JSON",
+  "restore": "Restore",
+  "restoreCloudBackupQuestion": "Restore Cloud Backup?",
+  "confirmRestoreCloudBackupDetail": "This will overwrite existing local data with the snapshot from {backupName}. Are you sure?",
+  "@confirmRestoreCloudBackupDetail": {
+    "placeholders": {
+      "backupName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreData": "Restore Data",
+  "cloudBackupCreatedSuccess": "Cloud backup created successfully!",
+  "databaseRestoredSuccess": "Database restored successfully from Google Drive!",
+  "noBackupFound": "No backup found in Google Drive",
+  "backupSuccess": "Backup uploaded successfully to Google Drive",
+  "restoreSuccess": "Data restored successfully from Google Drive",
+  "restoreWarning": "Restoring will replace all current local data with the cloud backup. Do you want to continue?",
+  "backupInProgress": "Creating and uploading encrypted backup...",
+  "restoreInProgress": "Downloading and restoring data...",
+  "autoBackup": "Automatic Cloud Backup",
+  "autoBackupDesc": "Automatically back up database when changes occur",
+
+  "categoryFoodDining": "Food & Dining",
+  "categoryGroceries": "Groceries",
+  "categoryTransportation": "Transportation",
+  "categoryHousing": "Housing & Rent",
+  "categoryUtilities": "Utilities",
+  "categoryEntertainment": "Entertainment",
+  "categoryHealthcare": "Healthcare",
+  "categoryShopping": "Shopping",
+  "categoryPersonalCare": "Personal Care",
+  "categoryEducation": "Education",
+  "categoryTravel": "Travel",
+  "categoryOtherExpense": "Other Expense",
+  "categorySalary": "Salary",
+  "categoryFreelance": "Freelance",
+  "categoryInvestments": "Investments",
+  "categoryOtherIncome": "Other Income",
+
+  "validationRequired": "This field is required",
+  "validationInvalidAmount": "Please enter a valid positive amount",
+  "validationSameAccount": "Source and destination accounts must be different",
+
+  "currencyConversion": "Currency Conversion",
+  "exchangeRate": "Exchange Rate",
+  "customRate": "Custom Rate",
+  "editExchangeRate": "Edit Exchange Rate",
+  "setCustomRate": "Set Custom Rate",
+  "resetRate": "Reset to Live Rate",
+  "debitedAmount": "Debited from account",
+  "creditedAmount": "Credited to account",
+  "rateUnitFormat": "1 {from} = {rate} {to}",
+  "@rateUnitFormat": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "refreshRateTooltip": "Refresh live exchange rate",
+  "exchangeRateHint": "Live rate from open.er-api.com",
+  "ratePlaceholder": "Exchange rate (e.g. 4150.0)",
+  "customRateActive": "Custom rate applied",
+  "originalAmount": "Original Amount"
+}

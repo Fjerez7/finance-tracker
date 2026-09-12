@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/savings_goal.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/budgets_provider.dart';
 
 /// Screen for creating and editing target savings objectives.
@@ -83,18 +84,20 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isEditing ? 'Edit Savings Goal' : 'New Savings Goal',
+          widget.isEditing ? l10n.editSavingsGoal : l10n.newSavingsGoal,
         ),
         actions: [
           if (widget.isEditing)
             IconButton(
               icon: const Icon(Icons.delete_outline),
               color: colorScheme.error,
-              tooltip: 'Delete Goal',
+              tooltip: l10n.delete,
               onPressed: _confirmDelete,
             ),
         ],
@@ -107,15 +110,15 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
             // Goal Title
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Goal Title',
-                hintText: 'e.g., Emergency Fund, Japan Trip, New Laptop',
-                prefixIcon: Icon(Icons.flag_outlined),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.goalTitle,
+                hintText: l10n.goalTitleHint,
+                prefixIcon: const Icon(Icons.flag_outlined),
+                border: const OutlineInputBorder(),
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter a goal title';
+                  return l10n.pleaseEnterGoalTitle;
                 }
                 return null;
               },
@@ -128,19 +131,19 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Target Savings Amount',
+              decoration: InputDecoration(
+                labelText: l10n.targetSavingsAmount,
                 hintText: '0.00',
-                prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.attach_money),
+                border: const OutlineInputBorder(),
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter the target amount';
+                  return l10n.pleaseEnterTargetAmount;
                 }
                 final cents = CurrencyFormatter.parseToCents(val);
                 if (cents <= 0) {
-                  return 'Target amount must be greater than 0';
+                  return l10n.targetAmountMustBeGreaterThanZero;
                 }
                 return null;
               },
@@ -153,19 +156,19 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Current Saved Amount',
+              decoration: InputDecoration(
+                labelText: l10n.currentSavedAmount,
                 hintText: '0.00',
-                prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                border: const OutlineInputBorder(),
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {
-                  return 'Please enter current saved amount';
+                  return l10n.pleaseEnterCurrentSavedAmount;
                 }
                 final cents = CurrencyFormatter.parseToCents(val);
                 if (cents < 0) {
-                  return 'Amount cannot be negative';
+                  return l10n.amountCannotBeNegative;
                 }
                 return null;
               },
@@ -187,9 +190,9 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Target Deadline (Optional)',
-                          style: TextStyle(
+                        Text(
+                          l10n.targetDeadlineOptional,
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey,
@@ -198,8 +201,8 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
                         const SizedBox(height: 4),
                         Text(
                           _targetDate != null
-                              ? DateFormat('MMMM d, yyyy').format(_targetDate!)
-                              : 'No deadline set',
+                              ? DateFormat('MMMM d, yyyy', locale).format(_targetDate!)
+                              : l10n.noDeadlineSet,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -220,7 +223,7 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
                           ),
                         TextButton.icon(
                           icon: const Icon(Icons.calendar_month, size: 18),
-                          label: Text(_targetDate != null ? 'Change' : 'Set Date'),
+                          label: Text(_targetDate != null ? l10n.edit : l10n.setDate),
                           onPressed: _pickTargetDate,
                         ),
                       ],
@@ -232,9 +235,9 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
             const SizedBox(height: 20),
 
             // Color Selector
-            const Text(
-              'Select Goal Color',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            Text(
+              l10n.selectGoalColor,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -281,9 +284,9 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
             const SizedBox(height: 20),
 
             // Icon Selector
-            const Text(
-              'Select Goal Icon',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            Text(
+              l10n.selectGoalIcon,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -338,7 +341,7 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
               ),
               icon: const Icon(Icons.save),
               label: Text(
-                widget.isEditing ? 'Save Changes' : 'Create Savings Goal',
+                widget.isEditing ? l10n.saveChanges : l10n.createSavingsGoal,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -371,6 +374,7 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
   Future<void> _saveGoal() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final targetCents = CurrencyFormatter.parseToCents(
       _targetAmountController.text,
     );
@@ -406,8 +410,8 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
           SnackBar(
             content: Text(
               widget.isEditing
-                  ? 'Savings goal updated successfully'
-                  : 'Savings goal created successfully',
+                  ? l10n.savingsGoalUpdatedSuccess
+                  : l10n.savingsGoalCreatedSuccess,
             ),
             backgroundColor: Colors.green.shade700,
           ),
@@ -418,7 +422,7 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving goal: $e'),
+            content: Text(l10n.errorSavingGoal(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -427,25 +431,26 @@ class _AddEditSavingsGoalScreenState extends State<AddEditSavingsGoalScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Delete Savings Goal?'),
+            title: Text(l10n.deleteSavingsGoalQuestion),
             content: Text(
-              'Are you sure you want to delete "${widget.goal?.name}"? Recorded transactions will remain unaffected.',
+              l10n.confirmDeleteSavingsGoalDetail(widget.goal?.name ?? ''),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: Theme.of(ctx).colorScheme.error,
                 ),
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Delete'),
+                child: Text(l10n.delete),
               ),
             ],
           ),

@@ -9,6 +9,9 @@ class TransactionModel extends Transaction {
     super.toAccountId,
     super.categoryId,
     required super.amountCents,
+    super.originalCurrency,
+    super.originalAmountCents,
+    super.exchangeRate,
     required super.type,
     super.description = '',
     required super.transactionDate,
@@ -24,6 +27,9 @@ class TransactionModel extends Transaction {
       toAccountId: entity.toAccountId,
       categoryId: entity.categoryId,
       amountCents: entity.amountCents,
+      originalCurrency: entity.originalCurrency,
+      originalAmountCents: entity.originalAmountCents,
+      exchangeRate: entity.exchangeRate,
       type: entity.type,
       description: entity.description,
       transactionDate: entity.transactionDate,
@@ -40,6 +46,13 @@ class TransactionModel extends Transaction {
       toAccountId: map[DatabaseConstants.colToAccountId] as String?,
       categoryId: map[DatabaseConstants.colCategoryId] as String?,
       amountCents: (map[DatabaseConstants.colAmountCents] as num).toInt(),
+      originalCurrency: map[DatabaseConstants.colOriginalCurrency] as String?,
+      originalAmountCents: map[DatabaseConstants.colOriginalAmountCents] != null
+          ? (map[DatabaseConstants.colOriginalAmountCents] as num).toInt()
+          : null,
+      exchangeRate: map[DatabaseConstants.colExchangeRate] != null
+          ? (map[DatabaseConstants.colExchangeRate] as num).toDouble()
+          : null,
       type: TransactionType.fromString(
         map[DatabaseConstants.colTransactionType] as String,
       ),
@@ -64,6 +77,9 @@ class TransactionModel extends Transaction {
       DatabaseConstants.colToAccountId: toAccountId,
       DatabaseConstants.colCategoryId: categoryId,
       DatabaseConstants.colAmountCents: amountCents,
+      DatabaseConstants.colOriginalCurrency: originalCurrency,
+      DatabaseConstants.colOriginalAmountCents: originalAmountCents,
+      DatabaseConstants.colExchangeRate: exchangeRate,
       DatabaseConstants.colTransactionType: type.toDbString(),
       DatabaseConstants.colDescription: description,
       DatabaseConstants.colTransactionDate: transactionDate
@@ -82,6 +98,9 @@ class TransactionModel extends Transaction {
       toAccountId: toAccountId,
       categoryId: categoryId,
       amountCents: amountCents,
+      originalCurrency: originalCurrency,
+      originalAmountCents: originalAmountCents,
+      exchangeRate: exchangeRate,
       type: type,
       description: description,
       transactionDate: transactionDate,

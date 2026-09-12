@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/account.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Card widget displaying account summary with balance and credit utilization.
 class AccountBalanceCard extends StatelessWidget {
@@ -11,16 +13,19 @@ class AccountBalanceCard extends StatelessWidget {
 
   const AccountBalanceCard({super.key, required this.account, this.onTap});
 
-  String _getAccountTypeLabel(AccountType type) {
+  String _getAccountTypeLabel(BuildContext context, AccountType type) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return type.name;
+
     switch (type) {
       case AccountType.bank:
-        return 'Bank Account';
+        return l10n.accountTypeBank;
       case AccountType.digitalWallet:
-        return 'Digital Wallet';
+        return l10n.accountTypeDigitalWallet;
       case AccountType.cash:
-        return 'Cash';
+        return l10n.accountTypeCash;
       case AccountType.creditCard:
-        return 'Credit Card';
+        return l10n.accountTypeCreditCard;
     }
   }
 
@@ -32,6 +37,7 @@ class AccountBalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final Color themeColor = ColorHelper.hexToColor(account.colorHex);
     final IconData iconData = IconHelper.getIconData(account.iconName);
 
@@ -76,7 +82,7 @@ class AccountBalanceCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _getAccountTypeLabel(account.type),
+                          _getAccountTypeLabel(context, account.type),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -86,7 +92,10 @@ class AccountBalanceCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    CurrencyFormatter.formatCents(account.balanceCents),
+                    CurrencyFormatter.formatCents(
+                      account.balanceCents,
+                      currency: AppCurrency.fromCode(account.currency),
+                    ),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -117,14 +126,19 @@ class AccountBalanceCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Available: ${CurrencyFormatter.formatCents(account.availableCreditCents)}',
+                      l10n.availableAmount(
+                        CurrencyFormatter.formatCents(account.availableCreditCents),
+                      ),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey.shade600,
                       ),
                     ),
                     Text(
-                      '${CurrencyFormatter.formatPercentage(account.creditUtilizationRate)} used of ${CurrencyFormatter.formatCents(account.creditLimitCents)}',
+                      l10n.creditUsedOfTotal(
+                        CurrencyFormatter.formatPercentage(account.creditUtilizationRate),
+                        CurrencyFormatter.formatCents(account.creditLimitCents),
+                      ),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,

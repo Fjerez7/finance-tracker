@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import '../../../core/constants/database_constants.dart';
 
 /// Singleton helper managing SQLite database lifecycle, schema migrations, and seeds.
@@ -27,17 +29,26 @@ class DatabaseHelper {
     return _database!;
   }
 
-  /// Initializes the SQLite database.
+  /// Initializes the SQLite database across web, desktop, and mobile environments.
   Future<Database> initDatabase() async {
+    final DatabaseFactory factory;
     final String path;
-    if (databasePathOverride != null) {
-      path = databasePathOverride!;
-    } else {
-      final String dbPath = await getDatabasesPath();
-      path = p.join(dbPath, DatabaseConstants.databaseName);
-    }
 
-    final DatabaseFactory factory = databaseFactoryOverride ?? databaseFactory;
+    if (databaseFactoryOverride != null) {
+      factory = databaseFactoryOverride!;
+      path = databasePathOverride ?? DatabaseConstants.databaseName;
+    } else if (kIsWeb) {
+      factory = databaseFactoryFfiWeb;
+      path = DatabaseConstants.databaseName;
+    } else {
+      factory = databaseFactory;
+      if (databasePathOverride != null) {
+        path = databasePathOverride!;
+      } else {
+        final String dbPath = await getDatabasesPath();
+        path = p.join(dbPath, DatabaseConstants.databaseName);
+      }
+    }
 
     return await factory.openDatabase(
       path,
@@ -98,6 +109,9 @@ class DatabaseHelper {
         ${DatabaseConstants.colToAccountId} TEXT,
         ${DatabaseConstants.colCategoryId} TEXT,
         ${DatabaseConstants.colAmountCents} INTEGER NOT NULL CHECK (${DatabaseConstants.colAmountCents} > 0),
+        ${DatabaseConstants.colOriginalCurrency} TEXT,
+        ${DatabaseConstants.colOriginalAmountCents} INTEGER,
+        ${DatabaseConstants.colExchangeRate} REAL,
         ${DatabaseConstants.colTransactionType} TEXT NOT NULL,
         ${DatabaseConstants.colDescription} TEXT NOT NULL DEFAULT '',
         ${DatabaseConstants.colTransactionDate} TEXT NOT NULL,
@@ -115,6 +129,7 @@ class DatabaseHelper {
         ${DatabaseConstants.colId} TEXT PRIMARY KEY,
         ${DatabaseConstants.colName} TEXT NOT NULL,
         ${DatabaseConstants.colAmountCents} INTEGER NOT NULL CHECK (${DatabaseConstants.colAmountCents} > 0),
+        ${DatabaseConstants.colCurrency} TEXT NOT NULL DEFAULT 'USD',
         ${DatabaseConstants.colFrequency} TEXT NOT NULL,
         ${DatabaseConstants.colAccountId} TEXT NOT NULL,
         ${DatabaseConstants.colCategoryId} TEXT NOT NULL,
@@ -160,7 +175,27 @@ class DatabaseHelper {
       );
     ''');
 
-    // 7. Performance Indexes
+    // 7. Settings Table
+    batch.execute('''
+      CREATE TABLE ${DatabaseConstants.tableSettings} (
+        ${DatabaseConstants.colKey} TEXT PRIMARY KEY,
+        ${DatabaseConstants.colValue} TEXT NOT NULL,
+        ${DatabaseConstants.colUpdatedAt} TEXT NOT NULL
+      );
+    ''');
+
+    // 8. Exchange Rates Table
+    batch.execute('''
+      CREATE TABLE ${DatabaseConstants.tableExchangeRates} (
+        ${DatabaseConstants.colBaseCurrency} TEXT NOT NULL,
+        ${DatabaseConstants.colTargetCurrency} TEXT NOT NULL,
+        ${DatabaseConstants.colRate} REAL NOT NULL,
+        ${DatabaseConstants.colLastUpdated} TEXT NOT NULL,
+        PRIMARY KEY (${DatabaseConstants.colBaseCurrency}, ${DatabaseConstants.colTargetCurrency})
+      );
+    ''');
+
+    // 9. Performance Indexes
     batch.execute(
       'CREATE INDEX idx_transactions_date ON ${DatabaseConstants.tableTransactions} (${DatabaseConstants.colTransactionDate} DESC);',
     );
@@ -183,7 +218,7 @@ class DatabaseHelper {
       'CREATE INDEX idx_accounts_archived ON ${DatabaseConstants.tableAccounts} (${DatabaseConstants.colIsArchived});',
     );
 
-    // 8. Seed Default Categories into same transaction batch
+    // 10. Seed Default Categories into same transaction batch
     _seedDefaultCategories(batch);
 
     // Execute table, index creation, and category seeds atomically
@@ -192,7 +227,46 @@ class DatabaseHelper {
 
   /// Migrations for future database schema versions.
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle future schema migrations when increasing databaseVersion
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSettings} (
+          ${DatabaseConstants.colKey} TEXT PRIMARY KEY,
+          ${DatabaseConstants.colValue} TEXT NOT NULL,
+          ${DatabaseConstants.colUpdatedAt} TEXT NOT NULL
+        );
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableExchangeRates} (
+          ${DatabaseConstants.colBaseCurrency} TEXT NOT NULL,
+          ${DatabaseConstants.colTargetCurrency} TEXT NOT NULL,
+          ${DatabaseConstants.colRate} REAL NOT NULL,
+          ${DatabaseConstants.colLastUpdated} TEXT NOT NULL,
+          PRIMARY KEY (${DatabaseConstants.colBaseCurrency}, ${DatabaseConstants.colTargetCurrency})
+        );
+      ''');
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableTransactions} ADD COLUMN ${DatabaseConstants.colOriginalCurrency} TEXT;',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableTransactions} ADD COLUMN ${DatabaseConstants.colOriginalAmountCents} INTEGER;',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableTransactions} ADD COLUMN ${DatabaseConstants.colExchangeRate} REAL;',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableSubscriptions} ADD COLUMN ${DatabaseConstants.colCurrency} TEXT NOT NULL DEFAULT \'USD\';',
+        );
+      } catch (_) {}
+    }
   }
 
   /// Populates the initial system categories into batch.
@@ -376,14 +450,53 @@ class DatabaseHelper {
   /// Deletes the database file (useful for testing or full app reset).
   Future<void> deleteDatabaseFile() async {
     await close();
+    final DatabaseFactory factory;
     final String path;
-    if (databasePathOverride != null) {
-      path = databasePathOverride!;
+
+    if (databaseFactoryOverride != null) {
+      factory = databaseFactoryOverride!;
+      path = databasePathOverride ?? DatabaseConstants.databaseName;
+    } else if (kIsWeb) {
+      factory = databaseFactoryFfiWeb;
+      path = DatabaseConstants.databaseName;
     } else {
-      final String dbPath = await getDatabasesPath();
-      path = p.join(dbPath, DatabaseConstants.databaseName);
+      factory = databaseFactory;
+      if (databasePathOverride != null) {
+        path = databasePathOverride!;
+      } else {
+        final String dbPath = await getDatabasesPath();
+        path = p.join(dbPath, DatabaseConstants.databaseName);
+      }
     }
-    final DatabaseFactory factory = databaseFactoryOverride ?? databaseFactory;
     await factory.deleteDatabase(path);
+  }
+
+  /// Retrieves a persisted setting value by key, returning null if not found.
+  Future<String?> getSetting(String key) async {
+    final Database db = await database;
+    final List<Map<String, dynamic>> results = await db.query(
+      DatabaseConstants.tableSettings,
+      columns: [DatabaseConstants.colValue],
+      where: '${DatabaseConstants.colKey} = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (results.isEmpty) return null;
+    return results.first[DatabaseConstants.colValue] as String?;
+  }
+
+  /// Sets or updates a persisted setting value.
+  Future<void> setSetting(String key, String value) async {
+    final Database db = await database;
+    final String now = DateTime.now().toUtc().toIso8601String();
+    await db.insert(
+      DatabaseConstants.tableSettings,
+      {
+        DatabaseConstants.colKey: key,
+        DatabaseConstants.colValue: value,
+        DatabaseConstants.colUpdatedAt: now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }

@@ -1,9 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/models/analytics_models.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Interactive pie/donut chart rendering category expense distributions with fl_chart.
 class CategoryExpensePieChart extends StatefulWidget {
@@ -44,6 +46,7 @@ class _CategoryExpensePieChartState extends State<CategoryExpensePieChart> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     if (widget.summaries.isEmpty) {
       return Center(
@@ -59,7 +62,7 @@ class _CategoryExpensePieChartState extends State<CategoryExpensePieChart> {
               ),
               const SizedBox(height: 8),
               Text(
-                'No expenses recorded in this period',
+                l10n.noExpensesPeriod,
                 style: TextStyle(
                   fontSize: 13,
                   color: colorScheme.onSurfaceVariant,
@@ -117,8 +120,12 @@ class _CategoryExpensePieChartState extends State<CategoryExpensePieChart> {
                   Text(
                     _touchedIndex >= 0 &&
                             _touchedIndex < widget.summaries.length
-                        ? widget.summaries[_touchedIndex].categoryName
-                        : 'Total Expense',
+                        ? CategoryLocalizationHelper.getLocalizedName(
+                          context,
+                          categoryId: widget.summaries[_touchedIndex].categoryId,
+                          defaultName: widget.summaries[_touchedIndex].categoryName,
+                        )
+                        : l10n.totalExpense,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -200,7 +207,11 @@ class _CategoryExpensePieChartState extends State<CategoryExpensePieChart> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      summary.categoryName,
+                      CategoryLocalizationHelper.getLocalizedName(
+                        context,
+                        categoryId: summary.categoryId,
+                        defaultName: summary.categoryName,
+                      ),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight:

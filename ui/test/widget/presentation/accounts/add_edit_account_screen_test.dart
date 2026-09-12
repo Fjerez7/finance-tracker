@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/accounts/add_edit_account_screen.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
 
@@ -38,11 +39,16 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<AccountsProvider>.value(
         value: provider,
-        child: const MaterialApp(home: AddEditAccountScreen()),
+        child: const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AddEditAccountScreen(),
+        ),
       ),
     );
 
-    expect(find.text('New Account'), findsOneWidget);
+    expect(find.text('Add Account'), findsOneWidget);
     expect(find.text('Account Name'), findsOneWidget);
 
     // Enter account name
@@ -51,13 +57,13 @@ void main() {
       'Nequi Digital Wallet',
     );
 
-    // Select Digital Wallet type
-    await tester.tap(find.text('Digital Wallet'));
+    // Select Savings / Digital Wallet type
+    await tester.tap(find.text('Savings'));
     await tester.pump();
 
     // Enter balance
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Initial Balance (\$)'),
+      find.widgetWithText(TextFormField, 'Initial Balance'),
       '350.00',
     );
 

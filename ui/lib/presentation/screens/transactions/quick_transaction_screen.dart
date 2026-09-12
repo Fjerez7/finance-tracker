@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/account.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
+import '../../../providers/exchange_rate_provider.dart';
 import '../../../providers/transactions_provider.dart';
+import '../../widgets/cards/currency_conversion_card.dart';
 import '../../widgets/common/calculator_numpad.dart';
 import '../../widgets/common/category_grid_picker.dart';
 
@@ -30,6 +33,8 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
   String? _selectedAccountId;
   String? _toAccountId; // For transfers
   String? _selectedCategoryId;
+  String? _selectedCurrency;
+  double? _customRate;
   DateTime _transactionDate = DateTime.now();
   final TextEditingController _noteController = TextEditingController();
   bool _showDetails = false;
@@ -51,6 +56,7 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final accountsProv = context.watch<AccountsProvider>();
     final txProv = context.watch<TransactionsProvider>();
 
@@ -65,20 +71,23 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
         accounts.where((a) => a.id == _selectedAccountId).firstOrNull ??
         accounts.firstOrNull;
     final currencyCode = currentAccount?.currency ?? 'USD';
+    _selectedCurrency ??= currencyCode;
 
     final categories = _selectedType == TransactionType.income
         ? txProv.incomeCategories
         : txProv.expenseCategories;
 
+    final bool isForeignCurrency = _selectedCurrency != currencyCode;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Transaction'),
+        title: Text(l10n.addTransaction),
         actions: [
           IconButton(
             icon: Icon(
               _showDetails ? Icons.keyboard_arrow_up : Icons.edit_note_outlined,
             ),
-            tooltip: 'Toggle Note & Date',
+            tooltip: l10n.toggleNoteAndDate,
             onPressed: () {
               setState(() {
                 _showDetails = !_showDetails;
@@ -97,21 +106,21 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                 children: [
                   // Segmented Type Selector
                   SegmentedButton<TransactionType>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: TransactionType.expense,
-                        label: Text('Expense'),
-                        icon: Icon(Icons.arrow_downward, size: 16),
+                        label: Text(l10n.expense),
+                        icon: const Icon(Icons.arrow_downward, size: 16),
                       ),
                       ButtonSegment(
                         value: TransactionType.income,
-                        label: Text('Income'),
-                        icon: Icon(Icons.arrow_upward, size: 16),
+                        label: Text(l10n.income),
+                        icon: const Icon(Icons.arrow_upward, size: 16),
                       ),
                       ButtonSegment(
                         value: TransactionType.transfer,
-                        label: Text('Transfer'),
-                        icon: Icon(Icons.swap_horiz, size: 16),
+                        label: Text(l10n.transfer),
+                        icon: const Icon(Icons.swap_horiz, size: 16),
                       ),
                     ],
                     selected: {_selectedType},
@@ -139,22 +148,47 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                     ),
                     child: Column(
                       children: [
-                        Text(
-                          CurrencyFormatter.formatCents(
-                            _amountCents,
-                            symbol: currencyCode == 'USD'
-                                ? '\$'
-                                : '$currencyCode ',
-                          ),
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: _selectedType == TransactionType.expense
-                                ? Colors.red.shade600
-                                : _selectedType == TransactionType.income
-                                ? Colors.green.shade600
-                                : colorScheme.primary,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              CurrencyFormatter.formatCents(
+                                _amountCents,
+                                symbol: _selectedCurrency == 'USD'
+                                    ? '\$'
+                                    : '$_selectedCurrency ',
+                              ),
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: _selectedType == TransactionType.expense
+                                    ? Colors.red.shade600
+                                    : _selectedType == TransactionType.income
+                                    ? Colors.green.shade600
+                                    : colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Quick Currency Dropdown Selector
+                            DropdownButton<String>(
+                              value: _selectedCurrency,
+                              isDense: true,
+                              underline: const SizedBox(),
+                              items: const [
+                                DropdownMenuItem(value: 'USD', child: Text('USD')),
+                                DropdownMenuItem(value: 'COP', child: Text('COP')),
+                                DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _selectedCurrency = val;
+                                    _customRate = null;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         // Account Selector pill
@@ -162,6 +196,21 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                       ],
                     ),
                   ),
+
+                  // Live Currency Conversion Card if foreign currency is selected
+                  if (isForeignCurrency)
+                    CurrencyConversionCard(
+                      fromCurrency: _selectedCurrency!,
+                      toCurrency: currencyCode,
+                      amountCents: _amountCents,
+                      customRate: _customRate,
+                      onCustomRateChanged: (rate) {
+                        setState(() {
+                          _customRate = rate;
+                        });
+                      },
+                      isIncome: _selectedType == TransactionType.income,
+                    ),
                 ],
               ),
             ),
@@ -179,11 +228,11 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                       children: [
                         TextField(
                           controller: _noteController,
-                          decoration: const InputDecoration(
-                            labelText: 'Note / Description',
-                            prefixIcon: Icon(Icons.description_outlined),
+                          decoration: InputDecoration(
+                            labelText: l10n.noteOrDescription,
+                            prefixIcon: const Icon(Icons.description_outlined),
                             isDense: true,
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -204,7 +253,7 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
                             const Spacer(),
                             TextButton(
                               onPressed: _pickDateTime,
-                              child: const Text('Change Date'),
+                              child: Text(l10n.changeDate),
                             ),
                           ],
                         ),
@@ -253,10 +302,11 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
   }
 
   Widget _buildAccountSelector(List<Account> accounts) {
+    final l10n = AppLocalizations.of(context)!;
     if (accounts.isEmpty) {
-      return const Text(
-        'No accounts found. Please create one first.',
-        style: TextStyle(color: Colors.red),
+      return Text(
+        l10n.noAccountsFoundCreateFirst,
+        style: const TextStyle(color: Colors.red),
       );
     }
 
@@ -289,6 +339,7 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
   }
 
   Widget _buildTransferDestinationPicker(List<Account> accounts) {
+    final l10n = AppLocalizations.of(context)!;
     final destinationAccounts = accounts
         .where((a) => a.id != _selectedAccountId)
         .toList();
@@ -302,17 +353,17 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Transfer Destination Account:',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          Text(
+            l10n.transferDestinationAccount,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _toAccountId,
-            decoration: const InputDecoration(
-              labelText: 'To Account',
-              prefixIcon: Icon(Icons.input),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.toAccount,
+              prefixIcon: const Icon(Icons.input),
+              border: const OutlineInputBorder(),
             ),
             items: destinationAccounts.map((account) {
               return DropdownMenuItem<String>(
@@ -332,7 +383,7 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
               minimumSize: const Size.fromHeight(48),
             ),
             icon: const Icon(Icons.check),
-            label: const Text('Confirm Transfer'),
+            label: Text(l10n.confirmTransfer),
             onPressed: _submitTransaction,
           ),
         ],
@@ -369,10 +420,11 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
   }
 
   Future<void> _submitTransaction() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_amountCents <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter an amount greater than 0'),
+        SnackBar(
+          content: Text(l10n.pleaseEnterAmountGreaterThanZero),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -381,8 +433,8 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
 
     if (_selectedAccountId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an account'),
+        SnackBar(
+          content: Text(l10n.pleaseSelectAccount),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -392,14 +444,34 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
     if (_selectedType == TransactionType.transfer) {
       if (_toAccountId == null || _toAccountId == _selectedAccountId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a different destination account'),
+          SnackBar(
+            content: Text(l10n.pleaseSelectDifferentDestination),
             behavior: SnackBarBehavior.floating,
           ),
         );
         return;
       }
     }
+
+    final accountsProv = context.read<AccountsProvider>();
+    final account = accountsProv.accounts.where((a) => a.id == _selectedAccountId).firstOrNull;
+    final accountCurrency = account?.currency ?? 'USD';
+    final currency = _selectedCurrency ?? accountCurrency;
+    final bool isForeign = currency != accountCurrency;
+
+    final exchangeProv = context.read<ExchangeRateProvider>();
+    final double? effectiveRate = isForeign
+        ? (_customRate ?? exchangeProv.getRate(currency, accountCurrency) ?? 1.0)
+        : null;
+
+    final int canonicalAmountCents = isForeign
+        ? exchangeProv.convertAmount(
+            amountCents: _amountCents,
+            fromCurrency: currency,
+            toCurrency: accountCurrency,
+            customRate: _customRate,
+          )
+        : _amountCents;
 
     final tx = Transaction(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
@@ -410,7 +482,10 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
       categoryId: _selectedType != TransactionType.transfer
           ? _selectedCategoryId
           : null,
-      amountCents: _amountCents,
+      amountCents: canonicalAmountCents,
+      originalCurrency: isForeign ? currency : null,
+      originalAmountCents: isForeign ? _amountCents : null,
+      exchangeRate: effectiveRate,
       type: _selectedType,
       description: _noteController.text.trim(),
       transactionDate: _transactionDate,
@@ -419,16 +494,19 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
     );
 
     final txProv = context.read<TransactionsProvider>();
-    final accountsProv = context.read<AccountsProvider>();
 
     try {
       await txProv.addTransaction(tx, accountsProvider: accountsProv);
 
       if (mounted) {
+        final typeLabel = _selectedType == TransactionType.income
+            ? l10n.income
+            : (_selectedType == TransactionType.expense ? l10n.expense : l10n.transfer);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${_selectedType.name.toUpperCase()} recorded successfully!',
+              l10n.recordedSuccessfully(typeLabel.toUpperCase()),
             ),
             backgroundColor: Colors.green.shade700,
             duration: const Duration(seconds: 2),
@@ -441,7 +519,7 @@ class _QuickTransactionScreenState extends State<QuickTransactionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving transaction: $e'),
+            content: Text(l10n.errorSavingTransaction(e.toString())),
             backgroundColor: Colors.red.shade700,
           ),
         );

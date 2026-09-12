@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
 import 'package:finance_tracker/domain/entities/subscription.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/widgets/cards/subscription_card.dart';
 
 void main() {
@@ -85,6 +86,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SubscriptionCard(
               subscription: activeSub,
@@ -118,6 +122,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SubscriptionCard(
               subscription: annualSub,
@@ -140,6 +147,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SubscriptionCard(
               subscription: pausedSub,
@@ -153,6 +163,44 @@ void main() {
       expect(find.text('Fitness Gym'), findsOneWidget);
       expect(find.text('PAUSED'), findsOneWidget);
       expect(find.text('Pay & Advance'), findsNothing);
+    });
+
+    testWidgets('renders foreign currency subscription correctly', (
+      WidgetTester tester,
+    ) async {
+      final foreignSub = Subscription(
+        id: 'sub-cop-card',
+        name: 'Disney+ Colombia',
+        amountCents: 3500000, // COP 35,000.00
+        currency: 'COP',
+        frequency: RecurrenceFrequency.monthly,
+        accountId: 'acc-1', // USD account
+        categoryId: 'cat-subs',
+        billingDay: 20,
+        nextDueDate: now.add(const Duration(days: 10)),
+        autoRegister: false,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SubscriptionCard(
+              subscription: foreignSub,
+              category: testCategory,
+              account: testAccount,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Disney+ Colombia'), findsOneWidget);
+      expect(find.text('COP 35,000.00'), findsOneWidget);
     });
   });
 }

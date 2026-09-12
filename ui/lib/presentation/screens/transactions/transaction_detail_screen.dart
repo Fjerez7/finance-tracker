@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_currency.dart';
+import '../../../core/utils/category_localization_helper.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/transactions_provider.dart';
 
-/// Screen displaying complete details for a single financial transaction.
+/// Screen displaying complete details for a single financial transaction
 class TransactionDetailScreen extends StatelessWidget {
   final Transaction transaction;
 
@@ -18,6 +21,7 @@ class TransactionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final txProv = context.watch<TransactionsProvider>();
     final accountsProv = context.watch<AccountsProvider>();
 
@@ -32,6 +36,10 @@ class TransactionDetailScreen extends StatelessWidget {
         : null;
 
     final currencyCode = sourceAccount?.currency ?? 'USD';
+    final bool isForeign =
+        transaction.originalCurrency != null &&
+        transaction.originalAmountCents != null &&
+        transaction.originalCurrency != currencyCode;
 
     Color amountColor;
     String typeLabel;
@@ -40,29 +48,29 @@ class TransactionDetailScreen extends StatelessWidget {
     switch (transaction.type) {
       case TransactionType.expense:
         amountColor = Colors.red.shade600;
-        typeLabel = 'Expense';
+        typeLabel = l10n.expense;
         signPrefix = '-';
         break;
       case TransactionType.income:
         amountColor = Colors.green.shade600;
-        typeLabel = 'Income';
+        typeLabel = l10n.income;
         signPrefix = '+';
         break;
       case TransactionType.transfer:
         amountColor = colorScheme.primary;
-        typeLabel = 'Account Transfer';
+        typeLabel = l10n.accountTransfer;
         signPrefix = '';
         break;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transaction Details'),
+        title: Text(l10n.transactionDetail),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
             color: colorScheme.error,
-            tooltip: 'Delete Transaction',
+            tooltip: l10n.delete,
             onPressed: () => _confirmDelete(context),
           ),
         ],
@@ -107,13 +115,26 @@ class TransactionDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '$signPrefix${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')}',
+                        isForeign
+                            ? '$signPrefix${CurrencyFormatter.formatCents(transaction.originalAmountCents!, symbol: transaction.originalCurrency == 'USD' ? '\$' : '${transaction.originalCurrency} ')}'
+                            : '$signPrefix${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')}',
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
                           color: amountColor,
                         ),
                       ),
+                      if (isForeign) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '(~$signPrefix${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')})',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       Text(
                         DateFormat(
@@ -147,7 +168,7 @@ class TransactionDetailScreen extends StatelessWidget {
                     if (category != null) ...[
                       _buildDetailRow(
                         context,
-                        label: 'Category',
+                        label: l10n.category,
                         child: Row(
                           children: [
                             CircleAvatar(
@@ -163,7 +184,11 @@ class TransactionDetailScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              category.name,
+                              CategoryLocalizationHelper.getLocalizedName(
+                                context,
+                                categoryId: category.id,
+                                defaultName: category.name,
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -177,10 +202,10 @@ class TransactionDetailScreen extends StatelessWidget {
                     _buildDetailRow(
                       context,
                       label: transaction.type == TransactionType.transfer
-                          ? 'Source Account'
-                          : 'Account',
+                          ? l10n.sourceAccount
+                          : l10n.account,
                       child: Text(
-                        sourceAccount?.name ?? 'Unknown Account',
+                        sourceAccount?.name ?? l10n.unknownAccount,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -190,9 +215,41 @@ class TransactionDetailScreen extends StatelessWidget {
                       const Divider(),
                       _buildDetailRow(
                         context,
-                        label: 'Destination Account',
+                        label: l10n.destinationAccount,
                         child: Text(
                           destAccount.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+
+                    if (isForeign) ...[
+                      const Divider(),
+                      _buildDetailRow(
+                        context,
+                        label: l10n.originalAmount,
+                        child: Text(
+                          '${CurrencyFormatter.formatCents(transaction.originalAmountCents!, symbol: transaction.originalCurrency == 'USD' ? '\$' : '${transaction.originalCurrency} ')} ${transaction.originalCurrency}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      if (transaction.exchangeRate != null) ...[
+                        const Divider(),
+                        _buildDetailRow(
+                          context,
+                          label: l10n.exchangeRate,
+                          child: Text(
+                            '1 ${transaction.originalCurrency} = ${transaction.exchangeRate! < 1 ? transaction.exchangeRate!.toStringAsFixed(6) : transaction.exchangeRate!.toStringAsFixed(2)} $currencyCode',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                      const Divider(),
+                      _buildDetailRow(
+                        context,
+                        label: l10n.debitedAmount,
+                        child: Text(
+                          '${CurrencyFormatter.formatCents(transaction.amountCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')} $currencyCode',
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -202,7 +259,7 @@ class TransactionDetailScreen extends StatelessWidget {
                       const Divider(),
                       _buildDetailRow(
                         context,
-                        label: 'Description / Note',
+                        label: l10n.noteOrDescription,
                         child: Text(
                           transaction.description,
                           style: const TextStyle(fontWeight: FontWeight.w500),
@@ -213,7 +270,7 @@ class TransactionDetailScreen extends StatelessWidget {
                     const Divider(),
                     _buildDetailRow(
                       context,
-                      label: 'Transaction ID',
+                      label: l10n.transactionId,
                       child: Text(
                         transaction.id,
                         style: TextStyle(
@@ -258,24 +315,23 @@ class TransactionDetailScreen extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Transaction?'),
-        content: const Text(
-          'This will permanently delete this transaction and automatically reverse its effect on your account balance.',
-        ),
+        title: Text(l10n.deleteTransactionQuestion),
+        content: Text(l10n.confirmDeleteTransactionDetail),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

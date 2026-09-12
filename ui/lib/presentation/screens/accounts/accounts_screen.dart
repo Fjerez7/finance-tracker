@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/account.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../widgets/cards/account_balance_card.dart';
 import 'account_detail_screen.dart';
@@ -12,6 +13,8 @@ class AccountsScreen extends StatelessWidget {
   const AccountsScreen({super.key});
 
   Widget _buildNetWorthHeader(BuildContext context, AccountsProvider provider) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -32,7 +35,7 @@ class AccountsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TOTAL NET WORTH',
+                l10n != null ? l10n.netWorth.toUpperCase() : 'TOTAL NET WORTH',
                 style: TextStyle(
                   fontSize: 12,
                   letterSpacing: 1.2,
@@ -79,7 +82,7 @@ class AccountsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Assets',
+                          l10n?.assets ?? 'Assets',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -116,7 +119,7 @@ class AccountsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Liabilities',
+                          l10n?.liabilities ?? 'Liabilities',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -146,8 +149,10 @@ class AccountsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Accounts & Net Worth')),
+      appBar: AppBar(title: Text(l10n.accounts)),
       body: Consumer<AccountsProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading && provider.accounts.isEmpty) {
@@ -174,7 +179,7 @@ class AccountsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'ASSETS (${assets.length})',
+                      '${l10n.assets.toUpperCase()} (${assets.length})',
                       style: TextStyle(
                         fontSize: 12,
                         letterSpacing: 1.1,
@@ -190,7 +195,7 @@ class AccountsScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: Center(
                       child: Text(
-                        'No asset accounts yet. Tap "+" to add one.',
+                        l10n.noAccountsFound,
                         style: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 13,
@@ -222,7 +227,7 @@ class AccountsScreen extends StatelessWidget {
                 // Section 2: Credit Cards & Liabilities
                 if (creditCards.isNotEmpty) ...[
                   Text(
-                    'CREDIT CARDS (${creditCards.length})',
+                    '${l10n.accountTypeCreditCard.toUpperCase()} (${creditCards.length})',
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 1.1,
@@ -263,7 +268,7 @@ class AccountsScreen extends StatelessWidget {
           );
         },
         icon: const Icon(Icons.add),
-        label: const Text('New Account'),
+        label: Text(l10n.addAccount),
       ),
     );
   }

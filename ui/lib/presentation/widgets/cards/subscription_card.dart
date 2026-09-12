@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_currency.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../domain/entities/account.dart';
 import '../../../domain/entities/category.dart';
 import '../../../domain/entities/subscription.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 /// Card widget rendering a subscription with due date indicators and 1-tap pay action.
 class SubscriptionCard extends StatelessWidget {
@@ -28,7 +30,8 @@ class SubscriptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final currencyCode = account?.currency ?? 'USD';
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
 
     final categoryColor =
         category != null
@@ -39,7 +42,23 @@ class SubscriptionCard extends StatelessWidget {
             ? IconHelper.getIconData(category!.iconName)
             : Icons.subscriptions;
 
-    final dueDateInfo = _calculateDueStatus(subscription.nextDueDate);
+    final dueDateInfo = _calculateDueStatus(subscription.nextDueDate, l10n, locale);
+
+    String freqLabel;
+    switch (subscription.frequency) {
+      case RecurrenceFrequency.monthly:
+        freqLabel = l10n.freqMonthly;
+        break;
+      case RecurrenceFrequency.weekly:
+        freqLabel = l10n.freqWeekly;
+        break;
+      case RecurrenceFrequency.biweekly:
+        freqLabel = l10n.freqBiweekly;
+        break;
+      case RecurrenceFrequency.annual:
+        freqLabel = l10n.freqAnnual;
+        break;
+    }
 
     return Card(
       elevation: 0,
@@ -107,9 +126,9 @@ class SubscriptionCard extends StatelessWidget {
                                   color: Colors.grey.shade300,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Text(
-                                  'PAUSED',
-                                  style: TextStyle(
+                                child: Text(
+                                  l10n.pausedTag,
+                                  style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black54,
@@ -143,7 +162,7 @@ class SubscriptionCard extends StatelessWidget {
                               const SizedBox(width: 6),
                             ],
                             Text(
-                              subscription.frequency.name.toUpperCase(),
+                              freqLabel.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -186,8 +205,9 @@ class SubscriptionCard extends StatelessWidget {
                       Text(
                         CurrencyFormatter.formatCents(
                           subscription.amountCents,
-                          symbol:
-                              currencyCode == 'USD' ? '\$' : '$currencyCode ',
+                          symbol: subscription.currency == 'USD'
+                              ? '\$'
+                              : '${subscription.currency} ',
                         ),
                         style: const TextStyle(
                           fontSize: 16,
@@ -198,7 +218,12 @@ class SubscriptionCard extends StatelessWidget {
                           RecurrenceFrequency.monthly) ...[
                         const SizedBox(height: 2),
                         Text(
-                          '~${CurrencyFormatter.formatCents(subscription.monthlyEquivalentCents, symbol: currencyCode == 'USD' ? '\$' : '$currencyCode ')}/mo',
+                          '~${CurrencyFormatter.formatCents(
+                            subscription.monthlyEquivalentCents,
+                            symbol: subscription.currency == 'USD'
+                                ? '\$'
+                                : '${subscription.currency} ',
+                          )}${l10n.perMonth}',
                           style: TextStyle(
                             fontSize: 11,
                             color: colorScheme.onSurfaceVariant,
@@ -230,8 +255,8 @@ class SubscriptionCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           subscription.autoRegister
-                              ? 'Auto-registers on due date'
-                              : 'Manual confirmation',
+                              ? l10n.autoRegistersOnDueDate
+                              : l10n.manualConfirmation,
                           style: TextStyle(
                             fontSize: 11,
                             color: colorScheme.onSurfaceVariant,
@@ -246,7 +271,7 @@ class SubscriptionCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                         ),
                         icon: const Icon(Icons.check, size: 16),
-                        label: const Text('Pay & Advance', style: TextStyle(fontSize: 12)),
+                        label: Text(l10n.payAndAdvance, style: const TextStyle(fontSize: 12)),
                         onPressed: onPay,
                       ),
                   ],
@@ -259,7 +284,11 @@ class SubscriptionCard extends StatelessWidget {
     );
   }
 
-  _DueStatusInfo _calculateDueStatus(DateTime nextDueDate) {
+  _DueStatusInfo _calculateDueStatus(
+    DateTime nextDueDate,
+    AppLocalizations l10n,
+    String locale,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final due = DateTime(
@@ -271,28 +300,28 @@ class SubscriptionCard extends StatelessWidget {
 
     if (diffDays < 0) {
       return _DueStatusInfo(
-        label: 'Overdue (${diffDays.abs()} days)',
+        label: l10n.overdueDays(diffDays.abs()),
         backgroundColor: Colors.red.shade100,
         textColor: Colors.red.shade800,
         isOverdue: true,
       );
     } else if (diffDays == 0) {
       return _DueStatusInfo(
-        label: 'Due Today',
+        label: l10n.dueToday,
         backgroundColor: Colors.orange.shade100,
         textColor: Colors.orange.shade900,
         isOverdue: false,
       );
     } else if (diffDays == 1) {
       return _DueStatusInfo(
-        label: 'Due Tomorrow',
+        label: l10n.dueTomorrow,
         backgroundColor: Colors.amber.shade100,
         textColor: Colors.amber.shade900,
         isOverdue: false,
       );
     } else {
       return _DueStatusInfo(
-        label: 'Due in $diffDays days (${DateFormat('MMM d').format(nextDueDate)})',
+        label: l10n.dueInDays(diffDays, DateFormat('MMM d', locale).format(nextDueDate)),
         backgroundColor: Colors.blue.shade50,
         textColor: Colors.blue.shade800,
         isOverdue: false,

@@ -36,6 +36,9 @@ class Transaction {
   final String? toAccountId;
   final String? categoryId;
   final int amountCents;
+  final String? originalCurrency;
+  final int? originalAmountCents;
+  final double? exchangeRate;
   final TransactionType type;
   final String description;
   final DateTime transactionDate;
@@ -48,6 +51,9 @@ class Transaction {
     this.toAccountId,
     this.categoryId,
     required this.amountCents,
+    this.originalCurrency,
+    this.originalAmountCents,
+    this.exchangeRate,
     required this.type,
     this.description = '',
     required this.transactionDate,
@@ -73,6 +79,9 @@ class Transaction {
     String? toAccountId,
     String? categoryId,
     int? amountCents,
+    String? originalCurrency,
+    int? originalAmountCents,
+    double? exchangeRate,
     TransactionType? type,
     String? description,
     DateTime? transactionDate,
@@ -85,6 +94,9 @@ class Transaction {
       toAccountId: toAccountId ?? this.toAccountId,
       categoryId: categoryId ?? this.categoryId,
       amountCents: amountCents ?? this.amountCents,
+      originalCurrency: originalCurrency ?? this.originalCurrency,
+      originalAmountCents: originalAmountCents ?? this.originalAmountCents,
+      exchangeRate: exchangeRate ?? this.exchangeRate,
       type: type ?? this.type,
       description: description ?? this.description,
       transactionDate: transactionDate ?? this.transactionDate,
@@ -103,6 +115,9 @@ class Transaction {
           toAccountId == other.toAccountId &&
           categoryId == other.categoryId &&
           amountCents == other.amountCents &&
+          originalCurrency == other.originalCurrency &&
+          originalAmountCents == other.originalAmountCents &&
+          exchangeRate == other.exchangeRate &&
           type == other.type &&
           description == other.description &&
           transactionDate == other.transactionDate &&
@@ -116,6 +131,9 @@ class Transaction {
       toAccountId.hashCode ^
       categoryId.hashCode ^
       amountCents.hashCode ^
+      originalCurrency.hashCode ^
+      originalAmountCents.hashCode ^
+      exchangeRate.hashCode ^
       type.hashCode ^
       description.hashCode ^
       transactionDate.hashCode ^
@@ -124,6 +142,6 @@ class Transaction {
 
   @override
   String toString() {
-    return 'Transaction(id: $id, accountId: $accountId, toAccountId: $toAccountId, categoryId: $categoryId, amountCents: $amountCents, type: $type, date: $transactionDate)';
+    return 'Transaction(id: $id, accountId: $accountId, toAccountId: $toAccountId, categoryId: $categoryId, amountCents: $amountCents, originalCurrency: $originalCurrency, originalAmountCents: $originalAmountCents, exchangeRate: $exchangeRate, type: $type, date: $transactionDate)';
   }
 }

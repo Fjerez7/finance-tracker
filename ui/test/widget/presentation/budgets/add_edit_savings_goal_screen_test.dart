@@ -5,6 +5,7 @@ import 'package:finance_tracker/domain/entities/budget.dart';
 import 'package:finance_tracker/domain/entities/savings_goal.dart';
 import 'package:finance_tracker/domain/repositories/budget_repository.dart';
 import 'package:finance_tracker/domain/repositories/savings_goal_repository.dart';
+import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/budgets/add_edit_savings_goal_screen.dart';
 import 'package:finance_tracker/providers/budgets_provider.dart';
 
@@ -82,7 +83,12 @@ void main() {
   Widget buildTestableWidget({SavingsGoal? goal}) {
     return ChangeNotifierProvider<BudgetsProvider>.value(
       value: budgetsProv,
-      child: MaterialApp(home: AddEditSavingsGoalScreen(goal: goal)),
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: AddEditSavingsGoalScreen(goal: goal),
+      ),
     );
   }
 
