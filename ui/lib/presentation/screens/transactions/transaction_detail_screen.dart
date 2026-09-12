@@ -11,7 +11,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/transactions_provider.dart';
 
-/// Screen displaying complete details for a single financial transaction.
+/// Screen displaying complete details for a single financial transaction
 class TransactionDetailScreen extends StatelessWidget {
   final Transaction transaction;
 
@@ -36,7 +36,8 @@ class TransactionDetailScreen extends StatelessWidget {
         : null;
 
     final currencyCode = sourceAccount?.currency ?? 'USD';
-    final bool isForeign = transaction.originalCurrency != null &&
+    final bool isForeign =
+        transaction.originalCurrency != null &&
         transaction.originalAmountCents != null &&
         transaction.originalCurrency != currencyCode;
 
@@ -319,9 +320,7 @@ class TransactionDetailScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.deleteTransactionQuestion),
-        content: Text(
-          l10n.confirmDeleteTransactionDetail,
-        ),
+        content: Text(l10n.confirmDeleteTransactionDetail),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
