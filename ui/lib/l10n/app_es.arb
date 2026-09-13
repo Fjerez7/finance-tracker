@@ -444,5 +444,21 @@
   "syncUpToDate": "Al día. No se encontraron nuevas transacciones bancarias.",
   "lastSyncTime": "Última sincronización: {time}",
   "googleSignInRequired": "Por favor conecta tu cuenta de Google primero para autorizar acceso a Gmail.",
-  "geminiKeyRequired": "Por favor configura tu clave de API de Gemini primero para habilitar el procesamiento."
+  "geminiKeyRequired": "Por favor configura tu clave de API de Gemini primero para habilitar el procesamiento.",
+
+  "securityAndPrivacy": "Seguridad y Privacidad",
+  "biometricAppLock": "Bloqueo Biométrico de la App",
+  "biometricAppLockDesc": "Requerir Huella dactilar, Face ID o PIN para abrir la app",
+  "biometricLockChallengeReason": "Escanea tu huella dactilar o Face ID para verificar tu identidad.",
+  "biometricUnlockPrompt": "Escanea tu biometría o ingresa el PIN del dispositivo para desbloquear Finance Tracker.",
+  "appLockedTitle": "Finance Tracker Bloqueado",
+  "appLockedSubtitle": "Autentícate para acceder a tus registros financieros",
+  "unlockButton": "Desbloquear App",
+  "autoLockTimeout": "Tiempo de Bloqueo Automático",
+  "autoLockImmediately": "Inmediatamente",
+  "autoLock30Seconds": "30 segundos",
+  "autoLock1Minute": "1 minuto",
+  "autoLock5Minutes": "5 minutos",
+  "biometricNotAvailable": "La biometría no está disponible o registrada en este dispositivo",
+  "biometricEnableFailed": "La verificación biométrica falló. El bloqueo no fue activado."
 }

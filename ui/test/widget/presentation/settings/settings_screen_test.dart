@@ -7,6 +7,7 @@ import 'package:finance_tracker/core/constants/app_currency.dart';
 import 'package:finance_tracker/data/datasources/local/database_helper.dart';
 import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/settings/settings_screen.dart';
+import 'package:finance_tracker/providers/app_lock_provider.dart';
 import 'package:finance_tracker/providers/settings_provider.dart';
 
 void main() {
@@ -14,6 +15,7 @@ void main() {
 
   late DatabaseHelper dbHelper;
   late SettingsProvider settingsProvider;
+  late AppLockProvider appLockProvider;
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
@@ -26,6 +28,9 @@ void main() {
 
     settingsProvider = SettingsProvider(dbHelper: dbHelper);
     await settingsProvider.loadSettings();
+
+    appLockProvider = AppLockProvider();
+    await appLockProvider.initialize();
   });
 
   tearDown(() async {
@@ -33,8 +38,11 @@ void main() {
   });
 
   Widget buildTestableWidget() {
-    return ChangeNotifierProvider<SettingsProvider>.value(
-      value: settingsProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<AppLockProvider>.value(value: appLockProvider),
+      ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp(
@@ -52,6 +60,11 @@ void main() {
     testWidgets('renders all sections and preferences tiles', (
       WidgetTester tester,
     ) async {
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
@@ -59,6 +72,8 @@ void main() {
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.text('Language'), findsOneWidget);
       expect(find.text('Currency'), findsOneWidget);
+      expect(find.text('Security & Privacy'), findsOneWidget);
+      expect(find.text('Biometric App Lock'), findsOneWidget);
       expect(find.text('Data & Storage'), findsOneWidget);
       expect(find.text('Cloud Backup'), findsOneWidget);
       expect(find.text('Gmail Bank Synchronization'), findsOneWidget);

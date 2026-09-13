@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_currency.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../providers/app_lock_provider.dart';
 import '../../../providers/settings_provider.dart';
 import 'backup_settings_screen.dart';
 import 'gmail_sync_settings_screen.dart';
 
-/// Screen presenting user preferences (Language, Currency), Data options, and App info.
+/// Screen presenting user preferences (Language, Currency), Security, Data options, and App info.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -16,6 +17,7 @@ class SettingsScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
+    final appLock = context.watch<AppLockProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -71,7 +73,65 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // 2. Data & Storage Section
+          // 2. Security & Privacy Section
+          _buildSectionHeader(context, l10n.securityAndPrivacy),
+          Card(
+            elevation: 0,
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: CircleAvatar(
+                    backgroundColor: Colors.indigo.shade100,
+                    child: Icon(Icons.fingerprint, color: Colors.indigo.shade800),
+                  ),
+                  title: Text(
+                    l10n.biometricAppLock,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(l10n.biometricAppLockDesc),
+                  value: appLock.isBiometricEnabled,
+                  onChanged: (bool value) async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final success = await appLock.setBiometricEnabled(
+                      value,
+                      challengeReason: l10n.biometricLockChallengeReason,
+                    );
+                    if (!success && value) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.biometricEnableFailed),
+                          backgroundColor: Colors.red.shade800,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                if (appLock.isBiometricEnabled) ...[
+                  const Divider(height: 1, indent: 64),
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blueGrey.shade100,
+                      child: Icon(Icons.timer_outlined, color: Colors.blueGrey.shade800),
+                    ),
+                    title: Text(
+                      l10n.autoLockTimeout,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(_getLockTimeoutLabel(appLock.lockTimeoutSeconds, l10n)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _showTimeoutDialog(context, appLock),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 3. Data & Storage Section
           _buildSectionHeader(context, l10n.dataAndStorage),
           Card(
             elevation: 0,
@@ -285,6 +345,89 @@ class SettingsScreen extends StatelessWidget {
                 onChanged: (val) {
                   if (val != null) {
                     settings.setCurrency(val);
+                  }
+                  Navigator.of(dialogCtx).pop();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(l10n.cancel),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getLockTimeoutLabel(int seconds, AppLocalizations l10n) {
+    switch (seconds) {
+      case 0:
+        return l10n.autoLockImmediately;
+      case 30:
+        return l10n.autoLock30Seconds;
+      case 60:
+        return l10n.autoLock1Minute;
+      case 300:
+        return l10n.autoLock5Minutes;
+      default:
+        return '$seconds s';
+    }
+  }
+
+  void _showTimeoutDialog(BuildContext context, AppLockProvider appLock) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: Text(l10n.autoLockTimeout),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<int>(
+                title: Text(l10n.autoLockImmediately),
+                value: 0,
+                groupValue: appLock.lockTimeoutSeconds,
+                onChanged: (val) {
+                  if (val != null) {
+                    appLock.setLockTimeout(val);
+                  }
+                  Navigator.of(dialogCtx).pop();
+                },
+              ),
+              RadioListTile<int>(
+                title: Text(l10n.autoLock30Seconds),
+                value: 30,
+                groupValue: appLock.lockTimeoutSeconds,
+                onChanged: (val) {
+                  if (val != null) {
+                    appLock.setLockTimeout(val);
+                  }
+                  Navigator.of(dialogCtx).pop();
+                },
+              ),
+              RadioListTile<int>(
+                title: Text(l10n.autoLock1Minute),
+                value: 60,
+                groupValue: appLock.lockTimeoutSeconds,
+                onChanged: (val) {
+                  if (val != null) {
+                    appLock.setLockTimeout(val);
+                  }
+                  Navigator.of(dialogCtx).pop();
+                },
+              ),
+              RadioListTile<int>(
+                title: Text(l10n.autoLock5Minutes),
+                value: 300,
+                groupValue: appLock.lockTimeoutSeconds,
+                onChanged: (val) {
+                  if (val != null) {
+                    appLock.setLockTimeout(val);
                   }
                   Navigator.of(dialogCtx).pop();
                 },

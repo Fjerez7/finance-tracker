@@ -1454,4 +1454,55 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get geminiKeyRequired =>
       'Por favor configura tu clave de API de Gemini primero para habilitar el procesamiento.';
+
+  @override
+  String get securityAndPrivacy => 'Seguridad y Privacidad';
+
+  @override
+  String get biometricAppLock => 'Bloqueo Biométrico de la App';
+
+  @override
+  String get biometricAppLockDesc =>
+      'Requerir Huella dactilar, Face ID o PIN para abrir la app';
+
+  @override
+  String get biometricLockChallengeReason =>
+      'Escanea tu huella dactilar o Face ID para verificar tu identidad.';
+
+  @override
+  String get biometricUnlockPrompt =>
+      'Escanea tu biometría o ingresa el PIN del dispositivo para desbloquear Finance Tracker.';
+
+  @override
+  String get appLockedTitle => 'Finance Tracker Bloqueado';
+
+  @override
+  String get appLockedSubtitle =>
+      'Autentícate para acceder a tus registros financieros';
+
+  @override
+  String get unlockButton => 'Desbloquear App';
+
+  @override
+  String get autoLockTimeout => 'Tiempo de Bloqueo Automático';
+
+  @override
+  String get autoLockImmediately => 'Inmediatamente';
+
+  @override
+  String get autoLock30Seconds => '30 segundos';
+
+  @override
+  String get autoLock1Minute => '1 minuto';
+
+  @override
+  String get autoLock5Minutes => '5 minutos';
+
+  @override
+  String get biometricNotAvailable =>
+      'La biometría no está disponible o registrada en este dispositivo';
+
+  @override
+  String get biometricEnableFailed =>
+      'La verificación biométrica falló. El bloqueo no fue activado.';
 }

@@ -52,6 +52,7 @@ dependencies:
   share_plus: ^10.1.4
   file_picker: ^8.1.7
   flutter_secure_storage: ^9.2.2
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
