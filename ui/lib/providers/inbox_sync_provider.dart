@@ -33,6 +33,16 @@ class InboxSyncProvider extends ChangeNotifier {
   bool get isGoogleSignedIn => _gmailAuthService?.currentUser != null;
   String? get googleUserEmail => _gmailAuthService?.currentUser?.email;
 
+  /// Attempts silent Google Sign-In on app startup.
+  Future<void> checkExistingAuth() async {
+    try {
+      await _gmailAuthService?.signInSilently();
+      notifyListeners();
+    } catch (_) {
+      // Non-blocking silent failure
+    }
+  }
+
   /// Connects Google Account requesting Gmail and Drive scopes.
   Future<bool> connectGoogle() async {
     try {
@@ -74,8 +84,10 @@ class InboxSyncProvider extends ChangeNotifier {
     try {
       int count = 0;
 
-      // 1. If Google is signed in and Gemini API Key is available, do Direct Gmail Sync
-      if (isGoogleSignedIn &&
+      // 1. If Google account is available (or can be silently restored) and Gemini API Key is available, do Direct Gmail Sync
+      final account =
+          _gmailAuthService?.currentUser ?? await _gmailAuthService?.signInSilently();
+      if (account != null &&
           geminiApiKey != null &&
           geminiApiKey.trim().isNotEmpty &&
           _gmailAuthService != null) {

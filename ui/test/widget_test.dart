@@ -2,14 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
+import 'package:finance_tracker/domain/entities/inbox_transaction.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
+import 'package:finance_tracker/domain/repositories/inbox_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/domain/usecases/sync_inbox_transactions_usecase.dart';
 import 'package:finance_tracker/main.dart';
 import 'package:finance_tracker/presentation/screens/accounts/accounts_screen.dart';
 import 'package:finance_tracker/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:finance_tracker/presentation/screens/transactions/transaction_list_screen.dart';
 import 'package:finance_tracker/providers/accounts_provider.dart';
+import 'package:finance_tracker/providers/inbox_sync_provider.dart';
 import 'package:finance_tracker/providers/settings_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
 
@@ -90,6 +94,27 @@ class FakeTransactionRepo implements TransactionRepository {
   }) async => transactions.length;
 }
 
+class FakeInboxRepo implements InboxRepository {
+  @override
+  Future<List<InboxTransaction>> getPendingTransactions({String userId = 'user_default'}) async => [];
+
+  @override
+  Future<void> markAsDiscarded(String transactionId, {String userId = 'user_default'}) async {}
+
+  @override
+  Future<void> markAsSynced(String transactionId, {String userId = 'user_default'}) async {}
+
+  @override
+  Future<int> syncPendingTransactions({String userId = 'user_default'}) async => 0;
+
+  @override
+  Future<int> syncDirectFromGmail({
+    required Map<String, String> authHeaders,
+    required String geminiApiKey,
+    List<String>? bankSenders,
+  }) async => 0;
+}
+
 void main() {
   testWidgets(
     'FinanceTrackerApp smoke test renders navigation shell and tabs',
@@ -110,6 +135,7 @@ void main() {
       final accountRepo = FakeAccountRepo([testAccount]);
       final categoryRepo = FakeCategoryRepo([]);
       final txRepo = FakeTransactionRepo();
+      final inboxRepo = FakeInboxRepo();
 
       final accountsProvider = AccountsProvider(repository: accountRepo);
       await accountsProvider.loadAccounts();
@@ -121,12 +147,16 @@ void main() {
       await txProvider.initialize();
 
       final settingsProvider = SettingsProvider();
+      final inboxSyncProvider = InboxSyncProvider(
+        syncUseCase: SyncInboxTransactionsUseCase(inboxRepo),
+      );
 
       await tester.pumpWidget(
         FinanceTrackerApp(
           accountsProvider: accountsProvider,
           transactionsProvider: txProvider,
           settingsProvider: settingsProvider,
+          inboxSyncProvider: inboxSyncProvider,
         ),
       );
       await tester.pumpAndSettle();

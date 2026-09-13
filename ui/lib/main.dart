@@ -171,7 +171,7 @@ class FinanceTrackerApp extends StatelessWidget {
                     geminiExtractionService: geminiExtraction,
                   ),
                 ),
-              );
+              )..checkExistingAuth();
             },
           ),
       ],
