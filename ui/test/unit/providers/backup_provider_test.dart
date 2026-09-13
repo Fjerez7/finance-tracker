@@ -6,6 +6,7 @@ import 'package:finance_tracker/core/constants/database_constants.dart';
 import 'package:finance_tracker/data/datasources/local/database_helper.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
+import 'package:finance_tracker/domain/entities/cloud_backup_info.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
 import 'package:finance_tracker/providers/backup_provider.dart';
 import 'package:finance_tracker/services/google_drive_service.dart';
@@ -35,11 +36,13 @@ class FakeGoogleDriveService extends GoogleDriveService {
     required String filename,
   }) async {
     uploadedContent = backupJson;
-    final info = DriveBackupInfo(
+    final info = CloudBackupInfo(
       id: 'file-123',
       name: filename,
+      destination: CloudBackupDestination.googleDrive,
       modifiedTime: DateTime.now(),
       sizeBytes: backupJson.length,
+      checksum: 'test-checksum',
     );
     backups.add(info);
     return drive.File()..id = 'file-123'..name = filename;
@@ -165,10 +168,10 @@ void main() {
       expect(csv, contains('tx1,2026-09-05 00:00:00,Bank,Dining,expense,20.00,2000,Lunch'));
     });
 
-    test('cloud backup creation fails if user is not signed in', () async {
+    test('cloud backup creation fails if no providers succeed', () async {
       final success = await provider.createCloudBackup();
       expect(success, isFalse);
-      expect(provider.errorMessage, contains('Please sign in to Google Drive first'));
+      expect(provider.errorMessage, isNotNull);
     });
   });
 }

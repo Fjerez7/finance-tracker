@@ -2246,47 +2246,101 @@ abstract class AppLocalizations {
   /// **'Cloud backup created successfully!'**
   String get cloudBackupCreatedSuccess;
 
-  /// No description provided for @databaseRestoredSuccess.
+  /// No description provided for @dualCloudBackup.
   ///
   /// In en, this message translates to:
-  /// **'Database restored successfully from Google Drive!'**
-  String get databaseRestoredSuccess;
+  /// **'Dual Cloud Backup (Firestore + Drive)'**
+  String get dualCloudBackup;
 
-  /// No description provided for @noBackupFound.
+  /// No description provided for @dualCloudBackupDesc.
   ///
   /// In en, this message translates to:
-  /// **'No backup found in Google Drive'**
-  String get noBackupFound;
+  /// **'Simultaneously sync encrypted database snapshots to Firebase and Google Drive'**
+  String get dualCloudBackupDesc;
 
-  /// No description provided for @backupSuccess.
+  /// No description provided for @firestoreCloudBackup.
   ///
   /// In en, this message translates to:
-  /// **'Backup uploaded successfully to Google Drive'**
-  String get backupSuccess;
+  /// **'Firebase Firestore'**
+  String get firestoreCloudBackup;
 
-  /// No description provided for @restoreSuccess.
+  /// No description provided for @googleDriveBackupLabel.
   ///
   /// In en, this message translates to:
-  /// **'Data restored successfully from Google Drive'**
-  String get restoreSuccess;
+  /// **'Google Drive'**
+  String get googleDriveBackupLabel;
 
-  /// No description provided for @restoreWarning.
+  /// No description provided for @shareCsv.
   ///
   /// In en, this message translates to:
-  /// **'Restoring will replace all current local data with the cloud backup. Do you want to continue?'**
-  String get restoreWarning;
+  /// **'Export & Share CSV (Excel)'**
+  String get shareCsv;
 
-  /// No description provided for @backupInProgress.
+  /// No description provided for @shareCsvDesc.
   ///
   /// In en, this message translates to:
-  /// **'Creating and uploading encrypted backup...'**
-  String get backupInProgress;
+  /// **'Share all {count} transactions to WhatsApp, Excel, Gmail, or Files'**
+  String shareCsvDesc(int count);
 
-  /// No description provided for @restoreInProgress.
+  /// No description provided for @shareJson.
   ///
   /// In en, this message translates to:
-  /// **'Downloading and restoring data...'**
-  String get restoreInProgress;
+  /// **'Export & Share JSON Snapshot'**
+  String get shareJson;
+
+  /// No description provided for @shareJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Share complete database backup file with cryptographic checksum'**
+  String get shareJsonDesc;
+
+  /// No description provided for @pickLocalJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Local File (.json)'**
+  String get pickLocalJson;
+
+  /// No description provided for @pickLocalJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a .json backup file from your device storage to restore'**
+  String get pickLocalJsonDesc;
+
+  /// No description provided for @restoreLocalBackupQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Local Backup File?'**
+  String get restoreLocalBackupQuestion;
+
+  /// No description provided for @confirmRestoreLocalBackupDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This will validate the checksum and overwrite existing local data with the selected file. Continue?'**
+  String get confirmRestoreLocalBackupDetail;
+
+  /// No description provided for @localRestoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database successfully restored from local backup file!'**
+  String get localRestoreSuccess;
+
+  /// No description provided for @checksumFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Security verification failed: Backup file is corrupted or tampered.'**
+  String get checksumFailed;
+
+  /// No description provided for @noFileSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No file selected.'**
+  String get noFileSelected;
+
+  /// No description provided for @backupUploadedDual.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved to Firebase Firestore and Google Drive!'**
+  String get backupUploadedDual;
 
   /// No description provided for @autoBackup.
   ///

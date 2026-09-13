@@ -1188,27 +1188,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudBackupCreatedSuccess => 'Cloud backup created successfully!';
 
   @override
-  String get databaseRestoredSuccess =>
-      'Database restored successfully from Google Drive!';
+  String get dualCloudBackup => 'Dual Cloud Backup (Firestore + Drive)';
 
   @override
-  String get noBackupFound => 'No backup found in Google Drive';
+  String get dualCloudBackupDesc =>
+      'Simultaneously sync encrypted database snapshots to Firebase and Google Drive';
 
   @override
-  String get backupSuccess => 'Backup uploaded successfully to Google Drive';
+  String get firestoreCloudBackup => 'Firebase Firestore';
 
   @override
-  String get restoreSuccess => 'Data restored successfully from Google Drive';
+  String get googleDriveBackupLabel => 'Google Drive';
 
   @override
-  String get restoreWarning =>
-      'Restoring will replace all current local data with the cloud backup. Do you want to continue?';
+  String get shareCsv => 'Export & Share CSV (Excel)';
 
   @override
-  String get backupInProgress => 'Creating and uploading encrypted backup...';
+  String shareCsvDesc(int count) {
+    return 'Share all $count transactions to WhatsApp, Excel, Gmail, or Files';
+  }
 
   @override
-  String get restoreInProgress => 'Downloading and restoring data...';
+  String get shareJson => 'Export & Share JSON Snapshot';
+
+  @override
+  String get shareJsonDesc =>
+      'Share complete database backup file with cryptographic checksum';
+
+  @override
+  String get pickLocalJson => 'Restore from Local File (.json)';
+
+  @override
+  String get pickLocalJsonDesc =>
+      'Select a .json backup file from your device storage to restore';
+
+  @override
+  String get restoreLocalBackupQuestion => 'Restore Local Backup File?';
+
+  @override
+  String get confirmRestoreLocalBackupDetail =>
+      'This will validate the checksum and overwrite existing local data with the selected file. Continue?';
+
+  @override
+  String get localRestoreSuccess =>
+      'Database successfully restored from local backup file!';
+
+  @override
+  String get checksumFailed =>
+      'Security verification failed: Backup file is corrupted or tampered.';
+
+  @override
+  String get noFileSelected => 'No file selected.';
+
+  @override
+  String get backupUploadedDual =>
+      'Backup saved to Firebase Firestore and Google Drive!';
 
   @override
   String get autoBackup => 'Automatic Cloud Backup';

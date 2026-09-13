@@ -7,6 +7,7 @@ import 'package:finance_tracker/data/datasources/local/database_helper.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/budget.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
+import 'package:finance_tracker/domain/entities/cloud_backup_info.dart';
 import 'package:finance_tracker/domain/entities/savings_goal.dart';
 import 'package:finance_tracker/domain/entities/subscription.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
@@ -23,35 +24,97 @@ import 'package:finance_tracker/providers/backup_provider.dart';
 import 'package:finance_tracker/providers/budgets_provider.dart';
 import 'package:finance_tracker/providers/subscriptions_provider.dart';
 import 'package:finance_tracker/providers/transactions_provider.dart';
+import 'package:finance_tracker/services/cloud_backup_service.dart';
+import 'package:finance_tracker/services/file_export_service.dart';
 import 'package:finance_tracker/services/google_drive_service.dart';
 
 class FakeDriveService extends GoogleDriveService {
   GoogleSignInAccount? fakeUser;
-  final List<DriveBackupInfo> backups = [
-    DriveBackupInfo(
-      id: 'b-1',
-      name: 'finance_tracker_backup_20260905_120000.json',
-      modifiedTime: DateTime(2026, 9, 5, 12, 0),
-      sizeBytes: 1024,
-    ),
-  ];
 
   @override
   GoogleSignInAccount? get currentUser => fakeUser;
 
   @override
-  Future<GoogleSignInAccount?> signIn() async {
-    return fakeUser;
-  }
+  Future<GoogleSignInAccount?> signIn() async => fakeUser;
+
+  @override
+  Future<GoogleSignInAccount?> signInSilently() async => fakeUser;
 
   @override
   Future<void> signOut() async {
     fakeUser = null;
-    backups.clear();
+  }
+}
+
+class FakeCloudBackupService implements CloudBackupService {
+  final List<CloudBackupInfo> backups = [
+    CloudBackupInfo(
+      id: 'b-1',
+      name: 'finance_tracker_backup_20260905_120000.json',
+      destination: CloudBackupDestination.all,
+      modifiedTime: DateTime(2026, 9, 5, 12, 0),
+      sizeBytes: 1024,
+      checksum: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    ),
+  ];
+
+  @override
+  Future<List<CloudBackupInfo>> listBackups({
+    CloudBackupDestination destination = CloudBackupDestination.all,
+    String? userId,
+  }) async => List.from(backups);
+
+  @override
+  Future<String> downloadBackup({
+    required String backupId,
+    required CloudBackupDestination destination,
+    String? userId,
+  }) async => '{"version": 1}';
+
+  @override
+  Future<List<CloudBackupInfo>> uploadBackup({
+    required String backupJson,
+    required String filename,
+    required String checksum,
+    CloudBackupDestination destination = CloudBackupDestination.all,
+    String? userId,
+  }) async => List.from(backups);
+
+  @override
+  Future<void> deleteBackup({
+    required String backupId,
+    required CloudBackupDestination destination,
+    String? userId,
+  }) async {
+    backups.removeWhere((b) => b.id == backupId);
+  }
+}
+
+class FakeFileExportService extends FileExportService {
+  bool shareCsvCalled = false;
+  bool shareJsonCalled = false;
+  String? pickedContent;
+
+  @override
+  Future<void> shareCsv({
+    required String csvContent,
+    required String filename,
+    String? subject,
+  }) async {
+    shareCsvCalled = true;
   }
 
   @override
-  Future<List<DriveBackupInfo>> listBackups() async => List.from(backups);
+  Future<void> shareJson({
+    required String jsonContent,
+    required String filename,
+    String? subject,
+  }) async {
+    shareJsonCalled = true;
+  }
+
+  @override
+  Future<String?> pickLocalJsonBackup() async => pickedContent;
 }
 
 class FakeAccountRepo implements AccountRepository {
@@ -172,6 +235,8 @@ void main() {
 
   late DatabaseHelper dbHelper;
   late FakeDriveService fakeDriveService;
+  late FakeCloudBackupService fakeCloudBackupService;
+  late FakeFileExportService fakeFileExportService;
   late BackupProvider backupProv;
   late AccountsProvider accountsProv;
   late TransactionsProvider txProv;
@@ -187,9 +252,14 @@ void main() {
     await dbHelper.database;
 
     fakeDriveService = FakeDriveService();
+    fakeCloudBackupService = FakeCloudBackupService();
+    fakeFileExportService = FakeFileExportService();
+
     backupProv = BackupProvider(
       dbHelper: dbHelper,
       driveService: fakeDriveService,
+      cloudBackupService: fakeCloudBackupService,
+      fileExportService: fakeFileExportService,
     );
 
     accountsProv = AccountsProvider(repository: FakeAccountRepo());
@@ -227,7 +297,7 @@ void main() {
   }
 
   group('BackupSettingsScreen Widget Tests', () {
-    testWidgets('renders Google Drive card, CSV export, and JSON export buttons when signed out', (
+    testWidgets('renders Dual Cloud Backup card, export & share tiles, and local restore tile when signed out', (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -239,13 +309,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Backup & Export'), findsOneWidget);
-      expect(find.text('Google Drive Cloud Sync'), findsOneWidget);
+      expect(find.text('Dual Cloud Backup (Firestore + Drive)'), findsOneWidget);
+      expect(find.text('Firebase Firestore'), findsOneWidget);
+      expect(find.text('Google Drive'), findsOneWidget);
       expect(find.text('Sign In with Google'), findsOneWidget);
-      expect(find.text('Export Ledger (CSV)'), findsOneWidget);
-      expect(find.text('Export Database Snapshot (JSON)'), findsOneWidget);
+      expect(find.text('Export & Share CSV (Excel)'), findsOneWidget);
+      expect(find.text('Export & Share JSON Snapshot'), findsOneWidget);
+      expect(find.text('Restore from Local File (.json)'), findsOneWidget);
     });
 
-    testWidgets('tapping CSV export opens preview dialog', (
+    testWidgets('tapping CSV export triggers native share service', (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -256,19 +329,13 @@ void main() {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Export Ledger (CSV)'));
+      await tester.tap(find.text('Export & Share CSV (Excel)'));
       await tester.pumpAndSettle();
 
-      expect(find.text('CSV Export Preview'), findsOneWidget);
-      expect(find.text('Close'), findsOneWidget);
-
-      await tester.tap(find.text('Close'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('CSV Export Preview'), findsNothing);
+      expect(fakeFileExportService.shareCsvCalled, isTrue);
     });
 
-    testWidgets('tapping JSON snapshot opens preview dialog', (
+    testWidgets('tapping JSON snapshot triggers native share service', (
       WidgetTester tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -280,18 +347,35 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.runAsync(() async {
-        await tester.tap(find.text('Export Database Snapshot (JSON)'));
+        await tester.tap(find.text('Export & Share JSON Snapshot'));
         await Future.delayed(const Duration(milliseconds: 150));
       });
       await tester.pumpAndSettle();
 
-      expect(find.text('Database Snapshot JSON'), findsOneWidget);
-      expect(find.text('Close'), findsOneWidget);
+      expect(fakeFileExportService.shareJsonCalled, isTrue);
+    });
 
-      await tester.tap(find.text('Close'));
+    testWidgets('tapping local file restore opens confirmation dialog and can be cancelled', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Database Snapshot JSON'), findsNothing);
+      await tester.tap(find.text('Restore from Local File (.json)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Restore Local Backup File?'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Restore Local Backup File?'), findsNothing);
     });
   });
 }

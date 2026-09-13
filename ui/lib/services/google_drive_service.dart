@@ -2,21 +2,10 @@ import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
+import '../domain/entities/cloud_backup_info.dart';
 
-/// DTO representing a remote Google Drive backup entry in appDataFolder.
-class DriveBackupInfo {
-  final String id;
-  final String name;
-  final DateTime? modifiedTime;
-  final int? sizeBytes;
-
-  const DriveBackupInfo({
-    required this.id,
-    required this.name,
-    this.modifiedTime,
-    this.sizeBytes,
-  });
-}
+/// Legacy DTO alias for backward compatibility.
+typedef DriveBackupInfo = CloudBackupInfo;
 
 /// Custom HTTP client injecting Google OAuth authentication headers for Google APIs.
 class GoogleAuthClient extends http.BaseClient {
@@ -110,11 +99,13 @@ class GoogleDriveService {
     final files = fileList.files ?? [];
     return files
         .map(
-          (f) => DriveBackupInfo(
+          (f) => CloudBackupInfo(
             id: f.id ?? '',
             name: f.name ?? 'Untitled Backup',
-            modifiedTime: f.modifiedTime,
-            sizeBytes: f.size != null ? int.tryParse(f.size!) : null,
+            destination: CloudBackupDestination.googleDrive,
+            modifiedTime: f.modifiedTime ?? DateTime.now(),
+            sizeBytes: f.size != null ? int.tryParse(f.size!) ?? 0 : 0,
+            checksum: '',
           ),
         )
         .toList();

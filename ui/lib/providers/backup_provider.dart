@@ -5,33 +5,46 @@ import 'package:intl/intl.dart';
 import '../data/datasources/local/database_helper.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/category.dart';
+import '../domain/entities/cloud_backup_info.dart';
 import '../domain/entities/transaction.dart';
 import '../services/backup_restore_service.dart';
+import '../services/cloud_backup_service.dart';
 import '../services/csv_export_service.dart';
+import '../services/file_export_service.dart';
 import '../services/google_drive_service.dart';
+import '../services/hybrid_cloud_backup_service.dart';
 
-/// Reactive provider managing Google Drive cloud backups, local exports, and database restorations.
+/// Reactive provider managing hybrid cloud backups (Firestore + Drive), local exports, and database restorations.
 class BackupProvider extends ChangeNotifier {
   final DatabaseHelper _dbHelper;
+  final CloudBackupService _cloudBackupService;
   final GoogleDriveService _driveService;
+  final FileExportService _fileExportService;
 
   bool _isLoading = false;
   bool _isSyncing = false;
   String? _errorMessage;
   String? _successMessage;
-  List<DriveBackupInfo> _cloudBackups = [];
+  List<CloudBackupInfo> _cloudBackups = [];
 
   BackupProvider({
     DatabaseHelper? dbHelper,
+    CloudBackupService? cloudBackupService,
     GoogleDriveService? driveService,
+    FileExportService? fileExportService,
   })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
-        _driveService = driveService ?? GoogleDriveService();
+        _driveService = driveService ?? GoogleDriveService(),
+        _fileExportService = fileExportService ?? FileExportService(),
+        _cloudBackupService = cloudBackupService ??
+            HybridCloudBackupService(
+              driveService: driveService,
+            );
 
   bool get isLoading => _isLoading;
   bool get isSyncing => _isSyncing;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
-  List<DriveBackupInfo> get cloudBackups => List.unmodifiable(_cloudBackups);
+  List<CloudBackupInfo> get cloudBackups => List.unmodifiable(_cloudBackups);
   GoogleSignInAccount? get currentUser => _driveService.currentUser;
   bool get isSignedIn => _driveService.currentUser != null;
 
@@ -88,12 +101,17 @@ class BackupProvider extends ChangeNotifier {
     }
   }
 
-  /// Fetches the list of backup files stored in Google Drive appDataFolder.
-  Future<void> fetchCloudBackups() async {
-    if (!isSignedIn) return;
+  /// Fetches the list of backup files from configured cloud providers.
+  Future<void> fetchCloudBackups({
+    CloudBackupDestination destination = CloudBackupDestination.all,
+    String? userId,
+  }) async {
     _setSyncing(true);
     try {
-      _cloudBackups = await _driveService.listBackups();
+      _cloudBackups = await _cloudBackupService.listBackups(
+        destination: destination,
+        userId: userId,
+      );
     } catch (e) {
       _errorMessage = 'Failed to retrieve backups: ${e.toString()}';
     } finally {
@@ -107,30 +125,36 @@ class BackupProvider extends ChangeNotifier {
     return await BackupRestoreService.createBackupSnapshot(db);
   }
 
-  /// Exports and uploads a new database backup snapshot to Google Drive appDataFolder.
-  Future<bool> createCloudBackup() async {
-    if (!isSignedIn) {
-      _errorMessage = 'Please sign in to Google Drive first.';
-      notifyListeners();
-      return false;
-    }
-
+  /// Exports and uploads database backup snapshot to cloud destinations (Firestore + Drive).
+  Future<bool> createCloudBackup({
+    CloudBackupDestination destination = CloudBackupDestination.all,
+    String? userId,
+  }) async {
     _setSyncing(true);
     _clearMessages();
     try {
       final snapshot = await createLocalSnapshot();
       final String snapshotJson = jsonEncode(snapshot);
+      final String checksum = snapshot['checksum'] as String? ?? '';
       final String timestamp =
           DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
       final String filename = 'finance_tracker_backup_$timestamp.json';
 
-      await _driveService.uploadBackup(
+      final results = await _cloudBackupService.uploadBackup(
         backupJson: snapshotJson,
         filename: filename,
+        checksum: checksum,
+        destination: destination,
+        userId: userId,
       );
 
-      _successMessage = 'Backup successfully saved to Google Drive';
-      await fetchCloudBackups();
+      if (results.isEmpty) {
+        throw StateError('No cloud provider completed backup successfully.');
+      }
+
+      final destinations = results.map((r) => r.destinationLabel).join(' & ');
+      _successMessage = 'Backup saved to $destinations';
+      await fetchCloudBackups(userId: userId);
       _setSyncing(false);
       return true;
     } catch (e) {
@@ -140,19 +164,26 @@ class BackupProvider extends ChangeNotifier {
     }
   }
 
-  /// Downloads and restores database from a selected remote Google Drive backup.
-  Future<bool> restoreCloudBackup(String fileId) async {
+  /// Downloads and restores database from a selected remote cloud backup.
+  Future<bool> restoreCloudBackup(
+    CloudBackupInfo backup, {
+    String? userId,
+  }) async {
     _setSyncing(true);
     _clearMessages();
     try {
-      final String jsonContent = await _driveService.downloadBackup(fileId);
+      final String jsonContent = await _cloudBackupService.downloadBackup(
+        backupId: backup.id,
+        destination: backup.destination,
+        userId: userId,
+      );
       final Map<String, dynamic> snapshot =
           jsonDecode(jsonContent) as Map<String, dynamic>;
 
       final db = await _dbHelper.database;
       await BackupRestoreService.restoreFromSnapshot(db, snapshot);
 
-      _successMessage = 'Database successfully restored from cloud backup';
+      _successMessage = 'Database restored successfully from ${backup.destinationLabel}';
       _setSyncing(false);
       return true;
     } catch (e) {
@@ -179,7 +210,68 @@ class BackupProvider extends ChangeNotifier {
     }
   }
 
-  /// Exports transactions to an RFC 4180 CSV string.
+  /// Exports and shares CSV ledger file via native OS share sheet.
+  Future<void> shareTransactionsCsv({
+    required List<Transaction> transactions,
+    required List<Account> accounts,
+    required List<Category> categories,
+  }) async {
+    final csv = CsvExportService.exportTransactionsToCsv(
+      transactions: transactions,
+      accounts: accounts,
+      categories: categories,
+    );
+    final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final filename = 'finance_tracker_transactions_$dateStr.csv';
+
+    await _fileExportService.shareCsv(
+      csvContent: csv,
+      filename: filename,
+      subject: 'Finance Tracker Transactions ($dateStr)',
+    );
+  }
+
+  /// Exports and shares full database JSON snapshot via native OS share sheet.
+  Future<void> shareDatabaseJson() async {
+    final snapshot = await createLocalSnapshot();
+    final jsonStr = jsonEncode(snapshot);
+    final dateStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final filename = 'finance_tracker_backup_$dateStr.json';
+
+    await _fileExportService.shareJson(
+      jsonContent: jsonStr,
+      filename: filename,
+      subject: 'Finance Tracker Database Snapshot ($dateStr)',
+    );
+  }
+
+  /// Prompts the user to pick a local .json file and restores the database from it.
+  Future<bool> pickAndRestoreLocalJson() async {
+    _setLoading(true);
+    _clearMessages();
+    try {
+      final jsonContent = await _fileExportService.pickLocalJsonBackup();
+      if (jsonContent == null || jsonContent.isEmpty) {
+        _setLoading(false);
+        return false;
+      }
+
+      final Map<String, dynamic> snapshot =
+          jsonDecode(jsonContent) as Map<String, dynamic>;
+
+      final db = await _dbHelper.database;
+      await BackupRestoreService.restoreFromSnapshot(db, snapshot);
+      _successMessage = 'Database restored successfully from local file';
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = 'Local restore failed: ${e.toString()}';
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  /// Exports transactions to an RFC 4180 CSV string (for in-memory / testing preview).
   String exportTransactionsCsv({
     required List<Transaction> transactions,
     required List<Account> accounts,
