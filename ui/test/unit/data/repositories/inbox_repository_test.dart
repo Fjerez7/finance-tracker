@@ -5,9 +5,11 @@ import 'package:finance_tracker/data/repositories/inbox_repository_impl.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
 import 'package:finance_tracker/domain/entities/inbox_transaction.dart';
+import 'package:finance_tracker/domain/entities/subscription.dart';
 import 'package:finance_tracker/domain/entities/transaction.dart';
 import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
+import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
 
 // Fake implementations for unit testing
@@ -135,12 +137,56 @@ class FakeCategoryRepository implements CategoryRepository {
   Future<void> updateCategory(Category category) async {}
 }
 
+class FakeSubscriptionRepository implements SubscriptionRepository {
+  List<Subscription> subscriptions = [];
+  final Map<String, DateTime> updatedDueDates = {};
+
+  @override
+  Future<List<Subscription>> getSubscriptions({
+    bool? isActive,
+    String? accountId,
+    String? categoryId,
+  }) async {
+    if (isActive != null) {
+      return subscriptions.where((s) => s.isActive == isActive).toList();
+    }
+    return subscriptions;
+  }
+
+  @override
+  Future<Subscription?> getSubscriptionById(String id) async {
+    try {
+      return subscriptions.firstWhere((s) => s.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> createSubscription(Subscription subscription) async => subscriptions.add(subscription);
+
+  @override
+  Future<void> updateSubscription(Subscription subscription) async {}
+
+  @override
+  Future<void> deleteSubscription(String id) async => subscriptions.removeWhere((s) => s.id == id);
+
+  @override
+  Future<void> updateNextDueDate(String id, DateTime nextDueDate) async {
+    updatedDueDates[id] = nextDueDate;
+  }
+
+  @override
+  Future<void> toggleActive(String id, bool isActive) async {}
+}
+
 void main() {
   group('InboxRepositoryImpl Tests', () {
     late FakeInboxRemoteDataSource fakeRemote;
     late FakeTransactionRepository fakeTxRepo;
     late FakeAccountRepository fakeAccountRepo;
     late FakeCategoryRepository fakeCategoryRepo;
+    late FakeSubscriptionRepository fakeSubRepo;
     late InboxRepositoryImpl repository;
 
     final now = DateTime.parse('2026-09-12T14:30:00.000Z');
@@ -168,17 +214,30 @@ void main() {
       updatedAt: now,
     );
 
+    final subCategory = Category(
+      id: 'cat-subscriptions',
+      name: 'Subscriptions',
+      iconName: 'subscriptions',
+      colorHex: '#2196F3',
+      type: CategoryType.expense,
+      isDefault: false,
+      createdAt: now,
+      updatedAt: now,
+    );
+
     setUp(() {
       fakeRemote = FakeInboxRemoteDataSource();
       fakeTxRepo = FakeTransactionRepository();
       fakeAccountRepo = FakeAccountRepository()..accounts = [sampleAccount];
-      fakeCategoryRepo = FakeCategoryRepository()..categories = [sampleCategory];
+      fakeCategoryRepo = FakeCategoryRepository()..categories = [sampleCategory, subCategory];
+      fakeSubRepo = FakeSubscriptionRepository();
 
       repository = InboxRepositoryImpl(
         remoteDataSource: fakeRemote,
         transactionRepository: fakeTxRepo,
         accountRepository: fakeAccountRepo,
         categoryRepository: fakeCategoryRepo,
+        subscriptionRepository: fakeSubRepo,
       );
     });
 
@@ -245,6 +304,137 @@ void main() {
       expect(secondRun, equals(1));
       // Only 1 transaction in DB
       expect(fakeTxRepo.db.length, equals(1));
+    });
+
+    test('syncPendingTransactions matches subscription within 15% amount and ±4 days date window', () async {
+      final googleSub = Subscription(
+        id: 'sub-google-one',
+        name: 'Google One',
+        amountCents: 1500000, // 15,000 COP
+        currency: 'COP',
+        frequency: RecurrenceFrequency.monthly,
+        accountId: 'acc-bancolombia-cc',
+        categoryId: 'cat-subscriptions',
+        billingDay: 12,
+        nextDueDate: DateTime.parse('2026-09-12T00:00:00.000Z'),
+        createdAt: now,
+        updatedAt: now,
+      );
+      fakeSubRepo.subscriptions = [googleSub];
+
+      final inboxTx = InboxTransactionModel(
+        id: 'msg-sub-1',
+        bankName: 'Bancolombia',
+        accountType: 'credit_card',
+        accountMask: '*4892',
+        merchant: 'Google*Google One',
+        amountCents: 1550000, // +3.3% within 15% margin
+        amount: 15500.0,
+        currency: 'COP',
+        type: 'expense',
+        categorySuggestion: 'Software',
+        transactionDate: DateTime.parse('2026-09-13T10:00:00.000Z'), // 1 day difference
+        referenceNumber: 'AUT-SUB-1',
+        status: InboxStatus.pending,
+        createdAt: now,
+      );
+
+      fakeRemote.pending = [inboxTx];
+      final int synced = await repository.syncPendingTransactions();
+
+      expect(synced, equals(1));
+      final savedTx = fakeTxRepo.db['tx_gmail_msg-sub-1']!;
+      expect(savedTx.description, equals('Google One (Subscription Payment)'));
+      expect(savedTx.categoryId, equals('cat-subscriptions'));
+      expect(fakeSubRepo.updatedDueDates.containsKey('sub-google-one'), isTrue);
+    });
+
+    test('syncPendingTransactions rejects subscription if amount differs > 15%', () async {
+      final googleSub = Subscription(
+        id: 'sub-google-one',
+        name: 'Google One',
+        amountCents: 1500000, // 15,000 COP
+        currency: 'COP',
+        frequency: RecurrenceFrequency.monthly,
+        accountId: 'acc-bancolombia-cc',
+        categoryId: 'cat-subscriptions',
+        billingDay: 12,
+        nextDueDate: DateTime.parse('2026-09-12T00:00:00.000Z'),
+        createdAt: now,
+        updatedAt: now,
+      );
+      fakeSubRepo.subscriptions = [googleSub];
+
+      // A $150.000 COP purchase in Google Play
+      final inboxTx = InboxTransactionModel(
+        id: 'msg-sub-rejected-amount',
+        bankName: 'Bancolombia',
+        accountType: 'credit_card',
+        accountMask: '*4892',
+        merchant: 'Google One Services',
+        amountCents: 15000000, // 150,000 COP (10x difference)
+        amount: 150000.0,
+        currency: 'COP',
+        type: 'expense',
+        categorySuggestion: 'Groceries',
+        transactionDate: DateTime.parse('2026-09-12T10:00:00.000Z'),
+        referenceNumber: 'AUT-REJ-1',
+        status: InboxStatus.pending,
+        createdAt: now,
+      );
+
+      fakeRemote.pending = [inboxTx];
+      final int synced = await repository.syncPendingTransactions();
+
+      expect(synced, equals(1));
+      final savedTx = fakeTxRepo.db['tx_gmail_msg-sub-rejected-amount']!;
+      // Should NOT be marked as subscription
+      expect(savedTx.description, equals('Google One Services'));
+      expect(fakeSubRepo.updatedDueDates.containsKey('sub-google-one'), isFalse);
+    });
+
+    test('syncPendingTransactions rejects subscription if date is outside billing window', () async {
+      final googleSub = Subscription(
+        id: 'sub-google-one',
+        name: 'Google One',
+        amountCents: 1500000, // 15,000 COP
+        currency: 'COP',
+        frequency: RecurrenceFrequency.monthly,
+        accountId: 'acc-bancolombia-cc',
+        categoryId: 'cat-subscriptions',
+        billingDay: 12,
+        nextDueDate: DateTime.parse('2026-09-12T00:00:00.000Z'),
+        createdAt: now,
+        updatedAt: now,
+      );
+      fakeSubRepo.subscriptions = [googleSub];
+
+      // Purchase made on day 27 (15 days away from due date day 12)
+      final inboxTx = InboxTransactionModel(
+        id: 'msg-sub-rejected-date',
+        bankName: 'Bancolombia',
+        accountType: 'credit_card',
+        accountMask: '*4892',
+        merchant: 'Google One',
+        amountCents: 1500000,
+        amount: 15000.0,
+        currency: 'COP',
+        type: 'expense',
+        categorySuggestion: 'Groceries',
+        transactionDate: DateTime.parse('2026-09-27T10:00:00.000Z'),
+        referenceNumber: 'AUT-REJ-2',
+        status: InboxStatus.pending,
+        createdAt: now,
+      );
+
+      fakeRemote.pending = [inboxTx];
+      final int synced = await repository.syncPendingTransactions();
+
+      expect(synced, equals(1));
+      final savedTx = fakeTxRepo.db['tx_gmail_msg-sub-rejected-date']!;
+      // Should NOT be marked as subscription
+      expect(savedTx.description, equals('Google One'));
+      expect(fakeSubRepo.updatedDueDates.containsKey('sub-google-one'), isFalse);
     });
   });
 }

@@ -157,6 +157,7 @@ class FinanceTrackerApp extends StatelessWidget {
                   transactionRepository: TransactionRepositoryImpl(),
                   accountRepository: AccountRepositoryImpl(),
                   categoryRepository: CategoryRepositoryImpl(),
+                  subscriptionRepository: SubscriptionRepositoryImpl(),
                 ),
               ),
             ),
