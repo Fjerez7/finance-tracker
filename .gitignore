@@ -32,3 +32,9 @@ test_project_dir/
 
 # Local package cache
 .vector-database/
+
+# Firebase configuration
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+**/firebase_options.dart
+

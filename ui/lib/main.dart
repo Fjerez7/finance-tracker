@@ -1,12 +1,16 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'data/datasources/remote/inbox_remote_datasource.dart';
 import 'data/repositories/account_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/category_repository_impl.dart';
+import 'data/repositories/inbox_repository_impl.dart';
 import 'data/repositories/savings_goal_repository_impl.dart';
 import 'data/repositories/sqlite_exchange_rate_repository.dart';
 import 'data/repositories/subscription_repository_impl.dart';
 import 'data/repositories/transaction_repository_impl.dart';
+import 'domain/usecases/sync_inbox_transactions_usecase.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'presentation/screens/accounts/accounts_screen.dart';
 import 'presentation/screens/budgets/budgets_screen.dart';
@@ -19,12 +23,18 @@ import 'providers/analytics_provider.dart';
 import 'providers/backup_provider.dart';
 import 'providers/budgets_provider.dart';
 import 'providers/exchange_rate_provider.dart';
+import 'providers/inbox_sync_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {
+    // If running in environment without google-services config (e.g. desktop/test), proceed gracefully.
+  }
   runApp(const FinanceTrackerApp());
 }
 
@@ -39,6 +49,7 @@ class FinanceTrackerApp extends StatelessWidget {
   final BackupProvider? backupProvider;
   final SettingsProvider? settingsProvider;
   final ExchangeRateProvider? exchangeRateProvider;
+  final InboxSyncProvider? inboxSyncProvider;
 
   const FinanceTrackerApp({
     super.key,
@@ -50,6 +61,7 @@ class FinanceTrackerApp extends StatelessWidget {
     this.backupProvider,
     this.settingsProvider,
     this.exchangeRateProvider,
+    this.inboxSyncProvider,
   });
 
   @override
@@ -132,6 +144,24 @@ class FinanceTrackerApp extends StatelessWidget {
               repository: SqliteExchangeRateRepository(),
             )..initialize(),
           ),
+        if (inboxSyncProvider != null)
+          ChangeNotifierProvider<InboxSyncProvider>.value(
+            value: inboxSyncProvider!,
+          )
+        else
+          ChangeNotifierProvider<InboxSyncProvider>(
+            create: (_) => InboxSyncProvider(
+              syncUseCase: SyncInboxTransactionsUseCase(
+                InboxRepositoryImpl(
+                  remoteDataSource: InboxRemoteDataSourceImpl(),
+                  transactionRepository: TransactionRepositoryImpl(),
+                  accountRepository: AccountRepositoryImpl(),
+                  categoryRepository: CategoryRepositoryImpl(),
+                  subscriptionRepository: SubscriptionRepositoryImpl(),
+                ),
+              ),
+            ),
+          ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
@@ -172,7 +202,7 @@ class MainNavigationShell extends StatefulWidget {
   State<MainNavigationShell> createState() => _MainNavigationShellState();
 }
 
-class _MainNavigationShellState extends State<MainNavigationShell> {
+class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsBindingObserver {
   int _currentIndex = 1; // Default to Transactions tab
 
   final List<Widget> _screens = const [
@@ -182,6 +212,45 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     SubscriptionsScreen(),
     AccountsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Trigger automatic background synchronization on app launch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerAutoSync();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Trigger automatic synchronization when app returns from background
+      _triggerAutoSync();
+    }
+  }
+
+  void _triggerAutoSync() {
+    if (!mounted) return;
+    try {
+      final inboxSync = context.read<InboxSyncProvider?>();
+      if (inboxSync != null) {
+        final accounts = context.read<AccountsProvider>();
+        final txs = context.read<TransactionsProvider>();
+        inboxSync.syncNow(
+          accountsProvider: accounts,
+          transactionsProvider: txs,
+        );
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -5,6 +5,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/analytics_provider.dart';
 import '../../../providers/budgets_provider.dart';
+import '../../../providers/inbox_sync_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
 import '../../widgets/cards/hero_net_worth_card.dart';
@@ -60,6 +61,8 @@ class DashboardScreen extends StatelessWidget {
 
     final recentTransactions = txProv.recentTransactions.take(5).toList();
 
+    final inboxSyncProv = context.watch<InboxSyncProvider?>();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -67,6 +70,38 @@ class DashboardScreen extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          if (inboxSyncProv != null)
+            IconButton(
+              icon: inboxSyncProv.isSyncing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.cloud_sync_outlined),
+              tooltip: 'Sincronizar correos bancarios',
+              onPressed: inboxSyncProv.isSyncing
+                  ? null
+                  : () async {
+                      final int count = await inboxSyncProv.syncNow(
+                        accountsProvider: accountsProv,
+                        transactionsProvider: txProv,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              count > 0
+                                  ? '✨ $count transacciones bancarias sincronizadas'
+                                  : 'Al día. No hay transacciones pendientes en la nube.',
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
+            ),
           IconButton(
             icon: const Icon(Icons.insights_outlined),
             tooltip: l10n.analytics,
@@ -90,6 +125,11 @@ class DashboardScreen extends StatelessWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           await Future.wait([
+            if (inboxSyncProv != null)
+              inboxSyncProv.syncNow(
+                accountsProvider: accountsProv,
+                transactionsProvider: txProv,
+              ),
             accountsProv.loadAccounts(),
             txProv.fetchTransactions(),
             subsProv.loadSubscriptions(),
