@@ -59,6 +59,7 @@ void main() {
       expect(find.text('Currency'), findsOneWidget);
       expect(find.text('Data & Storage'), findsOneWidget);
       expect(find.text('Cloud Backup'), findsOneWidget);
+      expect(find.text('Gmail Bank Synchronization'), findsOneWidget);
       expect(find.text('About'), findsOneWidget);
       expect(find.text('Finance Tracker'), findsOneWidget);
       expect(find.text('Local Database'), findsOneWidget);

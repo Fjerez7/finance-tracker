@@ -9,18 +9,22 @@ import '../../domain/repositories/inbox_repository.dart';
 import '../../domain/repositories/subscription_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../providers/subscriptions_provider.dart';
+import '../../services/gemini_extraction_service.dart';
+import '../datasources/remote/gmail_remote_datasource.dart';
 import '../datasources/remote/inbox_remote_datasource.dart';
 import '../models/inbox_transaction_model.dart';
 
-/// Implementation of [InboxRepository] handling Firestore staging queries,
-/// smart local account/category resolution, automatic subscription tracking,
-/// SQLite atomic insertion, and Firestore ACK.
+/// Implementation of [InboxRepository] handling direct client-side Gmail ingestion,
+/// Firestore staging fallback, smart local account/category resolution, automatic
+/// subscription tracking, SQLite atomic insertion, and label marking.
 class InboxRepositoryImpl implements InboxRepository {
   final InboxRemoteDataSource _remoteDataSource;
   final TransactionRepository _transactionRepository;
   final AccountRepository _accountRepository;
   final CategoryRepository _categoryRepository;
   final SubscriptionRepository? _subscriptionRepository;
+  final GmailRemoteDataSource? _gmailRemoteDataSource;
+  final GeminiExtractionService? _geminiExtractionService;
 
   InboxRepositoryImpl({
     required InboxRemoteDataSource remoteDataSource,
@@ -28,15 +32,105 @@ class InboxRepositoryImpl implements InboxRepository {
     required AccountRepository accountRepository,
     required CategoryRepository categoryRepository,
     SubscriptionRepository? subscriptionRepository,
+    GmailRemoteDataSource? gmailRemoteDataSource,
+    GeminiExtractionService? geminiExtractionService,
   })  : _remoteDataSource = remoteDataSource,
         _transactionRepository = transactionRepository,
         _accountRepository = accountRepository,
         _categoryRepository = categoryRepository,
-        _subscriptionRepository = subscriptionRepository;
+        _subscriptionRepository = subscriptionRepository,
+        _gmailRemoteDataSource = gmailRemoteDataSource,
+        _geminiExtractionService = geminiExtractionService;
 
   @override
   Future<List<InboxTransaction>> getPendingTransactions({String userId = 'user_default'}) async {
     return await _remoteDataSource.getPendingTransactions(userId: userId);
+  }
+
+  @override
+  Future<int> syncDirectFromGmail({
+    required Map<String, String> authHeaders,
+    required String geminiApiKey,
+    List<String>? bankSenders,
+  }) async {
+    final gmailSource = _gmailRemoteDataSource;
+    final geminiService = _geminiExtractionService;
+
+    if (gmailSource == null || geminiService == null) {
+      throw StateError('GmailRemoteDataSource or GeminiExtractionService is not configured.');
+    }
+
+    final List<GmailRawMessage> rawMessages =
+        await gmailSource.fetchUnprocessedBankMessages(
+      authHeaders: authHeaders,
+      bankSenders: bankSenders ?? GmailRemoteDataSourceImpl.defaultBankSenders,
+    );
+
+    if (rawMessages.isEmpty) return 0;
+
+    final List<Account> accounts = await _accountRepository.getAccounts(includeArchived: false);
+    final List<Category> categories = await _categoryRepository.getCategories();
+    final List<Subscription> activeSubscriptions =
+        await _subscriptionRepository?.getSubscriptions(isActive: true) ?? [];
+
+    int syncedCount = 0;
+
+    for (final rawMsg in rawMessages) {
+      final String localTxId = 'tx_gmail_${rawMsg.id}';
+
+      // 1. Check local SQLite idempotency
+      final Transaction? existing = await _transactionRepository.getTransactionById(localTxId);
+      if (existing != null) {
+        try {
+          await gmailSource.markMessageAsProcessed(
+            messageId: rawMsg.id,
+            authHeaders: authHeaders,
+          );
+        } catch (_) {}
+        continue;
+      }
+
+      try {
+        // 2. Extract structured metadata via Gemini Flash on-device
+        final InboxTransactionModel? extracted = await geminiService.extractTransaction(
+          emailBody: rawMsg.body,
+          emailSubject: rawMsg.subject,
+          sender: rawMsg.sender,
+          emailDate: rawMsg.date,
+          messageId: rawMsg.id,
+          apiKey: geminiApiKey,
+        );
+
+        if (extracted == null) {
+          // Non-financial email
+          await gmailSource.markMessageAsIgnored(
+            messageId: rawMsg.id,
+            authHeaders: authHeaders,
+          );
+          continue;
+        }
+
+        // 3. Process and persist into SQLite with multi-factor matching
+        final bool persisted = await _processAndPersistTransaction(
+          extracted,
+          accounts,
+          categories,
+          activeSubscriptions,
+        );
+
+        if (persisted) {
+          await gmailSource.markMessageAsProcessed(
+            messageId: rawMsg.id,
+            authHeaders: authHeaders,
+          );
+          syncedCount++;
+        }
+      } catch (_) {
+        // Continue processing subsequent messages
+      }
+    }
+
+    return syncedCount;
   }
 
   @override
@@ -60,76 +154,95 @@ class InboxRepositoryImpl implements InboxRepository {
         // Check if already exists in SQLite (Idempotency)
         final Transaction? existing = await _transactionRepository.getTransactionById(localTxId);
         if (existing != null) {
-          // Already in SQLite, just ACK Firestore
           await _remoteDataSource.markAsSynced(item.id, userId: userId);
           syncedCount++;
           continue;
         }
 
-        // 1. Resolve Account using multi-token and root brand matching
-        final Account? resolvedAccount = _matchAccount(item, accounts);
-        if (resolvedAccount == null) {
-          // Cannot persist without any account existing
-          continue;
-        }
-
-        // 2. Check for matching active Subscription
-        final Subscription? matchedSub = _matchSubscription(item, activeSubscriptions);
-
-        // 3. Resolve Transaction Type (with incoming transfer heuristic detection)
-        final TransactionType txType = _resolveTransactionType(item);
-
-        // 4. Resolve Category conforming to transaction type
-        final Category? resolvedCategory = matchedSub != null
-            ? _categoryRepositoryById(matchedSub.categoryId, categories) ?? _matchCategory(item, categories, txType)
-            : _matchCategory(item, categories, txType);
-
-        final DateTime now = DateTime.now().toUtc();
-
-        final String description = matchedSub != null
-            ? '${matchedSub.name} (Subscription Payment)'
-            : (item.merchant.isNotEmpty ? item.merchant : item.bankName);
-
-        final Transaction newTx = Transaction(
-          id: localTxId,
-          accountId: resolvedAccount.id,
-          toAccountId: null,
-          categoryId: resolvedCategory?.id,
-          amountCents: item.amountCents > 0 ? item.amountCents : 1,
-          originalCurrency: item.currency,
-          originalAmountCents: item.amountCents > 0 ? item.amountCents : 1,
-          exchangeRate: 1.0,
-          type: txType,
-          description: description,
-          transactionDate: item.transactionDate.toUtc(),
-          createdAt: now,
-          updatedAt: now,
+        final bool persisted = await _processAndPersistTransaction(
+          item,
+          accounts,
+          categories,
+          activeSubscriptions,
         );
 
-        // 5. Persist to SQLite (automatically updates account balance)
-        await _transactionRepository.createTransaction(newTx);
-
-        // 6. If matched to a subscription, automatically advance its next due date
-        if (matchedSub != null && _subscriptionRepository != null) {
-          try {
-            final DateTime nextDue = SubscriptionsProvider.calculateNextDueDate(
-              matchedSub.nextDueDate,
-              matchedSub.frequency,
-              billingDay: matchedSub.billingDay,
-            );
-            await _subscriptionRepository.updateNextDueDate(matchedSub.id, nextDue);
-          } catch (_) {}
+        if (persisted) {
+          await _remoteDataSource.markAsSynced(item.id, userId: userId);
+          syncedCount++;
         }
-
-        // 7. ACK remote staging
-        await _remoteDataSource.markAsSynced(item.id, userId: userId);
-        syncedCount++;
       } catch (e) {
         // Continue with next transaction on individual error
       }
     }
 
     return syncedCount;
+  }
+
+  /// Internal helper to resolve accounts, subscriptions, categories, and atomically commit to SQLite.
+  Future<bool> _processAndPersistTransaction(
+    InboxTransactionModel item,
+    List<Account> accounts,
+    List<Category> categories,
+    List<Subscription> activeSubscriptions,
+  ) async {
+    final String localTxId = 'tx_gmail_${item.id}';
+
+    // 1. Resolve Account using multi-token and root brand matching
+    final Account? resolvedAccount = _matchAccount(item, accounts);
+    if (resolvedAccount == null) {
+      return false;
+    }
+
+    // 2. Check for matching active Subscription
+    final Subscription? matchedSub = _matchSubscription(item, activeSubscriptions);
+
+    // 3. Resolve Transaction Type (with incoming transfer heuristic detection)
+    final TransactionType txType = _resolveTransactionType(item);
+
+    // 4. Resolve Category conforming to transaction type
+    final Category? resolvedCategory = matchedSub != null
+        ? _categoryRepositoryById(matchedSub.categoryId, categories) ??
+            _matchCategory(item, categories, txType)
+        : _matchCategory(item, categories, txType);
+
+    final DateTime now = DateTime.now().toUtc();
+
+    final String description = matchedSub != null
+        ? '${matchedSub.name} (Subscription Payment)'
+        : (item.merchant.isNotEmpty ? item.merchant : item.bankName);
+
+    final Transaction newTx = Transaction(
+      id: localTxId,
+      accountId: resolvedAccount.id,
+      toAccountId: null,
+      categoryId: resolvedCategory?.id,
+      amountCents: item.amountCents > 0 ? item.amountCents : 1,
+      originalCurrency: item.currency,
+      originalAmountCents: item.amountCents > 0 ? item.amountCents : 1,
+      exchangeRate: 1.0,
+      type: txType,
+      description: description,
+      transactionDate: item.transactionDate.toUtc(),
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    // 5. Persist to SQLite (automatically updates account balance)
+    await _transactionRepository.createTransaction(newTx);
+
+    // 6. If matched to a subscription, automatically advance its next due date
+    if (matchedSub != null && _subscriptionRepository != null) {
+      try {
+        final DateTime nextDue = SubscriptionsProvider.calculateNextDueDate(
+          matchedSub.nextDueDate,
+          matchedSub.frequency,
+          billingDay: matchedSub.billingDay,
+        );
+        await _subscriptionRepository.updateNextDueDate(matchedSub.id, nextDue);
+      } catch (_) {}
+    }
+
+    return true;
   }
 
   @override

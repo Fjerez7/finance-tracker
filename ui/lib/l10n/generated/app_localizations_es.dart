@@ -1343,4 +1343,83 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get originalAmount => 'Monto Original';
+
+  @override
+  String get gmailBankSync => 'Sincronización Bancaria Gmail';
+
+  @override
+  String get gmailBankSyncDesc =>
+      'Extrae transacciones automáticamente desde correos bancarios mediante IA Gemini';
+
+  @override
+  String googleAccountConnected(String email) {
+    return 'Conectado como $email';
+  }
+
+  @override
+  String get geminiApiKey => 'Clave de API de Gemini';
+
+  @override
+  String get geminiApiKeyDesc =>
+      'Utilizada para la extracción estructurada con Gemini 3.6 Flash';
+
+  @override
+  String get geminiApiKeyHelper =>
+      'Tu clave de API se guarda de forma segura únicamente en el almacenamiento local del dispositivo. Puedes obtener una clave gratuita en Google AI Studio.';
+
+  @override
+  String get enterGeminiApiKey => 'Ingresa tu clave de API de Gemini';
+
+  @override
+  String get apiKeySaved => 'Clave de API de Gemini guardada correctamente';
+
+  @override
+  String get bankSenders => 'Remitentes Bancarios Monitoreados';
+
+  @override
+  String get bankSendersDesc =>
+      'Lista de correos de notificación bancaria separados por comas';
+
+  @override
+  String get bankSendersSaved =>
+      'Remitentes bancarios actualizados correctamente';
+
+  @override
+  String get restoreDefaultSenders => 'Restablecer Predeterminados';
+
+  @override
+  String get enableAutoSync => 'Sincronización Automática en Segundo Plano';
+
+  @override
+  String get enableAutoSyncDesc =>
+      'Consultar nuevos correos bancarios al abrir o reanudar la app';
+
+  @override
+  String get syncNow => 'Sincronizar Ahora';
+
+  @override
+  String get syncingGmail =>
+      'Leyendo correos bancarios y extrayendo transacciones...';
+
+  @override
+  String syncSuccess(int count) {
+    return '✨ $count transacciones sincronizadas';
+  }
+
+  @override
+  String get syncUpToDate =>
+      'Al día. No se encontraron nuevas transacciones bancarias.';
+
+  @override
+  String lastSyncTime(String time) {
+    return 'Última sincronización: $time';
+  }
+
+  @override
+  String get googleSignInRequired =>
+      'Por favor conecta tu cuenta de Google primero para autorizar acceso a Gmail.';
+
+  @override
+  String get geminiKeyRequired =>
+      'Por favor configura tu clave de API de Gemini primero para habilitar el procesamiento.';
 }

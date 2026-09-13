@@ -1318,4 +1318,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get originalAmount => 'Original Amount';
+
+  @override
+  String get gmailBankSync => 'Gmail Bank Synchronization';
+
+  @override
+  String get gmailBankSyncDesc =>
+      'Extract transactions directly from bank notification emails via Gemini AI';
+
+  @override
+  String googleAccountConnected(String email) {
+    return 'Connected as $email';
+  }
+
+  @override
+  String get geminiApiKey => 'Gemini API Key';
+
+  @override
+  String get geminiApiKeyDesc =>
+      'Used for structured AI extraction with Gemini 3.6 Flash';
+
+  @override
+  String get geminiApiKeyHelper =>
+      'Your API key is securely saved only in local device storage. Free keys are available from Google AI Studio.';
+
+  @override
+  String get enterGeminiApiKey => 'Enter your Gemini API key';
+
+  @override
+  String get apiKeySaved => 'Gemini API key saved successfully';
+
+  @override
+  String get bankSenders => 'Monitored Bank Senders';
+
+  @override
+  String get bankSendersDesc =>
+      'Comma-separated list of bank notification sender emails to monitor';
+
+  @override
+  String get bankSendersSaved => 'Bank senders updated successfully';
+
+  @override
+  String get restoreDefaultSenders => 'Restore Defaults';
+
+  @override
+  String get enableAutoSync => 'Automatic Background Sync';
+
+  @override
+  String get enableAutoSyncDesc =>
+      'Check for new bank emails when app launches or returns to foreground';
+
+  @override
+  String get syncNow => 'Sync Now';
+
+  @override
+  String get syncingGmail => 'Reading bank emails & extracting transactions...';
+
+  @override
+  String syncSuccess(int count) {
+    return '✨ $count transactions synchronized';
+  }
+
+  @override
+  String get syncUpToDate => 'Up to date. No new bank transactions found.';
+
+  @override
+  String lastSyncTime(String time) {
+    return 'Last sync: $time';
+  }
+
+  @override
+  String get googleSignInRequired =>
+      'Please connect your Google Account first to authorize Gmail access.';
+
+  @override
+  String get geminiKeyRequired =>
+      'Please configure your Gemini API Key first to enable transaction parsing.';
 }

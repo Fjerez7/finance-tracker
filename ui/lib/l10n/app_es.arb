@@ -413,5 +413,27 @@
   "exchangeRateHint": "Tasa en vivo de open.er-api.com",
   "ratePlaceholder": "Tasa de cambio (ej. 4150.0)",
   "customRateActive": "Tasa personalizada aplicada",
-  "originalAmount": "Monto Original"
+  "originalAmount": "Monto Original",
+
+  "gmailBankSync": "Sincronización Bancaria Gmail",
+  "gmailBankSyncDesc": "Extrae transacciones automáticamente desde correos bancarios mediante IA Gemini",
+  "googleAccountConnected": "Conectado como {email}",
+  "geminiApiKey": "Clave de API de Gemini",
+  "geminiApiKeyDesc": "Utilizada para la extracción estructurada con Gemini 3.6 Flash",
+  "geminiApiKeyHelper": "Tu clave de API se guarda de forma segura únicamente en el almacenamiento local del dispositivo. Puedes obtener una clave gratuita en Google AI Studio.",
+  "enterGeminiApiKey": "Ingresa tu clave de API de Gemini",
+  "apiKeySaved": "Clave de API de Gemini guardada correctamente",
+  "bankSenders": "Remitentes Bancarios Monitoreados",
+  "bankSendersDesc": "Lista de correos de notificación bancaria separados por comas",
+  "bankSendersSaved": "Remitentes bancarios actualizados correctamente",
+  "restoreDefaultSenders": "Restablecer Predeterminados",
+  "enableAutoSync": "Sincronización Automática en Segundo Plano",
+  "enableAutoSyncDesc": "Consultar nuevos correos bancarios al abrir o reanudar la app",
+  "syncNow": "Sincronizar Ahora",
+  "syncingGmail": "Leyendo correos bancarios y extrayendo transacciones...",
+  "syncSuccess": "✨ {count} transacciones sincronizadas",
+  "syncUpToDate": "Al día. No se encontraron nuevas transacciones bancarias.",
+  "lastSyncTime": "Última sincronización: {time}",
+  "googleSignInRequired": "Por favor conecta tu cuenta de Google primero para autorizar acceso a Gmail.",
+  "geminiKeyRequired": "Por favor configura tu clave de API de Gemini primero para habilitar el procesamiento."
 }

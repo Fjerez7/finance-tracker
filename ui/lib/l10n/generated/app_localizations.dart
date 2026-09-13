@@ -2497,6 +2497,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original Amount'**
   String get originalAmount;
+
+  /// No description provided for @gmailBankSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Gmail Bank Synchronization'**
+  String get gmailBankSync;
+
+  /// No description provided for @gmailBankSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract transactions directly from bank notification emails via Gemini AI'**
+  String get gmailBankSyncDesc;
+
+  /// No description provided for @googleAccountConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {email}'**
+  String googleAccountConnected(String email);
+
+  /// No description provided for @geminiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API Key'**
+  String get geminiApiKey;
+
+  /// No description provided for @geminiApiKeyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for structured AI extraction with Gemini 3.6 Flash'**
+  String get geminiApiKeyDesc;
+
+  /// No description provided for @geminiApiKeyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Your API key is securely saved only in local device storage. Free keys are available from Google AI Studio.'**
+  String get geminiApiKeyHelper;
+
+  /// No description provided for @enterGeminiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Gemini API key'**
+  String get enterGeminiApiKey;
+
+  /// No description provided for @apiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API key saved successfully'**
+  String get apiKeySaved;
+
+  /// No description provided for @bankSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitored Bank Senders'**
+  String get bankSenders;
+
+  /// No description provided for @bankSendersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated list of bank notification sender emails to monitor'**
+  String get bankSendersDesc;
+
+  /// No description provided for @bankSendersSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank senders updated successfully'**
+  String get bankSendersSaved;
+
+  /// No description provided for @restoreDefaultSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Defaults'**
+  String get restoreDefaultSenders;
+
+  /// No description provided for @enableAutoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Background Sync'**
+  String get enableAutoSync;
+
+  /// No description provided for @enableAutoSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for new bank emails when app launches or returns to foreground'**
+  String get enableAutoSyncDesc;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get syncNow;
+
+  /// No description provided for @syncingGmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading bank emails & extracting transactions...'**
+  String get syncingGmail;
+
+  /// No description provided for @syncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ {count} transactions synchronized'**
+  String syncSuccess(int count);
+
+  /// No description provided for @syncUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date. No new bank transactions found.'**
+  String get syncUpToDate;
+
+  /// No description provided for @lastSyncTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {time}'**
+  String lastSyncTime(String time);
+
+  /// No description provided for @googleSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please connect your Google Account first to authorize Gmail access.'**
+  String get googleSignInRequired;
+
+  /// No description provided for @geminiKeyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please configure your Gemini API Key first to enable transaction parsing.'**
+  String get geminiKeyRequired;
 }
 
 class _AppLocalizationsDelegate
