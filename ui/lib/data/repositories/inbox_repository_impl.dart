@@ -76,15 +76,13 @@ class InboxRepositoryImpl implements InboxRepository {
         // 2. Check for matching active Subscription
         final Subscription? matchedSub = _matchSubscription(item, activeSubscriptions);
 
-        // 3. Resolve Category
-        final Category? resolvedCategory = matchedSub != null
-            ? _categoryRepositoryById(matchedSub.categoryId, categories) ?? _matchCategory(item, categories)
-            : _matchCategory(item, categories);
+        // 3. Resolve Transaction Type (with incoming transfer heuristic detection)
+        final TransactionType txType = _resolveTransactionType(item);
 
-        // 4. Resolve Transaction Type
-        final TransactionType txType = item.isIncome
-            ? TransactionType.income
-            : TransactionType.expense;
+        // 4. Resolve Category conforming to transaction type
+        final Category? resolvedCategory = matchedSub != null
+            ? _categoryRepositoryById(matchedSub.categoryId, categories) ?? _matchCategory(item, categories, txType)
+            : _matchCategory(item, categories, txType);
 
         final DateTime now = DateTime.now().toUtc();
 
@@ -262,32 +260,81 @@ class InboxRepositoryImpl implements InboxRepository {
     return null;
   }
 
-  /// Resolves the best matching category from SQLite categories.
-  Category? _matchCategory(InboxTransaction item, List<Category> categories) {
+  /// Resolves whether the transaction is an income or an expense, using explicit flags
+  /// and heuristic natural-language detection for bank transfer receipts, deposits, and refunds.
+  TransactionType _resolveTransactionType(InboxTransaction item) {
+    if (item.isIncome) return TransactionType.income;
+
+    final String text = '${item.merchant} ${item.categorySuggestion} ${item.bankName}'.toLowerCase();
+
+    const incomeKeywords = [
+      'recibiste',
+      'recibido',
+      'recibida',
+      'te transfirieron',
+      'te consignaron',
+      'abono',
+      'deposito',
+      'depósito',
+      'consignacion',
+      'consignación',
+      'transferencia recibida',
+      'transferencia de',
+      'devolucion',
+      'devolución',
+      'cashback',
+      'reembolso',
+      'nomina',
+      'nómina',
+      'salario',
+      'sueldo',
+      'received',
+      'deposit',
+      'refund',
+      'payroll',
+      'salary',
+    ];
+
+    for (final kw in incomeKeywords) {
+      if (text.contains(kw)) {
+        return TransactionType.income;
+      }
+    }
+
+    return TransactionType.expense;
+  }
+
+  /// Resolves the best matching category from SQLite categories conforming to transaction type.
+  Category? _matchCategory(InboxTransaction item, List<Category> categories, TransactionType txType) {
     if (categories.isEmpty) return null;
+
+    final bool isIncome = txType == TransactionType.income;
+    final List<Category> typedCategories =
+        categories.where((c) => isIncome ? c.isIncome : c.isExpense).toList();
+    final List<Category> searchPool = typedCategories.isNotEmpty ? typedCategories : categories;
 
     final String suggestion = item.categorySuggestion.trim().toLowerCase();
 
-    // 1. Match exact name
-    for (final Category cat in categories) {
+    // 1. Match exact name in typed pool
+    for (final Category cat in searchPool) {
       if (cat.name.toLowerCase() == suggestion) {
         return cat;
       }
     }
 
-    // 2. Match partial name
-    for (final Category cat in categories) {
+    // 2. Match partial name in typed pool
+    for (final Category cat in searchPool) {
       if (cat.name.toLowerCase().contains(suggestion) || suggestion.contains(cat.name.toLowerCase())) {
         return cat;
       }
     }
 
-    // 3. Fallback to default other category
-    final String defaultFallbackId = item.isIncome ? 'cat_default_other_income' : 'cat_default_other_expense';
+    // 3. Fallback to default other category of the matching type
+    final String defaultFallbackId = isIncome ? 'cat_default_other_income' : 'cat_default_other_expense';
     for (final Category cat in categories) {
       if (cat.id == defaultFallbackId) return cat;
     }
 
-    return categories.first;
+    return searchPool.first;
   }
 }

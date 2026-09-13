@@ -436,5 +436,32 @@ void main() {
       expect(savedTx.description, equals('Google One'));
       expect(fakeSubRepo.updatedDueDates.containsKey('sub-google-one'), isFalse);
     });
+
+    test('syncPendingTransactions detects received transfer as income', () async {
+      final inboxTx = InboxTransactionModel(
+        id: 'msg-transfer-in',
+        bankName: 'Bancolombia',
+        accountType: 'savings',
+        accountMask: '*3304',
+        merchant: 'Transferencia de ALBA MANRIQUE',
+        amountCents: 100, // 1 COP
+        amount: 1.0,
+        currency: 'COP',
+        type: 'expense', // Raw type might say expense or other, but text has 'Transferencia de'
+        categorySuggestion: 'Other Income',
+        transactionDate: now,
+        referenceNumber: 'AUT-999',
+        status: InboxStatus.pending,
+        createdAt: now,
+      );
+
+      fakeRemote.pending = [inboxTx];
+      final int synced = await repository.syncPendingTransactions();
+
+      expect(synced, equals(1));
+      final savedTx = fakeTxRepo.db['tx_gmail_msg-transfer-in']!;
+      expect(savedTx.isIncome, isTrue);
+      expect(savedTx.type, equals(TransactionType.income));
+    });
   });
 }
