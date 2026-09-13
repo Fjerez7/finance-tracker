@@ -91,6 +91,9 @@ abstract class GmailAuthService {
   /// Initiates interactive Google Sign-In requesting Gmail read/modify scopes.
   Future<GoogleSignInAccount?> signIn();
 
+  /// Attempts silent Google Sign-In to restore existing session without UI prompts.
+  Future<GoogleSignInAccount?> signInSilently();
+
   /// Obtains valid OAuth2 authentication headers (including Bearer token).
   Future<Map<String, String>> getAuthHeaders();
 
@@ -108,9 +111,24 @@ abstract class GmailAuthService {
 - `https://www.googleapis.com/auth/gmail.modify` (Apply processed labels to avoid re-reading)
 - `https://www.googleapis.com/auth/drive.appdata` (Google Drive backup scope)
 
+**Google Cloud Console & Firebase Setup Requirements:**
+1. **Firebase Authentication:** Google Sign-in provider enabled in Firebase Console (generates linked Web Client ID type 3).
+2. **Android OAuth Credential:** Debug and Release SHA-1 / SHA-256 certificate fingerprints registered under package `com.example.financetracker.finance_tracker` in Firebase Console / Google Cloud Console.
+3. **APIs Enabled:** `Gmail API` and `Google Drive API` enabled under the GCP project.
+4. **OAuth Consent Screen:** User Type configured (External / Testing mode) with active tester accounts added under Test Users.
+
 ---
 
-### 3.2 `GmailRemoteDataSource` Interface
+### 3.2 Monitored Bank Senders
+
+The ingestion pipeline filters incoming emails matching default bank notification senders:
+- **Bancolombia:** `alertasynotificaciones@bancolombia.com.co`, `alertasynotificaciones@an.notificacionesbancolombia.com`, `alertas@notificacionesbancolombia.com`
+- **RappiCard:** `notificaciones@rappicard.co`, `noreply@rappicard.co`
+- **Nu Colombia:** `nu@nu.com.co`, `tucuentanu@nu.com.co`, `ayuda@nu.com.co`, `notificaciones@nu.com.co`, `alertas@nu.com.co`
+
+---
+
+### 3.3 `GmailRemoteDataSource` Interface
 
 Encapsulates direct HTTP communication with `https://gmail.googleapis.com/gmail/v1/users/me/`.
 
@@ -144,7 +162,7 @@ abstract class GmailRemoteDataSource {
 
 ---
 
-### 3.3 `GeminiExtractionService` Interface
+### 3.4 `GeminiExtractionService` Interface
 
 Encapsulates prompt construction and structured JSON response decoding via Gemini 2.5 / 3.6 Flash.
 
@@ -161,7 +179,7 @@ abstract class GeminiExtractionService {
 
 ---
 
-### 3.4 Future Extensibility: Multi-Cloud Backup Provider
+### 3.5 Future Extensibility: Multi-Cloud Backup Provider
 
 The architecture keeps `FirebaseCore` and `CloudFirestore` active as an extensible storage destination for cloud backups:
 
