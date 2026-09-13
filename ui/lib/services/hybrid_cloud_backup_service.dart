@@ -43,7 +43,7 @@ class HybridCloudBackupService implements CloudBackupService {
               backupJson: backupJson,
               filename: filename,
               checksum: checksum,
-              userId: userId ?? 'user_default',
+              userId: userId ?? 'anonymous_user',
             )
             .then((info) => results.add(info))
             .catchError((e) {
@@ -105,7 +105,7 @@ class HybridCloudBackupService implements CloudBackupService {
     if (queryFirestore) {
       tasks.add(
         _firestoreService
-            .listBackups(userId: userId ?? 'user_default')
+            .listBackups(userId: userId ?? 'anonymous_user')
             .then((list) => combined.addAll(list))
             .catchError((_) {}),
       );
@@ -137,7 +137,7 @@ class HybridCloudBackupService implements CloudBackupService {
       case CloudBackupDestination.firestore:
         return await _firestoreService.downloadBackup(
           backupId: backupId,
-          userId: userId ?? 'user_default',
+          userId: userId ?? 'anonymous_user',
         );
       case CloudBackupDestination.googleDrive:
       case CloudBackupDestination.all:
@@ -155,7 +155,7 @@ class HybridCloudBackupService implements CloudBackupService {
       case CloudBackupDestination.firestore:
         await _firestoreService.deleteBackup(
           backupId: backupId,
-          userId: userId ?? 'user_default',
+          userId: userId ?? 'anonymous_user',
         );
         break;
       case CloudBackupDestination.googleDrive:

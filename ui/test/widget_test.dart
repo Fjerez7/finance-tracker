@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:finance_tracker/domain/entities/account.dart';
 import 'package:finance_tracker/domain/entities/category.dart';
@@ -119,6 +120,7 @@ void main() {
   testWidgets(
     'FinanceTrackerApp smoke test renders navigation shell and tabs',
     (WidgetTester tester) async {
+      FlutterSecureStorage.setMockInitialValues({});
       final now = DateTime.parse('2026-09-04T12:00:00Z');
       final testAccount = Account(
         id: 'acc-1',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants/app_currency.dart';
 import '../core/utils/currency_formatter.dart';
 import '../data/datasources/local/database_helper.dart';
@@ -17,6 +18,7 @@ class SettingsProvider extends ChangeNotifier {
       String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
 
   final DatabaseHelper _dbHelper;
+  final FlutterSecureStorage _secureStorage;
 
   Locale? _locale;
   AppCurrency _currency = AppCurrency.usd;
@@ -25,8 +27,11 @@ class SettingsProvider extends ChangeNotifier {
   bool _isGmailSyncEnabled = true;
   bool _isInitialized = false;
 
-  SettingsProvider({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+  SettingsProvider({
+    DatabaseHelper? dbHelper,
+    FlutterSecureStorage? secureStorage,
+  })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
+        _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   Locale? get locale => _locale;
   AppCurrency get currency => _currency;
@@ -38,7 +43,7 @@ class SettingsProvider extends ChangeNotifier {
   List<String> get bankSendersList =>
       _bankSenders.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
-  /// Loads saved language, currency, and sync settings from SQLite.
+  /// Loads saved language, currency, and sync settings from SQLite and Keystore.
   Future<void> loadSettings() async {
     try {
       final String? langCode = await _dbHelper.getSetting(keyLanguage);
@@ -55,11 +60,21 @@ class SettingsProvider extends ChangeNotifier {
         _currency = AppCurrency.usd;
       }
 
-      final String? savedKey = await _dbHelper.getSetting(keyGeminiApiKey);
-      if (savedKey != null && savedKey.isNotEmpty) {
-        _geminiApiKey = savedKey;
+      // Hardware-backed secure storage retrieval with transparent SQLite migration
+      final String? legacySqliteKey = await _dbHelper.getSetting(keyGeminiApiKey);
+      if (legacySqliteKey != null && legacySqliteKey.isNotEmpty) {
+        // Migrate to hardware keystore
+        await _secureStorage.write(key: keyGeminiApiKey, value: legacySqliteKey);
+        // Purge plaintext key from SQLite
+        await _dbHelper.deleteSetting(keyGeminiApiKey);
+        _geminiApiKey = legacySqliteKey;
       } else {
-        _geminiApiKey = defaultGeminiApiKey;
+        final String? secureKey = await _secureStorage.read(key: keyGeminiApiKey);
+        if (secureKey != null && secureKey.isNotEmpty) {
+          _geminiApiKey = secureKey;
+        } else {
+          _geminiApiKey = defaultGeminiApiKey;
+        }
       }
 
       _bankSenders = await _dbHelper.getSetting(keyBankSenders) ?? defaultBankSenders;
@@ -99,11 +114,17 @@ class SettingsProvider extends ChangeNotifier {
     await _dbHelper.setSetting(keyCurrency, newCurrency.code);
   }
 
-  /// Updates the Gemini API Key for on-device bank email extraction.
+  /// Updates the Gemini API Key for on-device bank email extraction in hardware keystore.
   Future<void> setGeminiApiKey(String key) async {
     _geminiApiKey = key.trim();
     notifyListeners();
-    await _dbHelper.setSetting(keyGeminiApiKey, _geminiApiKey);
+    if (_geminiApiKey.isEmpty) {
+      await _secureStorage.delete(key: keyGeminiApiKey);
+    } else {
+      await _secureStorage.write(key: keyGeminiApiKey, value: _geminiApiKey);
+    }
+    // Defensive cleanup in SQLite
+    await _dbHelper.deleteSetting(keyGeminiApiKey);
   }
 
   /// Updates the list of monitored bank sender emails.

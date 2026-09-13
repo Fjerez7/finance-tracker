@@ -499,4 +499,14 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
+  /// Deletes a persisted setting value by key.
+  Future<void> deleteSetting(String key) async {
+    final Database db = await database;
+    await db.delete(
+      DatabaseConstants.tableSettings,
+      where: '${DatabaseConstants.colKey} = ?',
+      whereArgs: [key],
+    );
+  }
 }

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:finance_tracker/core/constants/app_currency.dart';
@@ -10,9 +11,13 @@ void main() {
   sqfliteFfiInit();
 
   late DatabaseHelper dbHelper;
+  late FlutterSecureStorage secureStorage;
   late SettingsProvider settingsProv;
 
   setUp(() async {
+    FlutterSecureStorage.setMockInitialValues({});
+    secureStorage = const FlutterSecureStorage();
+
     dbHelper = DatabaseHelper.instance;
     dbHelper.databaseFactoryOverride = databaseFactoryFfi;
     dbHelper.databasePathOverride = inMemoryDatabasePath;
@@ -20,7 +25,10 @@ void main() {
     await dbHelper.close();
     await dbHelper.database;
 
-    settingsProv = SettingsProvider(dbHelper: dbHelper);
+    settingsProv = SettingsProvider(
+      dbHelper: dbHelper,
+      secureStorage: secureStorage,
+    );
   });
 
   tearDown(() async {
@@ -85,6 +93,37 @@ void main() {
 
       final String? savedCurr = await dbHelper.getSetting(SettingsProvider.keyCurrency);
       expect(savedCurr, 'COP');
+    });
+
+    test('setGeminiApiKey writes to FlutterSecureStorage and purges SQLite record', () async {
+      await settingsProv.loadSettings();
+
+      await settingsProv.setGeminiApiKey('AIzaSyTestSecureKey98765');
+
+      expect(settingsProv.geminiApiKey, 'AIzaSyTestSecureKey98765');
+
+      final storedSecureKey = await secureStorage.read(key: SettingsProvider.keyGeminiApiKey);
+      expect(storedSecureKey, 'AIzaSyTestSecureKey98765');
+
+      final sqliteKey = await dbHelper.getSetting(SettingsProvider.keyGeminiApiKey);
+      expect(sqliteKey, isNull);
+    });
+
+    test('loadSettings migrates legacy SQLite API key to secure storage and deletes from SQLite', () async {
+      // Simulate legacy state where API key was in SQLite
+      await dbHelper.setSetting(SettingsProvider.keyGeminiApiKey, 'legacy_api_key_123');
+
+      await settingsProv.loadSettings();
+
+      expect(settingsProv.geminiApiKey, 'legacy_api_key_123');
+
+      // Check it was migrated to secure storage
+      final storedSecureKey = await secureStorage.read(key: SettingsProvider.keyGeminiApiKey);
+      expect(storedSecureKey, 'legacy_api_key_123');
+
+      // Check it was deleted from SQLite
+      final sqliteKey = await dbHelper.getSetting(SettingsProvider.keyGeminiApiKey);
+      expect(sqliteKey, isNull);
     });
   });
 }
