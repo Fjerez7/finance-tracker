@@ -14,4 +14,13 @@ abstract class InboxRepository {
 
   /// Marks a specific staged transaction as discarded.
   Future<void> markAsDiscarded(String transactionId, {String userId = 'user_default'});
+
+  /// Directly queries Gmail REST API for new bank emails, parses with Gemini Flash,
+  /// persists into SQLite with multi-factor matching, and applies processed labels.
+  /// Returns count of newly synchronized transactions.
+  Future<int> syncDirectFromGmail({
+    required Map<String, String> authHeaders,
+    required String geminiApiKey,
+    List<String>? bankSenders,
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'data/datasources/remote/gmail_remote_datasource.dart';
 import 'data/datasources/remote/inbox_remote_datasource.dart';
 import 'data/repositories/account_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
@@ -27,6 +28,8 @@ import 'providers/inbox_sync_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
+import 'services/gemini_extraction_service.dart';
+import 'services/gmail_auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -150,17 +153,26 @@ class FinanceTrackerApp extends StatelessWidget {
           )
         else
           ChangeNotifierProvider<InboxSyncProvider>(
-            create: (_) => InboxSyncProvider(
-              syncUseCase: SyncInboxTransactionsUseCase(
-                InboxRepositoryImpl(
-                  remoteDataSource: InboxRemoteDataSourceImpl(),
-                  transactionRepository: TransactionRepositoryImpl(),
-                  accountRepository: AccountRepositoryImpl(),
-                  categoryRepository: CategoryRepositoryImpl(),
-                  subscriptionRepository: SubscriptionRepositoryImpl(),
+            create: (ctx) {
+              final gmailAuth = GmailAuthServiceImpl();
+              final gmailSource = GmailRemoteDataSourceImpl();
+              final geminiExtraction = GeminiExtractionServiceImpl();
+
+              return InboxSyncProvider(
+                gmailAuthService: gmailAuth,
+                syncUseCase: SyncInboxTransactionsUseCase(
+                  InboxRepositoryImpl(
+                    remoteDataSource: InboxRemoteDataSourceImpl(),
+                    transactionRepository: TransactionRepositoryImpl(),
+                    accountRepository: AccountRepositoryImpl(),
+                    categoryRepository: CategoryRepositoryImpl(),
+                    subscriptionRepository: SubscriptionRepositoryImpl(),
+                    gmailRemoteDataSource: gmailSource,
+                    geminiExtractionService: geminiExtraction,
+                  ),
                 ),
-              ),
-            ),
+              )..checkExistingAuth();
+            },
           ),
       ],
       child: Consumer<SettingsProvider>(
@@ -241,10 +253,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsB
     if (!mounted) return;
     try {
       final inboxSync = context.read<InboxSyncProvider?>();
-      if (inboxSync != null) {
+      final settings = context.read<SettingsProvider?>();
+      if (inboxSync != null && (settings == null || settings.isGmailSyncEnabled)) {
         final accounts = context.read<AccountsProvider>();
         final txs = context.read<TransactionsProvider>();
         inboxSync.syncNow(
+          geminiApiKey: settings?.geminiApiKey,
+          bankSenders: settings?.bankSendersList,
           accountsProvider: accounts,
           transactionsProvider: txs,
         );

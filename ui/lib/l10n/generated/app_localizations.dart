@@ -2246,47 +2246,101 @@ abstract class AppLocalizations {
   /// **'Cloud backup created successfully!'**
   String get cloudBackupCreatedSuccess;
 
-  /// No description provided for @databaseRestoredSuccess.
+  /// No description provided for @dualCloudBackup.
   ///
   /// In en, this message translates to:
-  /// **'Database restored successfully from Google Drive!'**
-  String get databaseRestoredSuccess;
+  /// **'Dual Cloud Backup (Firestore + Drive)'**
+  String get dualCloudBackup;
 
-  /// No description provided for @noBackupFound.
+  /// No description provided for @dualCloudBackupDesc.
   ///
   /// In en, this message translates to:
-  /// **'No backup found in Google Drive'**
-  String get noBackupFound;
+  /// **'Simultaneously sync encrypted database snapshots to Firebase and Google Drive'**
+  String get dualCloudBackupDesc;
 
-  /// No description provided for @backupSuccess.
+  /// No description provided for @firestoreCloudBackup.
   ///
   /// In en, this message translates to:
-  /// **'Backup uploaded successfully to Google Drive'**
-  String get backupSuccess;
+  /// **'Firebase Firestore'**
+  String get firestoreCloudBackup;
 
-  /// No description provided for @restoreSuccess.
+  /// No description provided for @googleDriveBackupLabel.
   ///
   /// In en, this message translates to:
-  /// **'Data restored successfully from Google Drive'**
-  String get restoreSuccess;
+  /// **'Google Drive'**
+  String get googleDriveBackupLabel;
 
-  /// No description provided for @restoreWarning.
+  /// No description provided for @shareCsv.
   ///
   /// In en, this message translates to:
-  /// **'Restoring will replace all current local data with the cloud backup. Do you want to continue?'**
-  String get restoreWarning;
+  /// **'Export & Share CSV (Excel)'**
+  String get shareCsv;
 
-  /// No description provided for @backupInProgress.
+  /// No description provided for @shareCsvDesc.
   ///
   /// In en, this message translates to:
-  /// **'Creating and uploading encrypted backup...'**
-  String get backupInProgress;
+  /// **'Share all {count} transactions to WhatsApp, Excel, Gmail, or Files'**
+  String shareCsvDesc(int count);
 
-  /// No description provided for @restoreInProgress.
+  /// No description provided for @shareJson.
   ///
   /// In en, this message translates to:
-  /// **'Downloading and restoring data...'**
-  String get restoreInProgress;
+  /// **'Export & Share JSON Snapshot'**
+  String get shareJson;
+
+  /// No description provided for @shareJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Share complete database backup file with cryptographic checksum'**
+  String get shareJsonDesc;
+
+  /// No description provided for @pickLocalJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Local File (.json)'**
+  String get pickLocalJson;
+
+  /// No description provided for @pickLocalJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a .json backup file from your device storage to restore'**
+  String get pickLocalJsonDesc;
+
+  /// No description provided for @restoreLocalBackupQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Local Backup File?'**
+  String get restoreLocalBackupQuestion;
+
+  /// No description provided for @confirmRestoreLocalBackupDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This will validate the checksum and overwrite existing local data with the selected file. Continue?'**
+  String get confirmRestoreLocalBackupDetail;
+
+  /// No description provided for @localRestoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database successfully restored from local backup file!'**
+  String get localRestoreSuccess;
+
+  /// No description provided for @checksumFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Security verification failed: Backup file is corrupted or tampered.'**
+  String get checksumFailed;
+
+  /// No description provided for @noFileSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No file selected.'**
+  String get noFileSelected;
+
+  /// No description provided for @backupUploadedDual.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved to Firebase Firestore and Google Drive!'**
+  String get backupUploadedDual;
 
   /// No description provided for @autoBackup.
   ///
@@ -2497,6 +2551,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original Amount'**
   String get originalAmount;
+
+  /// No description provided for @gmailBankSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Gmail Bank Synchronization'**
+  String get gmailBankSync;
+
+  /// No description provided for @gmailBankSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract transactions directly from bank notification emails via Gemini AI'**
+  String get gmailBankSyncDesc;
+
+  /// No description provided for @googleAccountConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {email}'**
+  String googleAccountConnected(String email);
+
+  /// No description provided for @geminiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API Key'**
+  String get geminiApiKey;
+
+  /// No description provided for @geminiApiKeyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for structured AI extraction with Gemini 3.6 Flash'**
+  String get geminiApiKeyDesc;
+
+  /// No description provided for @geminiApiKeyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Your API key is securely saved only in local device storage. Free keys are available from Google AI Studio.'**
+  String get geminiApiKeyHelper;
+
+  /// No description provided for @enterGeminiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Gemini API key'**
+  String get enterGeminiApiKey;
+
+  /// No description provided for @apiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API key saved successfully'**
+  String get apiKeySaved;
+
+  /// No description provided for @bankSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitored Bank Senders'**
+  String get bankSenders;
+
+  /// No description provided for @bankSendersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated list of bank notification sender emails to monitor'**
+  String get bankSendersDesc;
+
+  /// No description provided for @bankSendersSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank senders updated successfully'**
+  String get bankSendersSaved;
+
+  /// No description provided for @restoreDefaultSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Defaults'**
+  String get restoreDefaultSenders;
+
+  /// No description provided for @enableAutoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Background Sync'**
+  String get enableAutoSync;
+
+  /// No description provided for @enableAutoSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for new bank emails when app launches or returns to foreground'**
+  String get enableAutoSyncDesc;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get syncNow;
+
+  /// No description provided for @syncingGmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading bank emails & extracting transactions...'**
+  String get syncingGmail;
+
+  /// No description provided for @syncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ {count} transactions synchronized'**
+  String syncSuccess(int count);
+
+  /// No description provided for @syncUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date. No new bank transactions found.'**
+  String get syncUpToDate;
+
+  /// No description provided for @lastSyncTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {time}'**
+  String lastSyncTime(String time);
+
+  /// No description provided for @googleSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please connect your Google Account first to authorize Gmail access.'**
+  String get googleSignInRequired;
+
+  /// No description provided for @geminiKeyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please configure your Gemini API Key first to enable transaction parsing.'**
+  String get geminiKeyRequired;
 }
 
 class _AppLocalizationsDelegate

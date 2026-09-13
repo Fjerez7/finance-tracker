@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:finance_tracker/data/datasources/remote/gmail_remote_datasource.dart';
 import 'package:finance_tracker/data/datasources/remote/inbox_remote_datasource.dart';
 import 'package:finance_tracker/data/models/inbox_transaction_model.dart';
 import 'package:finance_tracker/data/repositories/inbox_repository_impl.dart';
@@ -11,8 +12,52 @@ import 'package:finance_tracker/domain/repositories/account_repository.dart';
 import 'package:finance_tracker/domain/repositories/category_repository.dart';
 import 'package:finance_tracker/domain/repositories/subscription_repository.dart';
 import 'package:finance_tracker/domain/repositories/transaction_repository.dart';
+import 'package:finance_tracker/services/gemini_extraction_service.dart';
 
 // Fake implementations for unit testing
+class FakeGmailRemoteDataSource implements GmailRemoteDataSource {
+  List<GmailRawMessage> messages = [];
+  final List<String> processedMessageIds = [];
+  final List<String> ignoredMessageIds = [];
+
+  @override
+  Future<List<GmailRawMessage>> fetchUnprocessedBankMessages({
+    required Map<String, String> authHeaders,
+    List<String> bankSenders = const [],
+    int maxResults = 25,
+  }) async => messages;
+
+  @override
+  Future<void> markMessageAsProcessed({
+    required String messageId,
+    required Map<String, String> authHeaders,
+  }) async {
+    processedMessageIds.add(messageId);
+  }
+
+  @override
+  Future<void> markMessageAsIgnored({
+    required String messageId,
+    required Map<String, String> authHeaders,
+  }) async {
+    ignoredMessageIds.add(messageId);
+  }
+}
+
+class FakeGeminiExtractionService implements GeminiExtractionService {
+  InboxTransactionModel? modelToReturn;
+
+  @override
+  Future<InboxTransactionModel?> extractTransaction({
+    required String emailBody,
+    required String emailSubject,
+    required String sender,
+    required DateTime emailDate,
+    required String messageId,
+    required String apiKey,
+  }) async => modelToReturn;
+}
+
 class FakeInboxRemoteDataSource implements InboxRemoteDataSource {
   List<InboxTransactionModel> pending = [];
   final List<String> syncedIds = [];
@@ -183,6 +228,8 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 void main() {
   group('InboxRepositoryImpl Tests', () {
     late FakeInboxRemoteDataSource fakeRemote;
+    late FakeGmailRemoteDataSource fakeGmail;
+    late FakeGeminiExtractionService fakeGemini;
     late FakeTransactionRepository fakeTxRepo;
     late FakeAccountRepository fakeAccountRepo;
     late FakeCategoryRepository fakeCategoryRepo;
@@ -227,6 +274,8 @@ void main() {
 
     setUp(() {
       fakeRemote = FakeInboxRemoteDataSource();
+      fakeGmail = FakeGmailRemoteDataSource();
+      fakeGemini = FakeGeminiExtractionService();
       fakeTxRepo = FakeTransactionRepository();
       fakeAccountRepo = FakeAccountRepository()..accounts = [sampleAccount];
       fakeCategoryRepo = FakeCategoryRepository()..categories = [sampleCategory, subCategory];
@@ -238,6 +287,8 @@ void main() {
         accountRepository: fakeAccountRepo,
         categoryRepository: fakeCategoryRepo,
         subscriptionRepository: fakeSubRepo,
+        gmailRemoteDataSource: fakeGmail,
+        geminiExtractionService: fakeGemini,
       );
     });
 
@@ -462,6 +513,50 @@ void main() {
       final savedTx = fakeTxRepo.db['tx_gmail_msg-transfer-in']!;
       expect(savedTx.isIncome, isTrue);
       expect(savedTx.type, equals(TransactionType.income));
+    });
+
+    test('syncDirectFromGmail fetches messages, extracts via Gemini, and marks as processed', () async {
+      fakeGmail.messages = [
+        GmailRawMessage(
+          id: 'gmail_direct_001',
+          threadId: 'th_001',
+          subject: 'Compra Bancolombia',
+          sender: 'alertasynotificaciones@bancolombia.com.co',
+          date: now,
+          body: 'Compra con tarjeta *4892 en Uber por \$25.000',
+        ),
+      ];
+
+      fakeGemini.modelToReturn = InboxTransactionModel(
+        id: 'gmail_direct_001',
+        bankName: 'Bancolombia',
+        accountType: 'credit_card',
+        accountMask: '*4892',
+        merchant: 'Uber',
+        amountCents: 2500000,
+        amount: 25000.0,
+        currency: 'COP',
+        type: 'expense',
+        categorySuggestion: 'Transportation',
+        transactionDate: now,
+        referenceNumber: 'AUT-DIR-1',
+        status: InboxStatus.pending,
+        createdAt: now,
+      );
+
+      final int synced = await repository.syncDirectFromGmail(
+        authHeaders: {'Authorization': 'Bearer token'},
+        geminiApiKey: 'fake_key',
+      );
+
+      expect(synced, equals(1));
+      expect(fakeGmail.processedMessageIds, contains('gmail_direct_001'));
+      expect(fakeTxRepo.db.containsKey('tx_gmail_gmail_direct_001'), isTrue);
+
+      final savedTx = fakeTxRepo.db['tx_gmail_gmail_direct_001']!;
+      expect(savedTx.accountId, equals('acc-bancolombia-cc'));
+      expect(savedTx.amountCents, equals(2500000));
+      expect(savedTx.description, equals('Uber'));
     });
   });
 }

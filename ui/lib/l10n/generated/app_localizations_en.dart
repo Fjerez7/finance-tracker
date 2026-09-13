@@ -1188,27 +1188,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudBackupCreatedSuccess => 'Cloud backup created successfully!';
 
   @override
-  String get databaseRestoredSuccess =>
-      'Database restored successfully from Google Drive!';
+  String get dualCloudBackup => 'Dual Cloud Backup (Firestore + Drive)';
 
   @override
-  String get noBackupFound => 'No backup found in Google Drive';
+  String get dualCloudBackupDesc =>
+      'Simultaneously sync encrypted database snapshots to Firebase and Google Drive';
 
   @override
-  String get backupSuccess => 'Backup uploaded successfully to Google Drive';
+  String get firestoreCloudBackup => 'Firebase Firestore';
 
   @override
-  String get restoreSuccess => 'Data restored successfully from Google Drive';
+  String get googleDriveBackupLabel => 'Google Drive';
 
   @override
-  String get restoreWarning =>
-      'Restoring will replace all current local data with the cloud backup. Do you want to continue?';
+  String get shareCsv => 'Export & Share CSV (Excel)';
 
   @override
-  String get backupInProgress => 'Creating and uploading encrypted backup...';
+  String shareCsvDesc(int count) {
+    return 'Share all $count transactions to WhatsApp, Excel, Gmail, or Files';
+  }
 
   @override
-  String get restoreInProgress => 'Downloading and restoring data...';
+  String get shareJson => 'Export & Share JSON Snapshot';
+
+  @override
+  String get shareJsonDesc =>
+      'Share complete database backup file with cryptographic checksum';
+
+  @override
+  String get pickLocalJson => 'Restore from Local File (.json)';
+
+  @override
+  String get pickLocalJsonDesc =>
+      'Select a .json backup file from your device storage to restore';
+
+  @override
+  String get restoreLocalBackupQuestion => 'Restore Local Backup File?';
+
+  @override
+  String get confirmRestoreLocalBackupDetail =>
+      'This will validate the checksum and overwrite existing local data with the selected file. Continue?';
+
+  @override
+  String get localRestoreSuccess =>
+      'Database successfully restored from local backup file!';
+
+  @override
+  String get checksumFailed =>
+      'Security verification failed: Backup file is corrupted or tampered.';
+
+  @override
+  String get noFileSelected => 'No file selected.';
+
+  @override
+  String get backupUploadedDual =>
+      'Backup saved to Firebase Firestore and Google Drive!';
 
   @override
   String get autoBackup => 'Automatic Cloud Backup';
@@ -1318,4 +1352,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get originalAmount => 'Original Amount';
+
+  @override
+  String get gmailBankSync => 'Gmail Bank Synchronization';
+
+  @override
+  String get gmailBankSyncDesc =>
+      'Extract transactions directly from bank notification emails via Gemini AI';
+
+  @override
+  String googleAccountConnected(String email) {
+    return 'Connected as $email';
+  }
+
+  @override
+  String get geminiApiKey => 'Gemini API Key';
+
+  @override
+  String get geminiApiKeyDesc =>
+      'Used for structured AI extraction with Gemini 3.6 Flash';
+
+  @override
+  String get geminiApiKeyHelper =>
+      'Your API key is securely saved only in local device storage. Free keys are available from Google AI Studio.';
+
+  @override
+  String get enterGeminiApiKey => 'Enter your Gemini API key';
+
+  @override
+  String get apiKeySaved => 'Gemini API key saved successfully';
+
+  @override
+  String get bankSenders => 'Monitored Bank Senders';
+
+  @override
+  String get bankSendersDesc =>
+      'Comma-separated list of bank notification sender emails to monitor';
+
+  @override
+  String get bankSendersSaved => 'Bank senders updated successfully';
+
+  @override
+  String get restoreDefaultSenders => 'Restore Defaults';
+
+  @override
+  String get enableAutoSync => 'Automatic Background Sync';
+
+  @override
+  String get enableAutoSyncDesc =>
+      'Check for new bank emails when app launches or returns to foreground';
+
+  @override
+  String get syncNow => 'Sync Now';
+
+  @override
+  String get syncingGmail => 'Reading bank emails & extracting transactions...';
+
+  @override
+  String syncSuccess(int count) {
+    return '✨ $count transactions synchronized';
+  }
+
+  @override
+  String get syncUpToDate => 'Up to date. No new bank transactions found.';
+
+  @override
+  String lastSyncTime(String time) {
+    return 'Last sync: $time';
+  }
+
+  @override
+  String get googleSignInRequired =>
+      'Please connect your Google Account first to authorize Gmail access.';
+
+  @override
+  String get geminiKeyRequired =>
+      'Please configure your Gemini API Key first to enable transaction parsing.';
 }

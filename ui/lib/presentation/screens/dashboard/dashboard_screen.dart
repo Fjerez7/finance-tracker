@@ -6,6 +6,7 @@ import '../../../providers/accounts_provider.dart';
 import '../../../providers/analytics_provider.dart';
 import '../../../providers/budgets_provider.dart';
 import '../../../providers/inbox_sync_provider.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
 import '../../widgets/cards/hero_net_worth_card.dart';
@@ -83,7 +84,10 @@ class DashboardScreen extends StatelessWidget {
               onPressed: inboxSyncProv.isSyncing
                   ? null
                   : () async {
+                      final settings = context.read<SettingsProvider>();
                       final int count = await inboxSyncProv.syncNow(
+                        geminiApiKey: settings.geminiApiKey,
+                        bankSenders: settings.bankSendersList,
                         accountsProvider: accountsProv,
                         transactionsProvider: txProv,
                       );
@@ -124,9 +128,12 @@ class DashboardScreen extends StatelessWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
+          final settings = context.read<SettingsProvider>();
           await Future.wait([
-            if (inboxSyncProv != null)
+            if (inboxSyncProv != null && settings.isGmailSyncEnabled)
               inboxSyncProv.syncNow(
+                geminiApiKey: settings.geminiApiKey,
+                bankSenders: settings.bankSendersList,
                 accountsProvider: accountsProv,
                 transactionsProvider: txProv,
               ),

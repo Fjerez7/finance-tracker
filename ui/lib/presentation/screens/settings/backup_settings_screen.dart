@@ -1,16 +1,16 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../domain/entities/cloud_backup_info.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/accounts_provider.dart';
 import '../../../providers/backup_provider.dart';
 import '../../../providers/budgets_provider.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../providers/subscriptions_provider.dart';
 import '../../../providers/transactions_provider.dart';
-import '../../../services/google_drive_service.dart';
 
-/// Screen allowing Google Drive cloud backups, CSV transaction exports, and JSON database restore.
+/// Screen managing hybrid cloud backups (Firestore & Drive), native CSV/JSON sharing, and local database restore.
 class BackupSettingsScreen extends StatefulWidget {
   const BackupSettingsScreen({super.key});
 
@@ -35,20 +35,20 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Feedback Snackbars / Status Banners
+          // 1. Status and Feedback Banners
           if (backupProv.errorMessage != null) ...[
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.red.shade200),
               ),
               child: Row(
                 children: [
                   Icon(Icons.error_outline, color: Colors.red.shade700),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       backupProv.errorMessage!,
@@ -69,13 +69,13 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.green.shade200),
               ),
               child: Row(
                 children: [
                   Icon(Icons.check_circle_outline, color: Colors.green.shade700),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       backupProv.successMessage!,
@@ -91,7 +91,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
             ),
           ],
 
-          // 1. Google Drive Cloud Backup Card
+          // 2. Hybrid Cloud Backup (Firestore + Google Drive) Card
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -125,7 +125,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.googleDriveCloudSync,
+                              l10n.dualCloudBackup,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -134,7 +134,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                             Text(
                               backupProv.isSignedIn
                                   ? (backupProv.currentUser?.email ?? l10n.connected)
-                                  : l10n.syncEncryptedSnapshotsDesc,
+                                  : l10n.dualCloudBackupDesc,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colorScheme.onSurfaceVariant,
@@ -145,7 +145,29 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+
+                  // Destination Pills
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Chip(
+                        avatar: const Icon(Icons.local_fire_department, size: 16, color: Colors.orange),
+                        label: Text(l10n.firestoreCloudBackup, style: const TextStyle(fontSize: 11)),
+                        backgroundColor: Colors.orange.shade50,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      Chip(
+                        avatar: const Icon(Icons.drive_folder_upload, size: 16, color: Colors.blue),
+                        label: Text(l10n.googleDriveBackupLabel, style: const TextStyle(fontSize: 11)),
+                        backgroundColor: Colors.blue.shade50,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
+
                   if (backupProv.isSignedIn) ...[
                     Row(
                       children: [
@@ -240,7 +262,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
 
           const SizedBox(height: 16),
 
-          // 2. Local CSV Data Export Card
+          // 3. Local Native File Exports & Sharing
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -249,174 +271,204 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                 color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.table_chart_outlined,
-                  color: Colors.green.shade700,
-                  size: 24,
-                ),
-              ),
-              title: Text(
-                l10n.exportLedgerCsv,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                l10n.exportLedgerCsvDesc(txProv.transactions.length),
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
-              ),
-              trailing: const Icon(Icons.download),
-              onTap: () {
-                final csv = backupProv.exportTransactionsCsv(
-                  transactions: txProv.transactions,
-                  accounts: accountsProv.accounts,
-                  categories: txProv.categories,
-                );
-
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(l10n.csvExportPreview),
-                    content: SizedBox(
-                      width: double.maxFinite,
-                      height: 300,
-                      child: SingleChildScrollView(
-                        child: SelectableText(
-                          csv,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
+            child: Column(
+              children: [
+                // CSV Export (Excel)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: Text(l10n.close),
-                      ),
-                    ],
+                    child: Icon(
+                      Icons.table_chart_outlined,
+                      color: Colors.green.shade700,
+                      size: 24,
+                    ),
                   ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // 3. Local JSON Database Snapshot Card
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  shape: BoxShape.circle,
+                  title: Text(
+                    l10n.shareCsv,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    l10n.shareCsvDesc(txProv.transactions.length),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  ),
+                  trailing: const Icon(Icons.share_outlined),
+                  onTap: () async {
+                    await backupProv.shareTransactionsCsv(
+                      transactions: txProv.transactions,
+                      accounts: accountsProv.accounts,
+                      categories: txProv.categories,
+                    );
+                  },
                 ),
-                child: Icon(
-                  Icons.data_object_outlined,
-                  color: Colors.purple.shade700,
-                  size: 24,
-                ),
-              ),
-              title: Text(
-                l10n.exportDatabaseSnapshotJson,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                l10n.databaseSnapshotJsonDesc,
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
-              ),
-              trailing: const Icon(Icons.code),
-              onTap: () async {
-                final snapshot = await backupProv.createLocalSnapshot();
-                final jsonStr = jsonEncode(snapshot);
+                const Divider(height: 1, indent: 16, endIndent: 16),
 
-                if (context.mounted) {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(l10n.databaseSnapshotJson),
-                      content: SizedBox(
-                        width: double.maxFinite,
-                        height: 300,
-                        child: SingleChildScrollView(
-                          child: SelectableText(
-                            jsonStr,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          child: Text(l10n.close),
-                        ),
-                      ],
+                // JSON Snapshot Export
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      shape: BoxShape.circle,
                     ),
-                  );
-                }
-              },
+                    child: Icon(
+                      Icons.data_object_outlined,
+                      color: Colors.purple.shade700,
+                      size: 24,
+                    ),
+                  ),
+                  title: Text(
+                    l10n.shareJson,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    l10n.shareJsonDesc,
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  ),
+                  trailing: const Icon(Icons.share_outlined),
+                  onTap: () async {
+                    await backupProv.shareDatabaseJson();
+                  },
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+
+                // Local JSON File Restore
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.file_open_outlined,
+                      color: Colors.teal.shade700,
+                      size: 24,
+                    ),
+                  ),
+                  title: Text(
+                    l10n.pickLocalJson,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    l10n.pickLocalJsonDesc,
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  ),
+                  trailing: const Icon(Icons.folder_open),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.restoreLocalBackupQuestion),
+                        content: Text(l10n.confirmRestoreLocalBackupDetail),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text(l10n.cancel),
+                          ),
+                          FilledButton(
+                            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text(l10n.restoreData),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true && context.mounted) {
+                      final ok = await backupProv.pickAndRestoreLocalJson();
+                      if (ok && context.mounted) {
+                        await Future.wait([
+                          context.read<SettingsProvider>().loadSettings(),
+                          context.read<AccountsProvider>().loadAccounts(),
+                          context.read<TransactionsProvider>().fetchTransactions(),
+                          context.read<SubscriptionsProvider>().loadSubscriptions(),
+                          context.read<BudgetsProvider>().loadBudgetsForSelectedPeriod(),
+                        ]);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.localRestoreSuccess),
+                              backgroundColor: Colors.green.shade800,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _buildCloudBackupTile(BuildContext context, DriveBackupInfo backup) {
+  Widget _buildCloudBackupTile(BuildContext context, CloudBackupInfo backup) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    final dateStr = backup.modifiedTime != null
-        ? DateFormat('yyyy-MM-dd HH:mm').format(backup.modifiedTime!)
-        : 'Unknown Date';
+    final dateStr = DateFormat('yyyy-MM-dd HH:mm').format(backup.modifiedTime);
+    final isFirestore = backup.destination == CloudBackupDestination.firestore;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(Icons.history_outlined, size: 20, color: colorScheme.primary),
+          Icon(
+            isFirestore ? Icons.local_fire_department : Icons.drive_folder_upload,
+            size: 20,
+            color: isFirestore ? Colors.orange.shade800 : Colors.blue.shade700,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  backup.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        backup.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isFirestore ? Colors.orange.shade50 : Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isFirestore ? 'Firestore' : 'Drive',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isFirestore ? Colors.orange.shade900 : Colors.blue.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 2),
                 Text(
                   dateStr,
                   style: TextStyle(
@@ -427,6 +479,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           FilledButton.tonal(
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -439,7 +492,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
     );
   }
 
-  Future<void> _confirmRestore(BuildContext context, DriveBackupInfo backup) async {
+  Future<void> _confirmRestore(BuildContext context, CloudBackupInfo backup) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -464,10 +517,11 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
 
     if (confirmed == true && context.mounted) {
       final backupProv = context.read<BackupProvider>();
-      final ok = await backupProv.restoreCloudBackup(backup.id);
+      final ok = await backupProv.restoreCloudBackup(backup);
       if (ok && context.mounted) {
         // Refresh all local providers
         await Future.wait([
+          context.read<SettingsProvider>().loadSettings(),
           context.read<AccountsProvider>().loadAccounts(),
           context.read<TransactionsProvider>().fetchTransactions(),
           context.read<SubscriptionsProvider>().loadSubscriptions(),
@@ -477,7 +531,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.databaseRestoredSuccess),
+              content: Text(backupProv.successMessage ?? l10n.localRestoreSuccess),
+              backgroundColor: Colors.green.shade800,
             ),
           );
         }

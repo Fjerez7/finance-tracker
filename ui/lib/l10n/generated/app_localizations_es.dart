@@ -1210,29 +1210,61 @@ class AppLocalizationsEs extends AppLocalizations {
       '¡Copia de seguridad en la nube creada con éxito!';
 
   @override
-  String get databaseRestoredSuccess =>
-      '¡Base de datos restaurada con éxito desde Google Drive!';
+  String get dualCloudBackup => 'Copia de Seguridad Dual (Firestore + Drive)';
 
   @override
-  String get noBackupFound =>
-      'No se encontró copia de seguridad en Google Drive';
+  String get dualCloudBackupDesc =>
+      'Sincroniza copias cifradas simultáneamente en Firebase y Google Drive';
 
   @override
-  String get backupSuccess =>
-      'Copia de seguridad subida con éxito a Google Drive';
+  String get firestoreCloudBackup => 'Firebase Firestore';
 
   @override
-  String get restoreSuccess => 'Datos restaurados con éxito desde Google Drive';
+  String get googleDriveBackupLabel => 'Google Drive';
 
   @override
-  String get restoreWarning =>
-      'Restaurar reemplazará todos los datos locales actuales con la copia de la nube. ¿Deseas continuar?';
+  String get shareCsv => 'Exportar y Compartir CSV (Excel)';
 
   @override
-  String get backupInProgress => 'Creando y subiendo copia cifrada...';
+  String shareCsvDesc(int count) {
+    return 'Compartir las $count transacciones a WhatsApp, Excel, Gmail o Archivos';
+  }
 
   @override
-  String get restoreInProgress => 'Descargando y restaurando datos...';
+  String get shareJson => 'Exportar y Compartir Copia JSON';
+
+  @override
+  String get shareJsonDesc =>
+      'Compartir archivo completo de base de datos con verificación SHA-256';
+
+  @override
+  String get pickLocalJson => 'Restaurar desde Archivo Local (.json)';
+
+  @override
+  String get pickLocalJsonDesc =>
+      'Seleccionar un archivo .json desde la memoria del teléfono';
+
+  @override
+  String get restoreLocalBackupQuestion => '¿Restaurar Archivo de Copia Local?';
+
+  @override
+  String get confirmRestoreLocalBackupDetail =>
+      'Esto validará la firma de seguridad y sobrescribirá los datos locales con el archivo seleccionado. ¿Continuar?';
+
+  @override
+  String get localRestoreSuccess =>
+      '¡Base de datos restaurada con éxito desde el archivo local!';
+
+  @override
+  String get checksumFailed =>
+      'Fallo de verificación de seguridad: El archivo de copia está dañado o ha sido alterado.';
+
+  @override
+  String get noFileSelected => 'No se seleccionó ningún archivo.';
+
+  @override
+  String get backupUploadedDual =>
+      '¡Copia de seguridad guardada en Firebase Firestore y Google Drive!';
 
   @override
   String get autoBackup => 'Copia Automática en la Nube';
@@ -1343,4 +1375,83 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get originalAmount => 'Monto Original';
+
+  @override
+  String get gmailBankSync => 'Sincronización Bancaria Gmail';
+
+  @override
+  String get gmailBankSyncDesc =>
+      'Extrae transacciones automáticamente desde correos bancarios mediante IA Gemini';
+
+  @override
+  String googleAccountConnected(String email) {
+    return 'Conectado como $email';
+  }
+
+  @override
+  String get geminiApiKey => 'Clave de API de Gemini';
+
+  @override
+  String get geminiApiKeyDesc =>
+      'Utilizada para la extracción estructurada con Gemini 3.6 Flash';
+
+  @override
+  String get geminiApiKeyHelper =>
+      'Tu clave de API se guarda de forma segura únicamente en el almacenamiento local del dispositivo. Puedes obtener una clave gratuita en Google AI Studio.';
+
+  @override
+  String get enterGeminiApiKey => 'Ingresa tu clave de API de Gemini';
+
+  @override
+  String get apiKeySaved => 'Clave de API de Gemini guardada correctamente';
+
+  @override
+  String get bankSenders => 'Remitentes Bancarios Monitoreados';
+
+  @override
+  String get bankSendersDesc =>
+      'Lista de correos de notificación bancaria separados por comas';
+
+  @override
+  String get bankSendersSaved =>
+      'Remitentes bancarios actualizados correctamente';
+
+  @override
+  String get restoreDefaultSenders => 'Restablecer Predeterminados';
+
+  @override
+  String get enableAutoSync => 'Sincronización Automática en Segundo Plano';
+
+  @override
+  String get enableAutoSyncDesc =>
+      'Consultar nuevos correos bancarios al abrir o reanudar la app';
+
+  @override
+  String get syncNow => 'Sincronizar Ahora';
+
+  @override
+  String get syncingGmail =>
+      'Leyendo correos bancarios y extrayendo transacciones...';
+
+  @override
+  String syncSuccess(int count) {
+    return '✨ $count transacciones sincronizadas';
+  }
+
+  @override
+  String get syncUpToDate =>
+      'Al día. No se encontraron nuevas transacciones bancarias.';
+
+  @override
+  String lastSyncTime(String time) {
+    return 'Última sincronización: $time';
+  }
+
+  @override
+  String get googleSignInRequired =>
+      'Por favor conecta tu cuenta de Google primero para autorizar acceso a Gmail.';
+
+  @override
+  String get geminiKeyRequired =>
+      'Por favor configura tu clave de API de Gemini primero para habilitar el procesamiento.';
 }

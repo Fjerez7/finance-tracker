@@ -677,13 +677,29 @@
   },
   "restoreData": "Restore Data",
   "cloudBackupCreatedSuccess": "Cloud backup created successfully!",
-  "databaseRestoredSuccess": "Database restored successfully from Google Drive!",
-  "noBackupFound": "No backup found in Google Drive",
-  "backupSuccess": "Backup uploaded successfully to Google Drive",
-  "restoreSuccess": "Data restored successfully from Google Drive",
-  "restoreWarning": "Restoring will replace all current local data with the cloud backup. Do you want to continue?",
-  "backupInProgress": "Creating and uploading encrypted backup...",
-  "restoreInProgress": "Downloading and restoring data...",
+  "dualCloudBackup": "Dual Cloud Backup (Firestore + Drive)",
+  "dualCloudBackupDesc": "Simultaneously sync encrypted database snapshots to Firebase and Google Drive",
+  "firestoreCloudBackup": "Firebase Firestore",
+  "googleDriveBackupLabel": "Google Drive",
+  "shareCsv": "Export & Share CSV (Excel)",
+  "shareCsvDesc": "Share all {count} transactions to WhatsApp, Excel, Gmail, or Files",
+  "@shareCsvDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareJson": "Export & Share JSON Snapshot",
+  "shareJsonDesc": "Share complete database backup file with cryptographic checksum",
+  "pickLocalJson": "Restore from Local File (.json)",
+  "pickLocalJsonDesc": "Select a .json backup file from your device storage to restore",
+  "restoreLocalBackupQuestion": "Restore Local Backup File?",
+  "confirmRestoreLocalBackupDetail": "This will validate the checksum and overwrite existing local data with the selected file. Continue?",
+  "localRestoreSuccess": "Database successfully restored from local backup file!",
+  "checksumFailed": "Security verification failed: Backup file is corrupted or tampered.",
+  "noFileSelected": "No file selected.",
+  "backupUploadedDual": "Backup saved to Firebase Firestore and Google Drive!",
   "autoBackup": "Automatic Cloud Backup",
   "autoBackupDesc": "Automatically back up database when changes occur",
 
@@ -734,5 +750,48 @@
   "exchangeRateHint": "Live rate from open.er-api.com",
   "ratePlaceholder": "Exchange rate (e.g. 4150.0)",
   "customRateActive": "Custom rate applied",
-  "originalAmount": "Original Amount"
+  "originalAmount": "Original Amount",
+
+  "gmailBankSync": "Gmail Bank Synchronization",
+  "gmailBankSyncDesc": "Extract transactions directly from bank notification emails via Gemini AI",
+  "googleAccountConnected": "Connected as {email}",
+  "@googleAccountConnected": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "geminiApiKey": "Gemini API Key",
+  "geminiApiKeyDesc": "Used for structured AI extraction with Gemini 3.6 Flash",
+  "geminiApiKeyHelper": "Your API key is securely saved only in local device storage. Free keys are available from Google AI Studio.",
+  "enterGeminiApiKey": "Enter your Gemini API key",
+  "apiKeySaved": "Gemini API key saved successfully",
+  "bankSenders": "Monitored Bank Senders",
+  "bankSendersDesc": "Comma-separated list of bank notification sender emails to monitor",
+  "bankSendersSaved": "Bank senders updated successfully",
+  "restoreDefaultSenders": "Restore Defaults",
+  "enableAutoSync": "Automatic Background Sync",
+  "enableAutoSyncDesc": "Check for new bank emails when app launches or returns to foreground",
+  "syncNow": "Sync Now",
+  "syncingGmail": "Reading bank emails & extracting transactions...",
+  "syncSuccess": "✨ {count} transactions synchronized",
+  "@syncSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncUpToDate": "Up to date. No new bank transactions found.",
+  "lastSyncTime": "Last sync: {time}",
+  "@lastSyncTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInRequired": "Please connect your Google Account first to authorize Gmail access.",
+  "geminiKeyRequired": "Please configure your Gemini API Key first to enable transaction parsing."
 }

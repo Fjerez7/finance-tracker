@@ -36,6 +36,12 @@ class BackupRestoreService {
     final List<Map<String, dynamic>> savingsGoals = await db.query(
       DatabaseConstants.tableSavingsGoals,
     );
+    final List<Map<String, dynamic>> settings = await db.query(
+      DatabaseConstants.tableSettings,
+    );
+    final List<Map<String, dynamic>> exchangeRates = await db.query(
+      DatabaseConstants.tableExchangeRates,
+    );
 
     final Map<String, dynamic> dataPayload = {
       'accounts': accounts,
@@ -44,6 +50,8 @@ class BackupRestoreService {
       'subscriptions': subscriptions,
       'budgets': budgets,
       'savings_goals': savingsGoals,
+      'settings': settings,
+      'exchange_rates': exchangeRates,
     };
 
     final String dataJson = jsonEncode(dataPayload);
@@ -112,6 +120,9 @@ class BackupRestoreService {
     final List<dynamic> budgets = data['budgets'] as List<dynamic>? ?? [];
     final List<dynamic> savingsGoals =
         data['savings_goals'] as List<dynamic>? ?? [];
+    final List<dynamic> settings = data['settings'] as List<dynamic>? ?? [];
+    final List<dynamic> exchangeRates =
+        data['exchange_rates'] as List<dynamic>? ?? [];
 
     await db.transaction((txn) async {
       // 1. Temporarily disable foreign keys for clean table wipe and restore
@@ -124,6 +135,12 @@ class BackupRestoreService {
       await txn.delete(DatabaseConstants.tableSavingsGoals);
       await txn.delete(DatabaseConstants.tableAccounts);
       await txn.delete(DatabaseConstants.tableCategories);
+      if (settings.isNotEmpty) {
+        await txn.delete(DatabaseConstants.tableSettings);
+      }
+      if (exchangeRates.isNotEmpty) {
+        await txn.delete(DatabaseConstants.tableExchangeRates);
+      }
 
       // 3. Batch insert restored rows
       final batch = txn.batch();
@@ -161,6 +178,24 @@ class BackupRestoreService {
       for (final raw in transactions) {
         batch.insert(
           DatabaseConstants.tableTransactions,
+          Map<String, dynamic>.from(raw as Map),
+        );
+      }
+      for (final raw in settings) {
+        final map = Map<String, dynamic>.from(raw as Map);
+        if (!map.containsKey(DatabaseConstants.colUpdatedAt) ||
+            map[DatabaseConstants.colUpdatedAt] == null) {
+          map[DatabaseConstants.colUpdatedAt] =
+              DateTime.now().toUtc().toIso8601String();
+        }
+        batch.insert(
+          DatabaseConstants.tableSettings,
+          map,
+        );
+      }
+      for (final raw in exchangeRates) {
+        batch.insert(
+          DatabaseConstants.tableExchangeRates,
           Map<String, dynamic>.from(raw as Map),
         );
       }

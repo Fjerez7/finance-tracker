@@ -108,6 +108,12 @@ void main() {
         DatabaseConstants.colUpdatedAt: now,
       });
 
+      await db.insert(DatabaseConstants.tableSettings, {
+        DatabaseConstants.colKey: 'app_currency',
+        DatabaseConstants.colValue: 'COP',
+        DatabaseConstants.colUpdatedAt: now,
+      });
+
       // 2. Create snapshot
       final snapshot = await BackupRestoreService.createBackupSnapshot(db);
 
@@ -121,6 +127,7 @@ void main() {
       // 3. Clear database / insert dummy records that will be overwritten
       await db.delete(DatabaseConstants.tableTransactions);
       await db.delete(DatabaseConstants.tableAccounts);
+      await db.delete(DatabaseConstants.tableSettings);
 
       final accountsAfterClear = await db.query(DatabaseConstants.tableAccounts);
       expect(accountsAfterClear, isEmpty);
@@ -136,6 +143,9 @@ void main() {
       final restoredTxs = await db.query(DatabaseConstants.tableTransactions);
       expect(restoredTxs.length, equals(1));
       expect(restoredTxs.first['description'], equals('Initial Deposit'));
+
+      final restoredSettings = await db.query(DatabaseConstants.tableSettings);
+      expect(restoredSettings.any((s) => s['key'] == 'app_currency' && s['value'] == 'COP'), isTrue);
     });
 
     test('throws BackupValidationException when snapshot data has been tampered with', () async {

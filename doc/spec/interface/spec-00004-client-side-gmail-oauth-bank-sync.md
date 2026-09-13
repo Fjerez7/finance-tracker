@@ -37,6 +37,7 @@ By transitioning from an external Google Apps Script intermediary to direct in-a
 - Transaction parsing is performed on-device via direct calls to Gemini 3.6 / 2.5 Flash API with structured JSON output.
 - All extracted transactions are persisted directly into SQLite with atomic account updates, multi-factor subscription detection, and persistent Gmail labeling for idempotency.
 - Operates strictly under the **$0.00 zero-server-cost** model with no external backend server dependencies.
+- Retains unified Google Authentication and Firebase Core foundations to support multi-provider Cloud Backups (Google Drive and Firebase Firestore/Storage).
 
 ---
 
@@ -57,8 +58,8 @@ sequenceDiagram
     Auth-->>Flutter: Returns OAuth2 Access Token
 
     Note over Flutter,GmailAPI: On Sync Button / App Open / Pull-to-Refresh
-    Flutter->>GmailAPI: GET /v1/users/me/messages?q=-label:FinanceTracker/Processed (Bancolombia OR Rappi OR Nu)
-    GmailAPI-->>Flutter: Returns list of unread/unprocessed message IDs
+    Flutter->>GmailAPI: GET /v1/users/me/messages?q=(Bancolombia OR Rappi OR Nu) newer_than:2d
+    GmailAPI-->>Flutter: Returns list of unhandled message IDs
 
     loop For each unhandled Message
         Flutter->>GmailAPI: GET /v1/users/me/messages/{id} (full body)
@@ -90,6 +91,9 @@ abstract class GmailAuthService {
   /// Initiates interactive Google Sign-In requesting Gmail read/modify scopes.
   Future<GoogleSignInAccount?> signIn();
 
+  /// Attempts silent Google Sign-In to restore existing session without UI prompts.
+  Future<GoogleSignInAccount?> signInSilently();
+
   /// Obtains valid OAuth2 authentication headers (including Bearer token).
   Future<Map<String, String>> getAuthHeaders();
 
@@ -105,10 +109,26 @@ abstract class GmailAuthService {
 - `https://www.googleapis.com/auth/gmail.readonly` (Read bank notification emails)
 - `https://www.googleapis.com/auth/gmail.labels` (Create and apply `FinanceTracker/Processed` label)
 - `https://www.googleapis.com/auth/gmail.modify` (Apply processed labels to avoid re-reading)
+- `https://www.googleapis.com/auth/drive.appdata` (Google Drive backup scope)
+
+**Google Cloud Console & Firebase Setup Requirements:**
+1. **Firebase Authentication:** Google Sign-in provider enabled in Firebase Console (generates linked Web Client ID type 3).
+2. **Android OAuth Credential:** Debug and Release SHA-1 / SHA-256 certificate fingerprints registered under package `com.example.financetracker.finance_tracker` in Firebase Console / Google Cloud Console.
+3. **APIs Enabled:** `Gmail API` and `Google Drive API` enabled under the GCP project.
+4. **OAuth Consent Screen:** User Type configured (External / Testing mode) with active tester accounts added under Test Users.
 
 ---
 
-### 3.2 `GmailRemoteDataSource` Interface
+### 3.2 Monitored Bank Senders
+
+The ingestion pipeline filters incoming emails matching default bank notification senders:
+- **Bancolombia:** `alertasynotificaciones@bancolombia.com.co`, `alertasynotificaciones@an.notificacionesbancolombia.com`, `alertas@notificacionesbancolombia.com`
+- **RappiCard:** `notificaciones@rappicard.co`, `noreply@rappicard.co`
+- **Nu Colombia:** `nu@nu.com.co`, `tucuentanu@nu.com.co`, `ayuda@nu.com.co`, `notificaciones@nu.com.co`, `alertas@nu.com.co`
+
+---
+
+### 3.3 `GmailRemoteDataSource` Interface
 
 Encapsulates direct HTTP communication with `https://gmail.googleapis.com/gmail/v1/users/me/`.
 
@@ -142,7 +162,7 @@ abstract class GmailRemoteDataSource {
 
 ---
 
-### 3.3 `GeminiExtractionService` Interface
+### 3.4 `GeminiExtractionService` Interface
 
 Encapsulates prompt construction and structured JSON response decoding via Gemini 2.5 / 3.6 Flash.
 
@@ -157,23 +177,27 @@ abstract class GeminiExtractionService {
 }
 ```
 
-**Extraction JSON Schema Contract:**
-```json
-{
-  "is_transaction": true,
-  "bank_name": "Bancolombia",
-  "account_type": "credit_card",
-  "account_mask": "*4892",
-  "merchant": "Supermercados Exito",
-  "amount_cents": 7500000,
-  "amount": 75000.0,
-  "currency": "COP",
-  "type": "expense",
-  "category_suggestion": "Groceries",
-  "transaction_date": "2026-09-13T14:30:00Z",
-  "reference_number": "AUT-98213"
+---
+
+### 3.5 Future Extensibility: Multi-Cloud Backup Provider
+
+The architecture keeps `FirebaseCore` and `CloudFirestore` active as an extensible storage destination for cloud backups:
+
+```dart
+abstract class CloudBackupProvider {
+  /// Exports serialized SQLite database snapshot to cloud destination.
+  Future<void> uploadBackup(String backupJson, {required String userId});
+
+  /// Fetches available backups from cloud destination.
+  Future<List<BackupMetadata>> listBackups({required String userId});
+
+  /// Downloads backup payload for restoration.
+  Future<String> downloadBackup(String backupId, {required String userId});
 }
 ```
+Supported implementations:
+1. `GoogleDriveBackupProvider` (Current implementation via `appDataFolder`).
+2. `FirebaseCloudBackupProvider` (Extensible implementation via Firestore `users/{uid}/backups`).
 
 ---
 

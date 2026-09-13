@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_currency.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/settings_provider.dart';
 import 'backup_settings_screen.dart';
+import 'gmail_sync_settings_screen.dart';
 
 /// Screen presenting user preferences (Language, Currency), Data options, and App info.
 class SettingsScreen extends StatelessWidget {
@@ -95,6 +96,26 @@ class SettingsScreen extends StatelessWidget {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const BackupSettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 64),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.red.shade100,
+                    child: Icon(Icons.mail_outline, color: Colors.red.shade800),
+                  ),
+                  title: Text(
+                    l10n.gmailBankSync,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(l10n.gmailBankSyncDesc),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const GmailSyncSettingsScreen(),
                       ),
                     );
                   },
