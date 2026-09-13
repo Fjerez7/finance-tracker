@@ -53,8 +53,15 @@ class GmailRemoteDataSourceImpl implements GmailRemoteDataSource {
 
   static const List<String> defaultBankSenders = [
     'alertasynotificaciones@bancolombia.com.co',
-    'notificaciones@rappicard.co',
+    'alertasynotificaciones@an.notificacionesbancolombia.com',
     'alertas@notificacionesbancolombia.com',
+    'notificaciones@rappicard.co',
+    'noreply@rappicard.co',
+    'nu@nu.com.co',
+    'tucuentanu@nu.com.co',
+    'ayuda@nu.com.co',
+    'notificaciones@nu.com.co',
+    'alertas@nu.com.co',
   ];
 
   final http.Client? _httpClient;

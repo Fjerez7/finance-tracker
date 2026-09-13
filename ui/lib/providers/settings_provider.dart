@@ -12,13 +12,15 @@ class SettingsProvider extends ChangeNotifier {
   static const String keyGmailSyncEnabled = 'gmail_sync_enabled';
 
   static const String defaultBankSenders =
-      'alertasynotificaciones@bancolombia.com.co,notificaciones@rappicard.co,alertas@notificacionesbancolombia.com';
+      'alertasynotificaciones@bancolombia.com.co,alertasynotificaciones@an.notificacionesbancolombia.com,alertas@notificacionesbancolombia.com,notificaciones@rappicard.co,noreply@rappicard.co,nu@nu.com.co,tucuentanu@nu.com.co,ayuda@nu.com.co,notificaciones@nu.com.co,alertas@nu.com.co';
+  static const String defaultGeminiApiKey =
+      String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
 
   final DatabaseHelper _dbHelper;
 
   Locale? _locale;
   AppCurrency _currency = AppCurrency.usd;
-  String _geminiApiKey = '';
+  String _geminiApiKey = defaultGeminiApiKey;
   String _bankSenders = defaultBankSenders;
   bool _isGmailSyncEnabled = true;
   bool _isInitialized = false;
@@ -28,7 +30,7 @@ class SettingsProvider extends ChangeNotifier {
 
   Locale? get locale => _locale;
   AppCurrency get currency => _currency;
-  String get geminiApiKey => _geminiApiKey;
+  String get geminiApiKey => _geminiApiKey.isNotEmpty ? _geminiApiKey : defaultGeminiApiKey;
   String get bankSenders => _bankSenders;
   bool get isGmailSyncEnabled => _isGmailSyncEnabled;
   bool get isInitialized => _isInitialized;
@@ -53,7 +55,13 @@ class SettingsProvider extends ChangeNotifier {
         _currency = AppCurrency.usd;
       }
 
-      _geminiApiKey = await _dbHelper.getSetting(keyGeminiApiKey) ?? '';
+      final String? savedKey = await _dbHelper.getSetting(keyGeminiApiKey);
+      if (savedKey != null && savedKey.isNotEmpty) {
+        _geminiApiKey = savedKey;
+      } else {
+        _geminiApiKey = defaultGeminiApiKey;
+      }
+
       _bankSenders = await _dbHelper.getSetting(keyBankSenders) ?? defaultBankSenders;
       final String? syncVal = await _dbHelper.getSetting(keyGmailSyncEnabled);
       _isGmailSyncEnabled = syncVal != 'false';
