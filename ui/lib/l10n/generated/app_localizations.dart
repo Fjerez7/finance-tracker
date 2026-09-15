@@ -2767,6 +2767,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Biometric verification failed. App lock was not enabled.'**
   String get biometricEnableFailed;
+
+  /// No description provided for @screenProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen Protection & Privacy'**
+  String get screenProtection;
+
+  /// No description provided for @screenProtectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)'**
+  String get screenProtectionDesc;
 }
 
 class _AppLocalizationsDelegate

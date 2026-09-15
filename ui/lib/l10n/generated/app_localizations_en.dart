@@ -1479,4 +1479,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get biometricEnableFailed =>
       'Biometric verification failed. App lock was not enabled.';
+
+  @override
+  String get screenProtection => 'Screen Protection & Privacy';
+
+  @override
+  String get screenProtectionDesc =>
+      'Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)';
 }

@@ -10,14 +10,22 @@ import 'package:finance_tracker/presentation/screens/settings/settings_screen.da
 import 'package:finance_tracker/providers/app_lock_provider.dart';
 import 'package:finance_tracker/providers/settings_provider.dart';
 
+import 'package:flutter/services.dart';
+import 'package:finance_tracker/services/screen_security_service.dart';
+
 void main() {
   sqfliteFfiInit();
 
   late DatabaseHelper dbHelper;
   late SettingsProvider settingsProvider;
   late AppLockProvider appLockProvider;
+  const channel = MethodChannel(ScreenSecurityService.defaultChannelName);
 
   setUp(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      return true;
+    });
     FlutterSecureStorage.setMockInitialValues({});
     dbHelper = DatabaseHelper.instance;
     dbHelper.databaseFactoryOverride = databaseFactoryFfi;
@@ -34,6 +42,8 @@ void main() {
   });
 
   tearDown(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
     await dbHelper.close();
   });
 
@@ -127,6 +137,33 @@ void main() {
 
       expect(settingsProvider.currency, equals(AppCurrency.cop));
       expect(find.text(r'Colombian Peso (COP - $)'), findsOneWidget);
+    });
+
+    testWidgets('toggling screen protection switch updates app lock provider', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Screen Protection & Privacy'), findsOneWidget);
+      expect(appLockProvider.isScreenProtectionEnabled, isTrue);
+
+      // Tap on the switch
+      await tester.tap(find.widgetWithText(SwitchListTile, 'Screen Protection & Privacy'));
+      await tester.pumpAndSettle();
+
+      expect(appLockProvider.isScreenProtectionEnabled, isFalse);
+
+      // Tap again to re-enable
+      await tester.tap(find.widgetWithText(SwitchListTile, 'Screen Protection & Privacy'));
+      await tester.pumpAndSettle();
+
+      expect(appLockProvider.isScreenProtectionEnabled, isTrue);
     });
   });
 }

@@ -809,5 +809,7 @@
   "autoLock1Minute": "1 minute",
   "autoLock5Minutes": "5 minutes",
   "biometricNotAvailable": "Biometric hardware is not available or enrolled on this device",
-  "biometricEnableFailed": "Biometric verification failed. App lock was not enabled."
+  "biometricEnableFailed": "Biometric verification failed. App lock was not enabled.",
+  "screenProtection": "Screen Protection & Privacy",
+  "screenProtectionDesc": "Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)"
 }

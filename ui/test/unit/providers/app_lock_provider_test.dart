@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:finance_tracker/providers/app_lock_provider.dart';
 import 'package:finance_tracker/services/biometric_auth_service.dart';
+import 'package:finance_tracker/services/screen_security_service.dart';
 
 class FakeLocalAuthentication extends LocalAuthentication {
   bool supported = true;
@@ -27,10 +28,23 @@ class FakeLocalAuthentication extends LocalAuthentication {
   }) async => authenticateResult;
 }
 
+class FakeScreenSecurityService extends ScreenSecurityService {
+  bool lastEnabled = true;
+  int callCount = 0;
+
+  @override
+  Future<bool> setScreenSecurity(bool enabled) async {
+    lastEnabled = enabled;
+    callCount++;
+    return true;
+  }
+}
+
 void main() {
   late FakeLocalAuthentication fakeLocalAuth;
   late BiometricAuthService authService;
   late FlutterSecureStorage secureStorage;
+  late FakeScreenSecurityService screenSecurityService;
   late AppLockProvider provider;
 
   setUp(() {
@@ -38,9 +52,11 @@ void main() {
     fakeLocalAuth = FakeLocalAuthentication();
     authService = BiometricAuthService(auth: fakeLocalAuth);
     secureStorage = const FlutterSecureStorage();
+    screenSecurityService = FakeScreenSecurityService();
     provider = AppLockProvider(
       authService: authService,
       secureStorage: secureStorage,
+      screenSecurityService: screenSecurityService,
     );
   });
 
@@ -110,6 +126,40 @@ void main() {
       final unlocked = await provider.authenticateAndUnlock();
       expect(unlocked, isTrue);
       expect(provider.isAppLocked, isFalse);
+    });
+
+    test('screen protection is enabled by default and synced on initialize', () async {
+      expect(provider.isScreenProtectionEnabled, isTrue);
+      await provider.initialize();
+      expect(provider.isScreenProtectionEnabled, isTrue);
+      expect(screenSecurityService.callCount, 1);
+      expect(screenSecurityService.lastEnabled, isTrue);
+    });
+
+    test('setScreenProtectionEnabled toggles value, invokes service, and persists to storage', () async {
+      await provider.initialize();
+      expect(screenSecurityService.callCount, 1);
+
+      await provider.setScreenProtectionEnabled(false);
+      expect(provider.isScreenProtectionEnabled, isFalse);
+      expect(screenSecurityService.callCount, 2);
+      expect(screenSecurityService.lastEnabled, isFalse);
+
+      final storedVal = await secureStorage.read(key: AppLockProvider.keyScreenProtectionEnabled);
+      expect(storedVal, 'false');
+
+      // Re-enable
+      await provider.setScreenProtectionEnabled(true);
+      expect(provider.isScreenProtectionEnabled, isTrue);
+      expect(screenSecurityService.callCount, 3);
+      expect(screenSecurityService.lastEnabled, isTrue);
+    });
+
+    test('initialize respects stored screen protection value', () async {
+      await secureStorage.write(key: AppLockProvider.keyScreenProtectionEnabled, value: 'false');
+      await provider.initialize();
+      expect(provider.isScreenProtectionEnabled, isFalse);
+      expect(screenSecurityService.lastEnabled, isFalse);
     });
   });
 }

@@ -126,6 +126,22 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => _showTimeoutDialog(context, appLock),
                   ),
                 ],
+                const Divider(height: 1, indent: 64),
+                SwitchListTile(
+                  secondary: CircleAvatar(
+                    backgroundColor: Colors.teal.shade100,
+                    child: Icon(Icons.shield_outlined, color: Colors.teal.shade800),
+                  ),
+                  title: Text(
+                    l10n.screenProtection,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(l10n.screenProtectionDesc),
+                  value: appLock.isScreenProtectionEnabled,
+                  onChanged: (bool value) {
+                    appLock.setScreenProtectionEnabled(value);
+                  },
+                ),
               ],
             ),
           ),

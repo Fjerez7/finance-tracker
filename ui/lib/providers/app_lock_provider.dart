@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import '../services/biometric_auth_service.dart';
+import '../services/screen_security_service.dart';
 
-/// Reactive provider managing biometric security, app lock status, and background timeout triggers.
+/// Reactive provider managing biometric security, screen protection, app lock status, and background timeout triggers.
 class AppLockProvider extends ChangeNotifier {
   static const String keyBiometricEnabled = 'biometric_app_lock_enabled';
   static const String keyLockTimeoutSeconds = 'biometric_lock_timeout_seconds';
+  static const String keyScreenProtectionEnabled = 'screen_protection_enabled';
 
   final BiometricAuthService _authService;
   final FlutterSecureStorage _secureStorage;
+  final ScreenSecurityService _screenSecurityService;
 
   bool _isInitialized = false;
   bool _isBiometricEnabled = false;
+  bool _isScreenProtectionEnabled = true;
   bool _isAppLocked = false;
   bool _isAuthenticating = false;
   int _lockTimeoutSeconds = 0; // 0 = immediately, 30 = 30s, 60 = 1m, 300 = 5m
@@ -24,11 +28,14 @@ class AppLockProvider extends ChangeNotifier {
   AppLockProvider({
     BiometricAuthService? authService,
     FlutterSecureStorage? secureStorage,
+    ScreenSecurityService? screenSecurityService,
   })  : _authService = authService ?? BiometricAuthService(),
-        _secureStorage = secureStorage ?? const FlutterSecureStorage();
+        _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+        _screenSecurityService = screenSecurityService ?? ScreenSecurityService();
 
   bool get isInitialized => _isInitialized;
   bool get isBiometricEnabled => _isBiometricEnabled;
+  bool get isScreenProtectionEnabled => _isScreenProtectionEnabled;
   bool get isAppLocked => _isAppLocked;
   bool get isAuthenticating => _isAuthenticating;
   int get lockTimeoutSeconds => _lockTimeoutSeconds;
@@ -50,6 +57,10 @@ class AppLockProvider extends ChangeNotifier {
       if (timeoutVal != null) {
         _lockTimeoutSeconds = int.tryParse(timeoutVal) ?? 0;
       }
+
+      final String? screenProtVal = await _secureStorage.read(key: keyScreenProtectionEnabled);
+      _isScreenProtectionEnabled = screenProtVal == null || screenProtVal == 'true';
+      await _screenSecurityService.setScreenSecurity(_isScreenProtectionEnabled);
 
       // If biometric lock is enabled, lock immediately on cold startup
       if (_isBiometricEnabled) {
@@ -137,6 +148,19 @@ class AppLockProvider extends ChangeNotifier {
     await _secureStorage.write(
       key: keyLockTimeoutSeconds,
       value: seconds.toString(),
+    );
+    notifyListeners();
+  }
+
+  /// Toggles the screen protection (FLAG_SECURE) preference and updates native window flags immediately.
+  Future<void> setScreenProtectionEnabled(bool enable) async {
+    if (enable == _isScreenProtectionEnabled) return;
+
+    _isScreenProtectionEnabled = enable;
+    await _screenSecurityService.setScreenSecurity(enable);
+    await _secureStorage.write(
+      key: keyScreenProtectionEnabled,
+      value: enable.toString(),
     );
     notifyListeners();
   }

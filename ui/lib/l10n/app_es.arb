@@ -460,5 +460,7 @@
   "autoLock1Minute": "1 minuto",
   "autoLock5Minutes": "5 minutos",
   "biometricNotAvailable": "La biometría no está disponible o registrada en este dispositivo",
-  "biometricEnableFailed": "La verificación biométrica falló. El bloqueo no fue activado."
+  "biometricEnableFailed": "La verificación biométrica falló. El bloqueo no fue activado.",
+  "screenProtection": "Protección de Pantalla y Privacidad",
+  "screenProtectionDesc": "Bloquear capturas, grabaciones y compartir pantalla en videollamadas (Meet, Zoom)"
 }
