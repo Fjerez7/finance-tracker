@@ -1486,4 +1486,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get screenProtectionDesc =>
       'Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)';
+
+  @override
+  String get notificationSync => 'Notification Bank Sync';
+
+  @override
+  String get notificationSyncDesc =>
+      'Capture and parse transactions from Nubank and neobank push notifications';
+
+  @override
+  String get notificationAccessStatus => 'Android Notification Access';
+
+  @override
+  String get notificationAccessGranted => 'Active & Listening';
+
+  @override
+  String get notificationAccessDenied => 'Permission Required';
+
+  @override
+  String get grantNotificationAccess => 'Grant Access in Settings';
+
+  @override
+  String get grantNotificationAccessDesc =>
+      'Allow Finance Tracker to read incoming banking notifications on your device';
+
+  @override
+  String get monitoredBanks => 'Monitored Banking Apps';
+
+  @override
+  String get monitoredBanksDesc =>
+      'Only notifications from active apps below will be parsed';
+
+  @override
+  String get addBankApp => 'Add Bank App';
+
+  @override
+  String get bankAppName => 'Bank Name';
+
+  @override
+  String get androidPackageName => 'Android Package Name';
+
+  @override
+  String get syncNotificationsNow => 'Sync Notifications Now';
+
+  @override
+  String get syncingNotifications =>
+      'Extracting transactions from pending notifications...';
+
+  @override
+  String get noPendingNotifications =>
+      'Up to date. No pending bank notifications found.';
+
+  @override
+  String notificationSyncSuccess(int count) {
+    return '✨ $count transactions synced from notifications';
+  }
 }

@@ -2779,6 +2779,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)'**
   String get screenProtectionDesc;
+
+  /// No description provided for @notificationSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Bank Sync'**
+  String get notificationSync;
+
+  /// No description provided for @notificationSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture and parse transactions from Nubank and neobank push notifications'**
+  String get notificationSyncDesc;
+
+  /// No description provided for @notificationAccessStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Android Notification Access'**
+  String get notificationAccessStatus;
+
+  /// No description provided for @notificationAccessGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Active & Listening'**
+  String get notificationAccessGranted;
+
+  /// No description provided for @notificationAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission Required'**
+  String get notificationAccessDenied;
+
+  /// No description provided for @grantNotificationAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Access in Settings'**
+  String get grantNotificationAccess;
+
+  /// No description provided for @grantNotificationAccessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Finance Tracker to read incoming banking notifications on your device'**
+  String get grantNotificationAccessDesc;
+
+  /// No description provided for @monitoredBanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitored Banking Apps'**
+  String get monitoredBanks;
+
+  /// No description provided for @monitoredBanksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only notifications from active apps below will be parsed'**
+  String get monitoredBanksDesc;
+
+  /// No description provided for @addBankApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Bank App'**
+  String get addBankApp;
+
+  /// No description provided for @bankAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Name'**
+  String get bankAppName;
+
+  /// No description provided for @androidPackageName.
+  ///
+  /// In en, this message translates to:
+  /// **'Android Package Name'**
+  String get androidPackageName;
+
+  /// No description provided for @syncNotificationsNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Notifications Now'**
+  String get syncNotificationsNow;
+
+  /// No description provided for @syncingNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracting transactions from pending notifications...'**
+  String get syncingNotifications;
+
+  /// No description provided for @noPendingNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date. No pending bank notifications found.'**
+  String get noPendingNotifications;
+
+  /// No description provided for @notificationSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ {count} transactions synced from notifications'**
+  String notificationSyncSuccess(int count);
 }
 
 class _AppLocalizationsDelegate

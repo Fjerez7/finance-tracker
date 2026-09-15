@@ -462,5 +462,21 @@
   "biometricNotAvailable": "La biometría no está disponible o registrada en este dispositivo",
   "biometricEnableFailed": "La verificación biométrica falló. El bloqueo no fue activado.",
   "screenProtection": "Protección de Pantalla y Privacidad",
-  "screenProtectionDesc": "Bloquear capturas, grabaciones y compartir pantalla en videollamadas (Meet, Zoom)"
+  "screenProtectionDesc": "Bloquear capturas, grabaciones y compartir pantalla en videollamadas (Meet, Zoom)",
+  "notificationSync": "Sincronización por Notificaciones",
+  "notificationSyncDesc": "Captura y extracción de compras desde notificaciones de Nubank y neobancos",
+  "notificationAccessStatus": "Acceso a Notificaciones en Android",
+  "notificationAccessGranted": "Activo y Escuchando",
+  "notificationAccessDenied": "Permiso Requerido",
+  "grantNotificationAccess": "Conceder Acceso en Ajustes",
+  "grantNotificationAccessDesc": "Permite a Finance Tracker leer las alertas de compras bancarias en tu dispositivo",
+  "monitoredBanks": "Bancos y Apps Monitoreadas",
+  "monitoredBanksDesc": "Solo se procesarán las notificaciones de las apps activas",
+  "addBankApp": "Agregar App Bancaria",
+  "bankAppName": "Nombre del Banco",
+  "androidPackageName": "Nombre del Paquete Android (Package)",
+  "syncNotificationsNow": "Sincronizar Notificaciones Ahora",
+  "syncingNotifications": "Extrayendo transacciones de las notificaciones pendientes...",
+  "noPendingNotifications": "Al día. No se encontraron nuevas notificaciones bancarias.",
+  "notificationSyncSuccess": "✨ {count} transacciones sincronizadas desde notificaciones"
 }

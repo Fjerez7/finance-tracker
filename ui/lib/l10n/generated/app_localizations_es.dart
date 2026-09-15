@@ -1512,4 +1512,59 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get screenProtectionDesc =>
       'Bloquear capturas, grabaciones y compartir pantalla en videollamadas (Meet, Zoom)';
+
+  @override
+  String get notificationSync => 'Sincronización por Notificaciones';
+
+  @override
+  String get notificationSyncDesc =>
+      'Captura y extracción de compras desde notificaciones de Nubank y neobancos';
+
+  @override
+  String get notificationAccessStatus => 'Acceso a Notificaciones en Android';
+
+  @override
+  String get notificationAccessGranted => 'Activo y Escuchando';
+
+  @override
+  String get notificationAccessDenied => 'Permiso Requerido';
+
+  @override
+  String get grantNotificationAccess => 'Conceder Acceso en Ajustes';
+
+  @override
+  String get grantNotificationAccessDesc =>
+      'Permite a Finance Tracker leer las alertas de compras bancarias en tu dispositivo';
+
+  @override
+  String get monitoredBanks => 'Bancos y Apps Monitoreadas';
+
+  @override
+  String get monitoredBanksDesc =>
+      'Solo se procesarán las notificaciones de las apps activas';
+
+  @override
+  String get addBankApp => 'Agregar App Bancaria';
+
+  @override
+  String get bankAppName => 'Nombre del Banco';
+
+  @override
+  String get androidPackageName => 'Nombre del Paquete Android (Package)';
+
+  @override
+  String get syncNotificationsNow => 'Sincronizar Notificaciones Ahora';
+
+  @override
+  String get syncingNotifications =>
+      'Extrayendo transacciones de las notificaciones pendientes...';
+
+  @override
+  String get noPendingNotifications =>
+      'Al día. No se encontraron nuevas notificaciones bancarias.';
+
+  @override
+  String notificationSyncSuccess(int count) {
+    return '✨ $count transacciones sincronizadas desde notificaciones';
+  }
 }

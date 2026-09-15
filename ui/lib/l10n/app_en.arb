@@ -811,5 +811,28 @@
   "biometricNotAvailable": "Biometric hardware is not available or enrolled on this device",
   "biometricEnableFailed": "Biometric verification failed. App lock was not enabled.",
   "screenProtection": "Screen Protection & Privacy",
-  "screenProtectionDesc": "Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)"
+  "screenProtectionDesc": "Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)",
+  "notificationSync": "Notification Bank Sync",
+  "notificationSyncDesc": "Capture and parse transactions from Nubank and neobank push notifications",
+  "notificationAccessStatus": "Android Notification Access",
+  "notificationAccessGranted": "Active & Listening",
+  "notificationAccessDenied": "Permission Required",
+  "grantNotificationAccess": "Grant Access in Settings",
+  "grantNotificationAccessDesc": "Allow Finance Tracker to read incoming banking notifications on your device",
+  "monitoredBanks": "Monitored Banking Apps",
+  "monitoredBanksDesc": "Only notifications from active apps below will be parsed",
+  "addBankApp": "Add Bank App",
+  "bankAppName": "Bank Name",
+  "androidPackageName": "Android Package Name",
+  "syncNotificationsNow": "Sync Notifications Now",
+  "syncingNotifications": "Extracting transactions from pending notifications...",
+  "noPendingNotifications": "Up to date. No pending bank notifications found.",
+  "notificationSyncSuccess": "✨ {count} transactions synced from notifications",
+  "@notificationSyncSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -195,7 +195,32 @@ class DatabaseHelper {
       );
     ''');
 
-    // 9. Performance Indexes
+    // 9. Monitored Bank Apps Table (Extensible Whitelist)
+    batch.execute('''
+      CREATE TABLE ${DatabaseConstants.tableMonitoredBankApps} (
+        ${DatabaseConstants.colId} TEXT PRIMARY KEY,
+        ${DatabaseConstants.colPackageName} TEXT NOT NULL UNIQUE,
+        ${DatabaseConstants.colDisplayName} TEXT NOT NULL,
+        ${DatabaseConstants.colIsEnabled} INTEGER NOT NULL DEFAULT 1,
+        ${DatabaseConstants.colCreatedAt} TEXT NOT NULL
+      );
+    ''');
+
+    // 10. Pending Bank Notifications Table (Offline Buffer)
+    batch.execute('''
+      CREATE TABLE ${DatabaseConstants.tablePendingBankNotifications} (
+        ${DatabaseConstants.colId} TEXT PRIMARY KEY,
+        ${DatabaseConstants.colPackageName} TEXT NOT NULL,
+        ${DatabaseConstants.colNotificationKey} TEXT NOT NULL UNIQUE,
+        ${DatabaseConstants.colTitle} TEXT,
+        ${DatabaseConstants.colBody} TEXT NOT NULL,
+        ${DatabaseConstants.colPostTime} INTEGER NOT NULL,
+        ${DatabaseConstants.colIsProcessed} INTEGER NOT NULL DEFAULT 0,
+        ${DatabaseConstants.colCreatedAt} TEXT NOT NULL
+      );
+    ''');
+
+    // 11. Performance Indexes
     batch.execute(
       'CREATE INDEX idx_transactions_date ON ${DatabaseConstants.tableTransactions} (${DatabaseConstants.colTransactionDate} DESC);',
     );
@@ -217,9 +242,13 @@ class DatabaseHelper {
     batch.execute(
       'CREATE INDEX idx_accounts_archived ON ${DatabaseConstants.tableAccounts} (${DatabaseConstants.colIsArchived});',
     );
+    batch.execute(
+      'CREATE INDEX idx_pending_notif_processed ON ${DatabaseConstants.tablePendingBankNotifications} (${DatabaseConstants.colIsProcessed});',
+    );
 
-    // 10. Seed Default Categories into same transaction batch
+    // 12. Seed Default Categories and Default Bank Whitelist (Nubank)
     _seedDefaultCategories(batch);
+    _seedDefaultMonitoredBanks(batch);
 
     // Execute table, index creation, and category seeds atomically
     await batch.commit(noResult: true);
@@ -267,6 +296,62 @@ class DatabaseHelper {
         );
       } catch (_) {}
     }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableMonitoredBankApps} (
+          ${DatabaseConstants.colId} TEXT PRIMARY KEY,
+          ${DatabaseConstants.colPackageName} TEXT NOT NULL UNIQUE,
+          ${DatabaseConstants.colDisplayName} TEXT NOT NULL,
+          ${DatabaseConstants.colIsEnabled} INTEGER NOT NULL DEFAULT 1,
+          ${DatabaseConstants.colCreatedAt} TEXT NOT NULL
+        );
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tablePendingBankNotifications} (
+          ${DatabaseConstants.colId} TEXT PRIMARY KEY,
+          ${DatabaseConstants.colPackageName} TEXT NOT NULL,
+          ${DatabaseConstants.colNotificationKey} TEXT NOT NULL UNIQUE,
+          ${DatabaseConstants.colTitle} TEXT,
+          ${DatabaseConstants.colBody} TEXT NOT NULL,
+          ${DatabaseConstants.colPostTime} INTEGER NOT NULL,
+          ${DatabaseConstants.colIsProcessed} INTEGER NOT NULL DEFAULT 0,
+          ${DatabaseConstants.colCreatedAt} TEXT NOT NULL
+        );
+      ''');
+      try {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_pending_notif_processed ON ${DatabaseConstants.tablePendingBankNotifications} (${DatabaseConstants.colIsProcessed});',
+        );
+      } catch (_) {}
+      final String now = DateTime.now().toUtc().toIso8601String();
+      await db.insert(
+        DatabaseConstants.tableMonitoredBankApps,
+        {
+          DatabaseConstants.colId: 'nubank',
+          DatabaseConstants.colPackageName: 'com.nu.production',
+          DatabaseConstants.colDisplayName: 'Nubank',
+          DatabaseConstants.colIsEnabled: 1,
+          DatabaseConstants.colCreatedAt: now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+  }
+
+  /// Populates initial default monitored bank apps into batch.
+  void _seedDefaultMonitoredBanks(Batch batch) {
+    final String now = DateTime.now().toUtc().toIso8601String();
+    batch.insert(
+      DatabaseConstants.tableMonitoredBankApps,
+      {
+        DatabaseConstants.colId: 'nubank',
+        DatabaseConstants.colPackageName: 'com.nu.production',
+        DatabaseConstants.colDisplayName: 'Nubank',
+        DatabaseConstants.colIsEnabled: 1,
+        DatabaseConstants.colCreatedAt: now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
   }
 
   /// Populates the initial system categories into batch.
@@ -509,4 +594,96 @@ class DatabaseHelper {
       whereArgs: [key],
     );
   }
+
+  // ==========================================
+  // Monitored Bank Apps & Notifications CRUD
+  // ==========================================
+
+  /// Retrieves all monitored bank apps.
+  Future<List<Map<String, dynamic>>> getMonitoredBankApps() async {
+    final Database db = await database;
+    return await db.query(
+      DatabaseConstants.tableMonitoredBankApps,
+      orderBy: '${DatabaseConstants.colDisplayName} ASC',
+    );
+  }
+
+  /// Inserts or replaces a monitored bank app.
+  Future<void> insertMonitoredBankApp(Map<String, dynamic> app) async {
+    final Database db = await database;
+    await db.insert(
+      DatabaseConstants.tableMonitoredBankApps,
+      app,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Updates a monitored bank app (e.g. toggle is_enabled).
+  Future<void> updateMonitoredBankApp(String id, Map<String, dynamic> values) async {
+    final Database db = await database;
+    await db.update(
+      DatabaseConstants.tableMonitoredBankApps,
+      values,
+      where: '${DatabaseConstants.colId} = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Deletes a monitored bank app by ID.
+  Future<void> deleteMonitoredBankApp(String id) async {
+    final Database db = await database;
+    await db.delete(
+      DatabaseConstants.tableMonitoredBankApps,
+      where: '${DatabaseConstants.colId} = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Retrieves pending (unprocessed) bank notifications.
+  Future<List<Map<String, dynamic>>> getPendingBankNotifications({bool unprocessedOnly = true}) async {
+    final Database db = await database;
+    if (unprocessedOnly) {
+      return await db.query(
+        DatabaseConstants.tablePendingBankNotifications,
+        where: '${DatabaseConstants.colIsProcessed} = 0',
+        orderBy: '${DatabaseConstants.colPostTime} ASC',
+      );
+    }
+    return await db.query(
+      DatabaseConstants.tablePendingBankNotifications,
+      orderBy: '${DatabaseConstants.colPostTime} DESC',
+    );
+  }
+
+  /// Inserts a pending bank notification into the offline buffer.
+  Future<void> insertPendingBankNotification(Map<String, dynamic> notification) async {
+    final Database db = await database;
+    await db.insert(
+      DatabaseConstants.tablePendingBankNotifications,
+      notification,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  /// Marks a pending bank notification as processed.
+  Future<void> markPendingBankNotificationProcessed(String id) async {
+    final Database db = await database;
+    await db.update(
+      DatabaseConstants.tablePendingBankNotifications,
+      {DatabaseConstants.colIsProcessed: 1},
+      where: '${DatabaseConstants.colId} = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Deletes a pending bank notification by ID.
+  Future<void> deletePendingBankNotification(String id) async {
+    final Database db = await database;
+    await db.delete(
+      DatabaseConstants.tablePendingBankNotifications,
+      where: '${DatabaseConstants.colId} = ?',
+      whereArgs: [id],
+    );
+  }
 }
+

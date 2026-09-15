@@ -139,14 +139,14 @@ When the application is in foreground or awakened by lifecycle resume:
   "title": "Compra aprobada",
   "body": "Compra por $ 45.000 en EXITO CALLE 80 con tu tarjeta débito terminada en 1234",
   "postTime": 1726359000000,
-  "notificationKey": "0|com.nu.production|1001|null|10234"
+  "notificationKey": "com.nu.production:1001:1726359000000"
 }
 ```
 
 ### 4.2. Extracted Structured Transaction
 ```json
 {
-  "id": "tx_notif_0_com_nu_production_1001_null_10234",
+  "id": "tx_notif_com_nu_production_1726359000000_1001",
   "amount": 4500000,
   "currency": "COP",
   "type": "expense",

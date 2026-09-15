@@ -6,6 +6,7 @@ import '../../../providers/app_lock_provider.dart';
 import '../../../providers/settings_provider.dart';
 import 'backup_settings_screen.dart';
 import 'gmail_sync_settings_screen.dart';
+import 'notification_sync_settings_screen.dart';
 
 /// Screen presenting user preferences (Language, Currency), Security, Data options, and App info.
 class SettingsScreen extends StatelessWidget {
@@ -192,6 +193,26 @@ class SettingsScreen extends StatelessWidget {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const GmailSyncSettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 64),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.purple.shade100,
+                    child: Icon(Icons.notifications_active_outlined, color: Colors.purple.shade800),
+                  ),
+                  title: Text(
+                    l10n.notificationSync,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(l10n.notificationSyncDesc),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationSyncSettingsScreen(),
                       ),
                     );
                   },

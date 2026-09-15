@@ -3,7 +3,7 @@ class DatabaseConstants {
   DatabaseConstants._();
 
   static const String databaseName = 'finance_tracker.db';
-  static const int databaseVersion = 3;
+  static const int databaseVersion = 4;
 
   // Tables
   static const String tableAccounts = 'accounts';
@@ -14,6 +14,8 @@ class DatabaseConstants {
   static const String tableSavingsGoals = 'savings_goals';
   static const String tableSettings = 'app_settings';
   static const String tableExchangeRates = 'exchange_rates';
+  static const String tableMonitoredBankApps = 'monitored_bank_apps';
+  static const String tablePendingBankNotifications = 'pending_bank_notifications';
 
   // Common Columns
   static const String colId = 'id';
@@ -22,6 +24,18 @@ class DatabaseConstants {
   static const String colUpdatedAt = 'updated_at';
   static const String colColorHex = 'color_hex';
   static const String colIconName = 'icon_name';
+
+  // Monitored Bank Apps Columns
+  static const String colPackageName = 'package_name';
+  static const String colDisplayName = 'display_name';
+  static const String colIsEnabled = 'is_enabled';
+
+  // Pending Bank Notifications Columns
+  static const String colNotificationKey = 'notification_key';
+  static const String colTitle = 'title';
+  static const String colBody = 'body';
+  static const String colPostTime = 'post_time';
+  static const String colIsProcessed = 'is_processed';
 
   // Settings Columns
   static const String colKey = 'key';

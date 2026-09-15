@@ -27,6 +27,7 @@ import 'providers/backup_provider.dart';
 import 'providers/budgets_provider.dart';
 import 'providers/exchange_rate_provider.dart';
 import 'providers/inbox_sync_provider.dart';
+import 'providers/notification_sync_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/subscriptions_provider.dart';
 import 'providers/transactions_provider.dart';
@@ -56,6 +57,7 @@ class FinanceTrackerApp extends StatelessWidget {
   final ExchangeRateProvider? exchangeRateProvider;
   final InboxSyncProvider? inboxSyncProvider;
   final AppLockProvider? appLockProvider;
+  final NotificationSyncProvider? notificationSyncProvider;
 
   const FinanceTrackerApp({
     super.key,
@@ -69,6 +71,7 @@ class FinanceTrackerApp extends StatelessWidget {
     this.exchangeRateProvider,
     this.inboxSyncProvider,
     this.appLockProvider,
+    this.notificationSyncProvider,
   });
 
   @override
@@ -186,6 +189,14 @@ class FinanceTrackerApp extends StatelessWidget {
           ChangeNotifierProvider<AppLockProvider>(
             create: (_) => AppLockProvider()..initialize(),
           ),
+        if (notificationSyncProvider != null)
+          ChangeNotifierProvider<NotificationSyncProvider>.value(
+            value: notificationSyncProvider!,
+          )
+        else
+          ChangeNotifierProvider<NotificationSyncProvider>(
+            create: (_) => NotificationSyncProvider()..initialize(),
+          ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
@@ -269,13 +280,27 @@ class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsB
     if (!mounted) return;
     try {
       final inboxSync = context.read<InboxSyncProvider?>();
+      final notifSync = context.read<NotificationSyncProvider?>();
       final settings = context.read<SettingsProvider?>();
+      final accounts = context.read<AccountsProvider>();
+      final txs = context.read<TransactionsProvider>();
+
       if (inboxSync != null && (settings == null || settings.isGmailSyncEnabled)) {
-        final accounts = context.read<AccountsProvider>();
-        final txs = context.read<TransactionsProvider>();
         inboxSync.syncNow(
           geminiApiKey: settings?.geminiApiKey,
           bankSenders: settings?.bankSendersList,
+          accountsProvider: accounts,
+          transactionsProvider: txs,
+        );
+      }
+
+      if (notifSync != null && notifSync.isPermissionGranted) {
+        notifSync.syncPendingNotifications(
+          geminiApiKey: settings?.geminiApiKey,
+          accountRepository: AccountRepositoryImpl(),
+          categoryRepository: CategoryRepositoryImpl(),
+          transactionRepository: TransactionRepositoryImpl(),
+          subscriptionRepository: SubscriptionRepositoryImpl(),
           accountsProvider: accounts,
           transactionsProvider: txs,
         );

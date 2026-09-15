@@ -13,17 +13,38 @@ import 'package:finance_tracker/providers/settings_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:finance_tracker/services/screen_security_service.dart';
 
+import 'package:finance_tracker/providers/accounts_provider.dart';
+import 'package:finance_tracker/providers/notification_sync_provider.dart';
+import 'package:finance_tracker/providers/subscriptions_provider.dart';
+import 'package:finance_tracker/providers/transactions_provider.dart';
+import 'package:finance_tracker/data/repositories/account_repository_impl.dart';
+import 'package:finance_tracker/data/repositories/category_repository_impl.dart';
+import 'package:finance_tracker/data/repositories/subscription_repository_impl.dart';
+import 'package:finance_tracker/data/repositories/transaction_repository_impl.dart';
+
 void main() {
   sqfliteFfiInit();
 
   late DatabaseHelper dbHelper;
   late SettingsProvider settingsProvider;
   late AppLockProvider appLockProvider;
+  late NotificationSyncProvider notificationSyncProvider;
+  late AccountsProvider accountsProvider;
+  late TransactionsProvider transactionsProvider;
+  late SubscriptionsProvider subscriptionsProvider;
   const channel = MethodChannel(ScreenSecurityService.defaultChannelName);
+  const notifChannel = MethodChannel('com.example.financetracker/notifications');
 
   setUp(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      return true;
+    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifChannel, (MethodCall methodCall) async {
+      if (methodCall.method == 'getBufferedNotifications') {
+        return <dynamic>[];
+      }
       return true;
     });
     FlutterSecureStorage.setMockInitialValues({});
@@ -39,11 +60,30 @@ void main() {
 
     appLockProvider = AppLockProvider();
     await appLockProvider.initialize();
+
+    notificationSyncProvider = NotificationSyncProvider(dbHelper: dbHelper);
+    await notificationSyncProvider.initialize();
+
+    final accountRepo = AccountRepositoryImpl(databaseHelper: dbHelper);
+    final catRepo = CategoryRepositoryImpl(databaseHelper: dbHelper);
+    final txRepo = TransactionRepositoryImpl(databaseHelper: dbHelper);
+    final subRepo = SubscriptionRepositoryImpl(databaseHelper: dbHelper);
+
+    accountsProvider = AccountsProvider(repository: accountRepo);
+    transactionsProvider = TransactionsProvider(
+      transactionRepository: txRepo,
+      categoryRepository: catRepo,
+    );
+    subscriptionsProvider = SubscriptionsProvider(
+      repository: subRepo,
+    );
   });
 
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifChannel, null);
     await dbHelper.close();
   });
 
@@ -52,6 +92,10 @@ void main() {
       providers: [
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
         ChangeNotifierProvider<AppLockProvider>.value(value: appLockProvider),
+        ChangeNotifierProvider<NotificationSyncProvider>.value(value: notificationSyncProvider),
+        ChangeNotifierProvider<AccountsProvider>.value(value: accountsProvider),
+        ChangeNotifierProvider<TransactionsProvider>.value(value: transactionsProvider),
+        ChangeNotifierProvider<SubscriptionsProvider>.value(value: subscriptionsProvider),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
@@ -87,9 +131,28 @@ void main() {
       expect(find.text('Data & Storage'), findsOneWidget);
       expect(find.text('Cloud Backup'), findsOneWidget);
       expect(find.text('Gmail Bank Synchronization'), findsOneWidget);
+      expect(find.text('Notification Bank Sync'), findsOneWidget);
       expect(find.text('About'), findsOneWidget);
       expect(find.text('Finance Tracker'), findsOneWidget);
       expect(find.text('Local Database'), findsOneWidget);
+    });
+
+    testWidgets('tapping Notification Bank Sync tile navigates to NotificationSyncSettingsScreen', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Notification Bank Sync'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Android Notification Access'), findsOneWidget);
+      expect(find.text('Monitored Banking Apps'), findsOneWidget);
     });
 
     testWidgets('selecting language in dialog updates provider locale', (
