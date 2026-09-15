@@ -16,6 +16,15 @@ class BackupValidationException implements Exception {
 class BackupRestoreService {
   static const int currentBackupVersion = 1;
 
+  static const Set<String> _sensitiveSettingsKeys = {
+    'gemini_api_key',
+    'auth_token',
+    'refresh_token',
+    'access_token',
+    'api_key',
+    'secret',
+  };
+
   /// Creates a full JSON snapshot of all database tables with SHA-256 checksum.
   static Future<Map<String, dynamic>> createBackupSnapshot(Database db) async {
     final List<Map<String, dynamic>> accounts = await db.query(
@@ -36,9 +45,17 @@ class BackupRestoreService {
     final List<Map<String, dynamic>> savingsGoals = await db.query(
       DatabaseConstants.tableSavingsGoals,
     );
-    final List<Map<String, dynamic>> settings = await db.query(
+    final List<Map<String, dynamic>> rawSettings = await db.query(
       DatabaseConstants.tableSettings,
     );
+    final List<Map<String, dynamic>> sanitizedSettings = rawSettings
+        .where(
+          (row) => !_sensitiveSettingsKeys.contains(
+            row[DatabaseConstants.colKey] as String?,
+          ),
+        )
+        .toList();
+
     final List<Map<String, dynamic>> exchangeRates = await db.query(
       DatabaseConstants.tableExchangeRates,
     );
@@ -50,7 +67,7 @@ class BackupRestoreService {
       'subscriptions': subscriptions,
       'budgets': budgets,
       'savings_goals': savingsGoals,
-      'settings': settings,
+      'settings': sanitizedSettings,
       'exchange_rates': exchangeRates,
     };
 

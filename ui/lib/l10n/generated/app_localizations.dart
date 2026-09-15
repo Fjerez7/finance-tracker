@@ -2677,6 +2677,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please configure your Gemini API Key first to enable transaction parsing.'**
   String get geminiKeyRequired;
+
+  /// No description provided for @securityAndPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Security & Privacy'**
+  String get securityAndPrivacy;
+
+  /// No description provided for @biometricAppLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric App Lock'**
+  String get biometricAppLock;
+
+  /// No description provided for @biometricAppLockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Require Fingerprint, Face ID, or PIN to open the app'**
+  String get biometricAppLockDesc;
+
+  /// No description provided for @biometricLockChallengeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your fingerprint or Face ID to verify your identity.'**
+  String get biometricLockChallengeReason;
+
+  /// No description provided for @biometricUnlockPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your biometric or enter device PIN to unlock Finance Tracker.'**
+  String get biometricUnlockPrompt;
+
+  /// No description provided for @appLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance Tracker Locked'**
+  String get appLockedTitle;
+
+  /// No description provided for @appLockedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to access your financial records'**
+  String get appLockedSubtitle;
+
+  /// No description provided for @unlockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock App'**
+  String get unlockButton;
+
+  /// No description provided for @autoLockTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Lock Timeout'**
+  String get autoLockTimeout;
+
+  /// No description provided for @autoLockImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get autoLockImmediately;
+
+  /// No description provided for @autoLock30Seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'30 seconds'**
+  String get autoLock30Seconds;
+
+  /// No description provided for @autoLock1Minute.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute'**
+  String get autoLock1Minute;
+
+  /// No description provided for @autoLock5Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes'**
+  String get autoLock5Minutes;
+
+  /// No description provided for @biometricNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric hardware is not available or enrolled on this device'**
+  String get biometricNotAvailable;
+
+  /// No description provided for @biometricEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric verification failed. App lock was not enabled.'**
+  String get biometricEnableFailed;
+
+  /// No description provided for @screenProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen Protection & Privacy'**
+  String get screenProtection;
+
+  /// No description provided for @screenProtectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)'**
+  String get screenProtectionDesc;
 }
 
 class _AppLocalizationsDelegate

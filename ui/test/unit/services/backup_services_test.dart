@@ -148,6 +148,38 @@ void main() {
       expect(restoredSettings.any((s) => s['key'] == 'app_currency' && s['value'] == 'COP'), isTrue);
     });
 
+    test('sanitizes sensitive secrets from settings table in backup snapshot', () async {
+      final String now = DateTime.now().toUtc().toIso8601String();
+
+      await db.insert(DatabaseConstants.tableSettings, {
+        DatabaseConstants.colKey: 'app_currency',
+        DatabaseConstants.colValue: 'COP',
+        DatabaseConstants.colUpdatedAt: now,
+      });
+
+      await db.insert(DatabaseConstants.tableSettings, {
+        DatabaseConstants.colKey: 'gemini_api_key',
+        DatabaseConstants.colValue: 'AIzaSySecretApiKey123456789',
+        DatabaseConstants.colUpdatedAt: now,
+      });
+
+      await db.insert(DatabaseConstants.tableSettings, {
+        DatabaseConstants.colKey: 'auth_token',
+        DatabaseConstants.colValue: 'secret_jwt_token',
+        DatabaseConstants.colUpdatedAt: now,
+      });
+
+      final snapshot = await BackupRestoreService.createBackupSnapshot(db);
+      final data = snapshot['data'] as Map<String, dynamic>;
+      final settings = (data['settings'] as List<dynamic>).cast<Map<String, dynamic>>();
+
+      final settingKeys = settings.map((s) => s[DatabaseConstants.colKey]).toList();
+
+      expect(settingKeys, contains('app_currency'));
+      expect(settingKeys, isNot(contains('gemini_api_key')));
+      expect(settingKeys, isNot(contains('auth_token')));
+    });
+
     test('throws BackupValidationException when snapshot data has been tampered with', () async {
       final snapshot = await BackupRestoreService.createBackupSnapshot(db);
 

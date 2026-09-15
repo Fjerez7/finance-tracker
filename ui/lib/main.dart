@@ -16,11 +16,13 @@ import 'l10n/generated/app_localizations.dart';
 import 'presentation/screens/accounts/accounts_screen.dart';
 import 'presentation/screens/budgets/budgets_screen.dart';
 import 'presentation/screens/dashboard/dashboard_screen.dart';
+import 'presentation/screens/security/app_lock_screen.dart';
 import 'presentation/screens/subscriptions/subscriptions_screen.dart';
 import 'presentation/screens/transactions/quick_transaction_screen.dart';
 import 'presentation/screens/transactions/transaction_list_screen.dart';
 import 'providers/accounts_provider.dart';
 import 'providers/analytics_provider.dart';
+import 'providers/app_lock_provider.dart';
 import 'providers/backup_provider.dart';
 import 'providers/budgets_provider.dart';
 import 'providers/exchange_rate_provider.dart';
@@ -53,6 +55,7 @@ class FinanceTrackerApp extends StatelessWidget {
   final SettingsProvider? settingsProvider;
   final ExchangeRateProvider? exchangeRateProvider;
   final InboxSyncProvider? inboxSyncProvider;
+  final AppLockProvider? appLockProvider;
 
   const FinanceTrackerApp({
     super.key,
@@ -65,6 +68,7 @@ class FinanceTrackerApp extends StatelessWidget {
     this.settingsProvider,
     this.exchangeRateProvider,
     this.inboxSyncProvider,
+    this.appLockProvider,
   });
 
   @override
@@ -174,6 +178,14 @@ class FinanceTrackerApp extends StatelessWidget {
               )..checkExistingAuth();
             },
           ),
+        if (appLockProvider != null)
+          ChangeNotifierProvider<AppLockProvider>.value(
+            value: appLockProvider!,
+          )
+        else
+          ChangeNotifierProvider<AppLockProvider>(
+            create: (_) => AppLockProvider()..initialize(),
+          ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
@@ -243,6 +255,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsB
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    try {
+      context.read<AppLockProvider?>()?.handleAppLifecycleState(state);
+    } catch (_) {}
+
     if (state == AppLifecycleState.resumed) {
       // Trigger automatic synchronization when app returns from background
       _triggerAutoSync();
@@ -269,6 +285,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> with WidgetsB
 
   @override
   Widget build(BuildContext context) {
+    final appLock = context.watch<AppLockProvider?>();
+    if (appLock != null && appLock.isAppLocked) {
+      return const AppLockScreen();
+    }
+
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(

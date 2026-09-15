@@ -12,8 +12,16 @@ class FirestoreBackupService {
   FirebaseFirestore get _firestore =>
       _customFirestore ?? FirebaseFirestore.instance;
 
+  static String sanitizeUserId(String? userId) {
+    if (userId == null || userId.trim().isEmpty) {
+      return 'anonymous_user';
+    }
+    return userId.trim().replaceAll('/', '_');
+  }
+
   CollectionReference<Map<String, dynamic>> _backupsCollection(String userId) {
-    return _firestore.collection('users').doc(userId).collection('backups');
+    final sanitized = sanitizeUserId(userId);
+    return _firestore.collection('users').doc(sanitized).collection('backups');
   }
 
   /// Uploads a backup snapshot to Firestore.
@@ -21,7 +29,7 @@ class FirestoreBackupService {
     required String backupJson,
     required String filename,
     required String checksum,
-    String userId = 'user_default',
+    String userId = 'anonymous_user',
   }) async {
     final docRef = _backupsCollection(userId).doc();
     final now = DateTime.now().toUtc();
@@ -49,7 +57,7 @@ class FirestoreBackupService {
 
   /// Lists all available backups stored in Firestore for a user.
   Future<List<CloudBackupInfo>> listBackups({
-    String userId = 'user_default',
+    String userId = 'anonymous_user',
   }) async {
     final querySnapshot = await _backupsCollection(userId)
         .orderBy('createdAt', descending: true)
@@ -75,7 +83,7 @@ class FirestoreBackupService {
   /// Downloads raw JSON content for a specific backup ID from Firestore.
   Future<String> downloadBackup({
     required String backupId,
-    String userId = 'user_default',
+    String userId = 'anonymous_user',
   }) async {
     final docSnapshot =
         await _backupsCollection(userId).doc(backupId).get();
@@ -96,7 +104,7 @@ class FirestoreBackupService {
   /// Deletes a backup document from Firestore.
   Future<void> deleteBackup({
     required String backupId,
-    String userId = 'user_default',
+    String userId = 'anonymous_user',
   }) async {
     await _backupsCollection(userId).doc(backupId).delete();
   }

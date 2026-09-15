@@ -101,16 +101,28 @@ class BackupProvider extends ChangeNotifier {
     }
   }
 
+  String _resolveUserId(String? explicitUserId) {
+    if (explicitUserId != null && explicitUserId.trim().isNotEmpty) {
+      return explicitUserId.trim();
+    }
+    final email = currentUser?.email;
+    if (email != null && email.trim().isNotEmpty) {
+      return email.trim();
+    }
+    return 'anonymous_user';
+  }
+
   /// Fetches the list of backup files from configured cloud providers.
   Future<void> fetchCloudBackups({
     CloudBackupDestination destination = CloudBackupDestination.all,
     String? userId,
   }) async {
+    final activeUserId = _resolveUserId(userId);
     _setSyncing(true);
     try {
       _cloudBackups = await _cloudBackupService.listBackups(
         destination: destination,
-        userId: userId,
+        userId: activeUserId,
       );
     } catch (e) {
       _errorMessage = 'Failed to retrieve backups: ${e.toString()}';
@@ -130,6 +142,7 @@ class BackupProvider extends ChangeNotifier {
     CloudBackupDestination destination = CloudBackupDestination.all,
     String? userId,
   }) async {
+    final activeUserId = _resolveUserId(userId);
     _setSyncing(true);
     _clearMessages();
     try {
@@ -145,7 +158,7 @@ class BackupProvider extends ChangeNotifier {
         filename: filename,
         checksum: checksum,
         destination: destination,
-        userId: userId,
+        userId: activeUserId,
       );
 
       if (results.isEmpty) {
@@ -154,7 +167,7 @@ class BackupProvider extends ChangeNotifier {
 
       final destinations = results.map((r) => r.destinationLabel).join(' & ');
       _successMessage = 'Backup saved to $destinations';
-      await fetchCloudBackups(userId: userId);
+      await fetchCloudBackups(userId: activeUserId);
       _setSyncing(false);
       return true;
     } catch (e) {
@@ -169,13 +182,14 @@ class BackupProvider extends ChangeNotifier {
     CloudBackupInfo backup, {
     String? userId,
   }) async {
+    final activeUserId = _resolveUserId(userId);
     _setSyncing(true);
     _clearMessages();
     try {
       final String jsonContent = await _cloudBackupService.downloadBackup(
         backupId: backup.id,
         destination: backup.destination,
-        userId: userId,
+        userId: activeUserId,
       );
       final Map<String, dynamic> snapshot =
           jsonDecode(jsonContent) as Map<String, dynamic>;

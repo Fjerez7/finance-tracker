@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -6,15 +7,26 @@ import 'package:finance_tracker/core/constants/app_currency.dart';
 import 'package:finance_tracker/data/datasources/local/database_helper.dart';
 import 'package:finance_tracker/l10n/generated/app_localizations.dart';
 import 'package:finance_tracker/presentation/screens/settings/settings_screen.dart';
+import 'package:finance_tracker/providers/app_lock_provider.dart';
 import 'package:finance_tracker/providers/settings_provider.dart';
+
+import 'package:flutter/services.dart';
+import 'package:finance_tracker/services/screen_security_service.dart';
 
 void main() {
   sqfliteFfiInit();
 
   late DatabaseHelper dbHelper;
   late SettingsProvider settingsProvider;
+  late AppLockProvider appLockProvider;
+  const channel = MethodChannel(ScreenSecurityService.defaultChannelName);
 
   setUp(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      return true;
+    });
+    FlutterSecureStorage.setMockInitialValues({});
     dbHelper = DatabaseHelper.instance;
     dbHelper.databaseFactoryOverride = databaseFactoryFfi;
     dbHelper.databasePathOverride = inMemoryDatabasePath;
@@ -24,15 +36,23 @@ void main() {
 
     settingsProvider = SettingsProvider(dbHelper: dbHelper);
     await settingsProvider.loadSettings();
+
+    appLockProvider = AppLockProvider();
+    await appLockProvider.initialize();
   });
 
   tearDown(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
     await dbHelper.close();
   });
 
   Widget buildTestableWidget() {
-    return ChangeNotifierProvider<SettingsProvider>.value(
-      value: settingsProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<AppLockProvider>.value(value: appLockProvider),
+      ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp(
@@ -50,6 +70,11 @@ void main() {
     testWidgets('renders all sections and preferences tiles', (
       WidgetTester tester,
     ) async {
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
@@ -57,6 +82,8 @@ void main() {
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.text('Language'), findsOneWidget);
       expect(find.text('Currency'), findsOneWidget);
+      expect(find.text('Security & Privacy'), findsOneWidget);
+      expect(find.text('Biometric App Lock'), findsOneWidget);
       expect(find.text('Data & Storage'), findsOneWidget);
       expect(find.text('Cloud Backup'), findsOneWidget);
       expect(find.text('Gmail Bank Synchronization'), findsOneWidget);
@@ -110,6 +137,33 @@ void main() {
 
       expect(settingsProvider.currency, equals(AppCurrency.cop));
       expect(find.text(r'Colombian Peso (COP - $)'), findsOneWidget);
+    });
+
+    testWidgets('toggling screen protection switch updates app lock provider', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Screen Protection & Privacy'), findsOneWidget);
+      expect(appLockProvider.isScreenProtectionEnabled, isTrue);
+
+      // Tap on the switch
+      await tester.tap(find.widgetWithText(SwitchListTile, 'Screen Protection & Privacy'));
+      await tester.pumpAndSettle();
+
+      expect(appLockProvider.isScreenProtectionEnabled, isFalse);
+
+      // Tap again to re-enable
+      await tester.tap(find.widgetWithText(SwitchListTile, 'Screen Protection & Privacy'));
+      await tester.pumpAndSettle();
+
+      expect(appLockProvider.isScreenProtectionEnabled, isTrue);
     });
   });
 }

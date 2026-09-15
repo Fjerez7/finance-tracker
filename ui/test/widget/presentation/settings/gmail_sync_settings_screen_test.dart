@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' hide Transaction;
@@ -112,6 +113,7 @@ void main() {
   late TransactionsProvider transactionsProvider;
 
   setUp(() async {
+    FlutterSecureStorage.setMockInitialValues({});
     dbHelper = DatabaseHelper.instance;
     dbHelper.databaseFactoryOverride = databaseFactoryFfi;
     dbHelper.databasePathOverride = inMemoryDatabasePath;

@@ -793,5 +793,23 @@
     }
   },
   "googleSignInRequired": "Please connect your Google Account first to authorize Gmail access.",
-  "geminiKeyRequired": "Please configure your Gemini API Key first to enable transaction parsing."
+  "geminiKeyRequired": "Please configure your Gemini API Key first to enable transaction parsing.",
+
+  "securityAndPrivacy": "Security & Privacy",
+  "biometricAppLock": "Biometric App Lock",
+  "biometricAppLockDesc": "Require Fingerprint, Face ID, or PIN to open the app",
+  "biometricLockChallengeReason": "Scan your fingerprint or Face ID to verify your identity.",
+  "biometricUnlockPrompt": "Scan your biometric or enter device PIN to unlock Finance Tracker.",
+  "appLockedTitle": "Finance Tracker Locked",
+  "appLockedSubtitle": "Authenticate to access your financial records",
+  "unlockButton": "Unlock App",
+  "autoLockTimeout": "Auto-Lock Timeout",
+  "autoLockImmediately": "Immediately",
+  "autoLock30Seconds": "30 seconds",
+  "autoLock1Minute": "1 minute",
+  "autoLock5Minutes": "5 minutes",
+  "biometricNotAvailable": "Biometric hardware is not available or enrolled on this device",
+  "biometricEnableFailed": "Biometric verification failed. App lock was not enabled.",
+  "screenProtection": "Screen Protection & Privacy",
+  "screenProtectionDesc": "Block screenshots, recordings, and screen sharing in video calls (Meet, Zoom)"
 }
